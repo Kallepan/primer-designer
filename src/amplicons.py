@@ -39,20 +39,29 @@ def _load_loci(path_to_loci_file: str) -> pd.DataFrame:
 
     return df
 
-def _extract_region(seq, start: int, end: int, buffer: int = 50) -> SeqIO.SeqRecord:
+def _extract_region(seq, start: int, end: int, buffer: int = 100) -> SeqIO.SeqRecord:
     """Extract a region of genome from a sequence"""
     
+    # TODO: What to do when the region is smaller than the amplicon?
+
     if start > end:
         return seq[end-buffer:start+buffer]
 
     return seq[start-buffer:end+buffer]
 
-def _split_region_into_amplicons(region, amplicon_size: int = 1000, amplicon_buffer: int = 50) -> list[SeqIO.SeqRecord]:
+def _split_region_into_amplicons(region, amplicon_size: int = 1000, amplicon_buffer: int = 100) -> list[SeqIO.SeqRecord]:
     """Split a region of the genome into amplicons"""
-    # TODO: implement amplicon buffer
+    amplicon_size = amplicon_size - amplicon_buffer
     amplicons = []
-    for i in range(0, len(region), amplicon_size):
-        amplicons.append(region[i:i+amplicon_size])
+
+    # process initial amplicon separately
+    amplicons.append(region[0:amplicon_size+amplicon_buffer])
+
+    for i in range(amplicon_size, len(region)-amplicon_size, amplicon_size):
+        amplicons.append(region[i-amplicon_buffer:i+amplicon_size])
+    
+    # process final amplicon separately
+    amplicons.append(region[-amplicon_size-amplicon_buffer:])
 
     return amplicons
 
@@ -76,8 +85,8 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument('fasta_file', type=str, help='Path to fasta file')
     parser.add_argument('loci_file', type=str, help='Path to loci file. Format: CSV. Columns: loci, start, end')
     parser.add_argument('output_file', type=str, help='Path to output file in fasta format')
-    parser.add_argument('-s', '--amplicon_size', type=int, help='Size of amplicons. Default: 1000', required=False)
-    parser.add_argument('-b', '--amplicon_buffer', type=int, help='Buffer size for amplicons. Default: 50', required=False)
+    parser.add_argument('-s', '--amplicon_size', type=int, help='Size of amplicons. Default: 1000.', required=False)
+    parser.add_argument('-b', '--amplicon_buffer', type=int, help='Buffer size for amplicons. Default: 100', required=False)
     
     return parser
 
@@ -103,10 +112,10 @@ def main():
         raise Exception("Output file already exists")
 
     if not amplicon_buffer:
-        amplicon_buffer = 1000
+        amplicon_buffer = 100
     
-    if not amplicon_buffer:
-        amplicon_buffer = 50
+    if not amplicon_size:
+        amplicon_size = 1000
 
     if amplicon_size < amplicon_buffer:
         raise Exception("Amplicon size must be greater than amplicon buffer")
@@ -137,8 +146,9 @@ def main():
     return seq_record, amplicons
 
 if __name__ == "__main__":
+    main()
     try:
-        main()
+        pass
     except Exception as e:
         print(e)
         sys.exit(1)
