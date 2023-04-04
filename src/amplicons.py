@@ -135,6 +135,10 @@ def main():
 
         regions[loci_name] = _extract_region(seq_record.seq, start, end)
 
+        # print message if region is smaller than amplicon
+        if len(regions[loci_name]) < amplicon_size:
+            print(f"Warning: Region {loci_name} is smaller than amplicon size of by {amplicon_size - len(regions[loci_name])} bp.")
+
     # Split regions into amplicons
     amplicons = defaultdict(list)
     for region_name, region in regions.items():
