@@ -18,55 +18,61 @@ def _extract_seq_record_from_fasta_file(path_to_fasta_file: str) -> SeqIO.SeqRec
 
     with open(path_to_fasta_file, "r") as handle:
         fa = list(SeqIO.parse(handle, "fasta"))
-    
+
     if len(fa) == 0:
         raise Exception("No sequences found in fasta file")
-    
+
     if len(fa) > 1:
         raise Exception("More than one sequence found in fasta file")
 
     return fa[0]
 
+
 def _load_loci(path_to_loci_file: str) -> pd.DataFrame:
     """Read a loci csv file and return a list of loci"""
 
     df = pd.read_csv(
-        path_to_loci_file, 
-        sep=",", 
-        header=0, 
-        names=["loci", "start", "end"], 
-        dtype={"loci": str, "start": int, "end": int}
+        path_to_loci_file,
+        sep=",",
+        header=0,
+        names=["loci", "start", "end"],
+        dtype={"loci": str, "start": int, "end": int},
     )
 
     return df
 
+
 def _extract_region(seq, start: int, end: int, buffer: int = 100) -> SeqIO.SeqRecord:
     """Extract a region of genome from a sequence"""
-    
+
     # TODO: What to do when the region is smaller than the amplicon?
 
     if start > end:
-        return seq[end-buffer:start+buffer]
+        return seq[end - buffer : start + buffer]
 
-    return seq[start-buffer:end+buffer]
+    return seq[start - buffer : end + buffer]
 
-def _split_region_into_amplicons(region, amplicon_size: int = 1000, amplicon_buffer: int = 100) -> list[SeqIO.SeqRecord]:
+
+def _split_region_into_amplicons(
+    region, amplicon_size: int = 1000, amplicon_buffer: int = 100
+) -> list[SeqIO.SeqRecord]:
     """Split a region of the genome into amplicons"""
     amplicon_size = amplicon_size - amplicon_buffer
     amplicons = []
 
     # process initial amplicon separately
-    amplicons.append(region[0:amplicon_size+amplicon_buffer])
+    amplicons.append(region[0 : amplicon_size + amplicon_buffer])
 
-    for i in range(amplicon_size, len(region)-amplicon_size, amplicon_size):
-        amplicons.append(region[i-amplicon_buffer:i+amplicon_size])
-    
+    for i in range(amplicon_size, len(region) - amplicon_size, amplicon_size):
+        amplicons.append(region[i - amplicon_buffer : i + amplicon_size])
+
     # process final amplicon separately
-    amplicons.append(region[-amplicon_size-amplicon_buffer:])
+    amplicons.append(region[-amplicon_size - amplicon_buffer :])
 
     return amplicons
 
-def _write_amplicons_to_file(amplicons : dict, path_to_output_file: str) -> None:
+
+def _write_amplicons_to_file(amplicons: dict, path_to_output_file: str) -> None:
     """Write amplicons to file"""
     with open(path_to_output_file, "w") as handle:
         for region_name, region_amplicons in amplicons.items():
@@ -75,6 +81,7 @@ def _write_amplicons_to_file(amplicons : dict, path_to_output_file: str) -> None
                 handle.write("\n")
                 handle.write(f"{amplicon}")
                 handle.write("\n")
+
 
 def get_parser() -> argparse.ArgumentParser:
     """
@@ -86,13 +93,32 @@ def get_parser() -> argparse.ArgumentParser:
         description="Load in fasta file of an organism and extract the regions of interest (loci) from the genome.",
     )
 
-    parser.add_argument('fasta_file', type=str, help='Path to fasta file')
-    parser.add_argument('loci_file', type=str, help='Path to loci file. Format: CSV. Columns: loci, start, end')
-    parser.add_argument('output_file', type=str, help='Path to output file in fasta format')
-    parser.add_argument('-s', '--amplicon_size', type=int, help='Size of amplicons. Default: 1000.', required=False)
-    parser.add_argument('-b', '--amplicon_buffer', type=int, help='Buffer size for amplicons. Default: 100', required=False)
-    
+    parser.add_argument("fasta_file", type=str, help="Path to fasta file")
+    parser.add_argument(
+        "loci_file",
+        type=str,
+        help="Path to loci file. Format: CSV. Columns: loci, start, end",
+    )
+    parser.add_argument(
+        "output_file", type=str, help="Path to output file in fasta format"
+    )
+    parser.add_argument(
+        "-s",
+        "--amplicon_size",
+        type=int,
+        help="Size of amplicons. Default: 1000.",
+        required=False,
+    )
+    parser.add_argument(
+        "-b",
+        "--amplicon_buffer",
+        type=int,
+        help="Buffer size for amplicons. Default: 100",
+        required=False,
+    )
+
     return parser
+
 
 def main():
     parser = get_parser()
@@ -117,7 +143,7 @@ def main():
 
     if not amplicon_buffer:
         amplicon_buffer = 100
-    
+
     if not amplicon_size:
         amplicon_size = 1000
 
@@ -141,17 +167,22 @@ def main():
 
         # print message if region is smaller than amplicon
         if len(regions[loci_name]) < amplicon_size:
-            print(f"Warning: Region {loci_name} is smaller than amplicon size of by {amplicon_size - len(regions[loci_name])} bp.")
+            print(
+                f"Warning: Region {loci_name} is smaller than amplicon size of by {amplicon_size - len(regions[loci_name])} bp."
+            )
 
     # Split regions into amplicons
     amplicons = defaultdict(list)
     for region_name, region in regions.items():
-        amplicons[region_name] = _split_region_into_amplicons(region, amplicon_size, amplicon_buffer)
+        amplicons[region_name] = _split_region_into_amplicons(
+            region, amplicon_size, amplicon_buffer
+        )
 
     # Write amplicons to file
     _write_amplicons_to_file(amplicons, output_file_path)
 
     return seq_record, amplicons
+
 
 if __name__ == "__main__":
     try:

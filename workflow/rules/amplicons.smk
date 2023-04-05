@@ -4,6 +4,8 @@ rule:
         loci_file = "data/loci_formatted.csv"
     output:
         output_file = "results/{sample}.amplicons.fasta"
+    conda:
+        "envs/amplicons.yaml"
     log:
         out = "logs/amplicons_{sample}.out",
         err = "logs/amplicons_{sample}.err"
