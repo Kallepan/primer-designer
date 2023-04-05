@@ -12,6 +12,7 @@ from collections import defaultdict
 from Bio import SeqIO
 import pandas as pd
 
+
 def _extract_seq_record_from_fasta_file(path_to_fasta_file: str) -> SeqIO.SeqRecord:
     """Read a fasta file and return a list of sequences"""
 
@@ -67,7 +68,6 @@ def _split_region_into_amplicons(region, amplicon_size: int = 1000, amplicon_buf
 
 def _write_amplicons_to_file(amplicons : dict, path_to_output_file: str) -> None:
     """Write amplicons to file"""
-
     with open(path_to_output_file, "w") as handle:
         for region_name, region_amplicons in amplicons.items():
             for i, amplicon in enumerate(region_amplicons):
@@ -77,6 +77,10 @@ def _write_amplicons_to_file(amplicons : dict, path_to_output_file: str) -> None
                 handle.write("\n")
 
 def get_parser() -> argparse.ArgumentParser:
+    """
+    Get parser for script. Is needed if the script is called from the command line.
+    """
+
     parser = argparse.ArgumentParser(
         prog="A script to load in fasta file of an organism and extract the regions of interest (loci) from the genome and split these regions into amplicons of desired length.",
         description="Load in fasta file of an organism and extract the regions of interest (loci) from the genome.",
@@ -150,9 +154,8 @@ def main():
     return seq_record, amplicons
 
 if __name__ == "__main__":
-    main()
     try:
-        pass
+        main()
     except Exception as e:
-        print(e)
+        sys.stderr.write(f"Error: {e}")
         sys.exit(1)
