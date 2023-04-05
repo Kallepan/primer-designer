@@ -1,8 +1,7 @@
 channels:
-  - bioconda
   - conda-forge
 dependencies:
-  - pandas=1.5.3
   - pip:
-    - biopyton==1.81
-    
+      - biopython==1.81
+      - pandas==2.0.0
+prefix: /homes/kkandeepan/mambaforge/envs/snakemake
