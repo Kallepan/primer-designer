@@ -15,13 +15,15 @@ rule:
     shell:
         "python workflow/scripts/generate_amplicons.py {input.fasta_file} {input.loci_file} {output.output_file} -s {params.amplicon_size} -b {params.amplicon_buffer} 2> {log.err} > {log.out}"
 
+
+""" Split amplicons into separate files. """
 rule split_by_amplicon:
     input:
         amplicons_fasta = "results/{sample}.amplicons.fasta"
     log:
         "logs/split_by_amplicon.{sample}.log"
     conda:
-        "../envs/proto_primers.yaml"
+        "../envs/amplicons.yaml"
     output:
         "results/{sample}.split"
     shell:

@@ -13,6 +13,9 @@ from Bio import SeqIO
 import pandas as pd
 
 
+DEFAULT_AMPICLON_SIZE = 150
+DEFAULT_AMPICLON_BUFFER = 20
+
 def _extract_seq_record_from_fasta_file(path_to_fasta_file: str) -> SeqIO.SeqRecord:
     """Read a fasta file and return a list of sequences"""
 
@@ -106,14 +109,14 @@ def get_parser() -> argparse.ArgumentParser:
         "-s",
         "--amplicon_size",
         type=int,
-        help="Size of amplicons. Default: 1000.",
+        help=f"Size of amplicons. Default: {DEFAULT_AMPICLON_SIZE}.",
         required=False,
     )
     parser.add_argument(
         "-b",
         "--amplicon_buffer",
         type=int,
-        help="Buffer size for amplicons. Default: 100",
+        help=f"Buffer size for amplicons. Default: {DEFAULT_AMPICLON_BUFFER}",
         required=False,
     )
 
@@ -142,10 +145,10 @@ def main():
         raise Exception("Output file already exists")
 
     if not amplicon_buffer:
-        amplicon_buffer = 100
+        amplicon_buffer = DEFAULT_AMPICLON_BUFFER
 
     if not amplicon_size:
-        amplicon_size = 1000
+        amplicon_size = DEFAULT_AMPICLON_SIZE
 
     if amplicon_size < amplicon_buffer:
         raise Exception("Amplicon size must be greater than amplicon buffer")
