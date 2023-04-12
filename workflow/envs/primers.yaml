@@ -1,0 +1,9 @@
+channels:
+  - conda-forge
+dependencies:
+  - pip:
+      - biopython==1.81
+      - pandas==2.0.0
+      - PyYAML==6.0
+      - primer3-py==1.2.0
+prefix: /homes/kkandeepan/mambaforge/envs/snakemake
