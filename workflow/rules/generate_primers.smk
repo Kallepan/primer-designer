@@ -26,9 +26,11 @@ rule generate_proto_primers:
         "results/{species}.amplicons.fasta"
     conda:
         "../envs/primers.yaml"
+    params:
+        amplicon_buffer_size = config["amplicon_buffer_size"]
     log:
         out = "logs/{species}.proto_primers.log"
     output:
         "results/{species}.proto_primers.json"
     shell:
-        "python3 workflow/scripts/generate_proto_primer.py --input {input} --config config/primer3_settings.yaml > {log.out}"
+        "python3 workflow/scripts/generate_proto_primer.py --input {input} --config config/primer3_settings.yaml -b {params.amplicon_buffer_size} > {log.out}"

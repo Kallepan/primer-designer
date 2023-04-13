@@ -8,3 +8,4 @@ PRIMER_MIN_GC: 35.0
 PRIMER_MAX_GC: 80.0
 PRIMER_OPT_SIZE: 20
 PRIMER_NUM_RETURN: 10
+PRIMER_PRODUCT_SIZE_RANGE: DUMMY  # Note: this value is calculated on the fly and just needs to be present
