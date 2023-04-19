@@ -90,9 +90,10 @@ class PrimerGenerator():
         return self
 
     def __del__(self):
+        self.untargetable
         self._seq_file.close()
 
-    async def __anext__(self):
+    async def __anext__(self) -> tuple[str, dict]:
         try:
             record = next(self._records)
         except StopIteration:
@@ -128,7 +129,7 @@ class PrimerGenerator():
             primers.append(primer_data)
         return primers
     
-    def __parse_output_from_primer3(self, output: bytes, sequence_id: str) -> dict:
+    def __parse_output_from_primer3(self, output: bytes, sequence_id: str) -> dict | None:
         # convert byte output to string output, afterwards find the desired sequences
         pattern = re.compile(r"PRIMER_(LEFT|RIGHT)_NUM_RETURNED=(\d+)\r?\n")
         result = {}
@@ -149,8 +150,15 @@ class PrimerGenerator():
         corresponding to the left and right primer. This is then stored in the overall results dictionary
         """
 
-        result["forward_primers"] = self.__extract_primer_data(n_left_primers, output, "LEFT")
-        result["reverse_primers"] = self.__extract_primer_data(n_right_primers, output, "RIGHT")
+        forward_primers = self.__extract_primer_data(n_left_primers, output, "LEFT")
+        reverse_primers = self.__extract_primer_data(n_right_primers, output, "RIGHT")
+        
+        if not forward_primers or not reverse_primers:
+            print(f"Could not target Sequence: {sequence_id}")
+            return None
+        
+        result["forward_primers"] = forward_primers
+        result["reverse_primers"] = reverse_primers
 
         return result
 
@@ -171,6 +179,10 @@ async def main():
     # The magic happens here
     amplicons = []
     async for id, result in PrimerGenerator(primer3_settings, args.input, args.amplicon_buffer_size, args.temp_dir):
+        if result is None:
+            # either no left primer or no right primer returned
+            continue
+        
         primers = {
             "id": id,
             "forward_primers": result["forward_primers"],
