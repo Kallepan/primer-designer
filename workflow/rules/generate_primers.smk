@@ -20,10 +20,19 @@ def get_amplicon_fasta_files():
 
 SPECIES, AMPLICONS = get_amplicon_fasta_files() 
 
+rule create_tmp_dir:
+    input:
+        "results/{species}.amplicons.fasta"
+    output:
+        temp(directory("tmp/{species}/"))
+    shell:
+        "mkdir -p {output}"
+
 rule generate_proto_primers:
     """ Generates the proto-primers for each amplicon taking a fasta file with all amplicons as input"""
     input:
-        "results/{species}.amplicons.fasta"
+        amplicons = "results/{species}.amplicons.fasta",
+        tmpdir = "tmp/{species}/"
     conda:
         "../envs/primers.yaml"
     params:
@@ -31,6 +40,6 @@ rule generate_proto_primers:
     log:
         out = "logs/{species}.proto_primers.log"
     output:
-        "results/{species}.proto_primers.json"
+        file = "results/{species}.proto_primers.json"
     shell:
-        "python3 workflow/scripts/generate_proto_primer.py --input {input} --config config/primer3_settings.yaml -b {params.amplicon_buffer_size} > {log.out}"
+        "python3 workflow/scripts/generate_proto_primer.py --input {input.amplicons} --config config/primer3_settings.yaml -b {params.amplicon_buffer_size} -o {output.file} -t {input.tmpdir} > {log.out}"
