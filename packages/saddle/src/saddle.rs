@@ -1,5 +1,6 @@
 use crate::json;
 use rand::random;
+use std::collections::HashMap;
 
 pub struct AmpliconPrimer {
     pub amplicon_name: String,
@@ -51,26 +52,31 @@ fn pick_random_primer_set(proto_primers: &json::ProtoPrimers) -> Vec<AmpliconPri
     primer_set
 }
 
-fn calculate_badness_for_primerset(primer_set: &Vec<AmpliconPrimer>) -> f32 {
-    /*
-        Calculate the badness of a primer set.
-        The badness is a float value, where a lower value means a better primer set.
-        The badness is calculated by summing up the badness of each primer paired against each other in the set.
-        The badness of a given primer pair is calculated by the formula:
+fn calculate_reverse_complement(primer: &str) -> String {
+    let mut reverse_complement = String::new();
 
-    */
+    for nucleotide in primer.chars().rev() {
+        match nucleotide {
+            'A' => reverse_complement.push('T'),
+            'T' => reverse_complement.push('A'),
+            'G' => reverse_complement.push('C'),
+            'C' => reverse_complement.push('G'),
+            'N' => reverse_complement.push('N'),
+            _ => panic!("Invalid Nucleotide")
+        }
+    }
 
-    let mut badness = 0.0;
-
-
-    badness
+    reverse_complement
 }
+
 pub fn run(input_file_path: &str) {
+    let mut rev_comp_hash_table: HashMap<String, f64> = HashMap::new();
+
     let data = match json::load_json_from_file(&input_file_path) {
         Ok(data) => data,
         Err(e) => panic!("Failed to parse JSON file. Error: {}", e)
     };
 
-    let mut primer_set = pick_random_primer_set(&data);
+    let mut current_primer_set = pick_random_primer_set(&data);
 
 }
