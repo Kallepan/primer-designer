@@ -177,7 +177,7 @@ async def main():
     primer3_settings = _load_primer3_settings(args.config)
     
     # The magic happens here
-    amplicons = []
+    list_of_amplicons = []
     async for id, result in PrimerGenerator(primer3_settings, args.input, args.amplicon_buffer_size, args.temp_dir):
         if result is None:
             # either no left primer or no right primer returned
@@ -188,10 +188,14 @@ async def main():
             "forward_primers": result["forward_primers"],
             "reverse_primers": result["reverse_primers"]
         }
-        amplicons.append(primers)
+        list_of_amplicons.append(primers)
     
+    json_dict = {
+        "amplicons": list_of_amplicons
+    }
+
     with open(args.output_file, "w") as output_file:
-        json.dump(amplicons, output_file, indent=4)
+        json.dump(json_dict, output_file, indent=4)
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
