@@ -90,7 +90,6 @@ class PrimerGenerator():
         return self
 
     def __del__(self):
-        self.untargetable
         self._seq_file.close()
 
     async def __anext__(self) -> tuple[str, dict]:
@@ -123,9 +122,16 @@ class PrimerGenerator():
             data_pattern = re.compile(pattern)
             data = re.findall(data_pattern, output)
             primer_data = {}
+            "".lower()
             for entry in data:
-                primer_data[entry[0]] = entry[1]
-                primer_data["ID"] = f"{i}_{left_or_right}"
+                key = entry[0].lower()
+                try:
+                    value = float(entry[1])
+                except ValueError:
+                    value = entry[1]
+                
+                primer_data[key] = value
+            primer_data["id"] = f"{i}_{left_or_right}"
             primers.append(primer_data)
         return primers
     
