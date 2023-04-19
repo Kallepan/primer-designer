@@ -1,4 +1,6 @@
+mod saddle;
 mod json;
+mod errors;
 use std::env;
 use std::process;
 
@@ -21,5 +23,5 @@ fn main() {
 
     println!("Using File: {}", &input_file);
 
-    json::load_json(&input_file);
+    saddle::run(&input_file)
 }
