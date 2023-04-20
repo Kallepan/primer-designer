@@ -1,6 +1,7 @@
 mod saddle;
 mod json;
 mod errors;
+mod utils;
 use std::env;
 use std::process;
 
