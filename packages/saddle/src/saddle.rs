@@ -1,4 +1,5 @@
 use crate::json;
+use crate::utils::StringUtils;
 use rand::random;
 use std::collections::HashMap;
 
@@ -70,6 +71,11 @@ fn calculate_reverse_complement(primer: &str) -> String {
 }
 
 pub fn run(input_file_path: &str) {
+    let test = "0123456789ABCDEFGHJI";
+    println!("{}", test.len());
+    for v in test.get_all_substrings_between(4, 8) {
+        println!("{}", v);
+    }
     let mut rev_comp_hash_table: HashMap<String, f64> = HashMap::new();
 
     let data = match json::load_json_from_file(&input_file_path) {
