@@ -1,46 +1,22 @@
 use std::ops::{Bound, RangeBounds};
 
-pub fn combinations(start: usize, end: usize, min_size: usize, max_size: usize) -> Vec<[usize; 2]> {
-    /*
-        Calculates all possible combinations of all numbers between start and end 
-        with max_size being the maximum size of the combination and min_size being the minimum size of the combination.
-        EG:
-        start = 0
-        end = 3
-        min_size = 1
-        max_size = 2
-        -> [[0, 1], [0, 2], [1, 2], [1, 3], [2, 3]]
-
-        Usage: combinations(0, len(str)+1, 4, 8)
-    */
-
-    let mut combinations = Vec::new();
-    let mut first_pointer = start;
-    let mut second_pointer = first_pointer + min_size;
-
-    loop {
-        if first_pointer > end { break; }
-        if second_pointer > end { first_pointer += 1; second_pointer = first_pointer+min_size; continue; }
-        if second_pointer - first_pointer > max_size { first_pointer += 1; second_pointer = first_pointer+min_size; continue; }
-
-        combinations.push([first_pointer, second_pointer]);
-        second_pointer += 1;
-    }
-
-    combinations
+pub struct SubsequenceInfo {
+    pub seq: String,
+    pub start_index: usize,
+    pub end_index: usize,
 }
 
-pub trait StringUtils {
+pub trait PrimerUtils {
     /*
         Returns a substring of the string, between the first argument (inclusive) and the second argument (exclusive).
     */
     fn substring(&self, start: usize, len: usize) -> &str;
     fn slice(&self, range: impl RangeBounds<usize>) -> &str;
-    fn get_all_substrings_between(&self, min_size: usize, max_size: usize) -> Vec<String>;
+    fn get_all_substrings_between(&self, min_size: usize, max_size: usize) -> Vec<SubsequenceInfo>;
 }
 
-impl StringUtils for str {
-    fn get_all_substrings_between(&self, min_size: usize, max_size: usize) -> Vec<String> {
+impl PrimerUtils for str {
+    fn get_all_substrings_between(&self, min_size: usize, max_size: usize) -> Vec<SubsequenceInfo> {
         let mut substrings = Vec::new();
         
         let mut first_pointer = 0;
@@ -51,13 +27,20 @@ impl StringUtils for str {
             if first_pointer > end { break; }
             if second_pointer > end { first_pointer += 1; second_pointer = first_pointer+min_size; continue; }
             if second_pointer - first_pointer > max_size { first_pointer += 1; second_pointer = first_pointer+min_size; continue; }
-    
-            substrings.push(self.slice(first_pointer..second_pointer).to_string());
+            
+            let subsequence_info = SubsequenceInfo {
+                seq: self.slice(first_pointer..second_pointer).to_string(),
+                start_index: first_pointer,
+                end_index: second_pointer,
+            };
+            
+            substrings.push(subsequence_info);
             second_pointer += 1;
         }
-
+    
         substrings
     }
+
     fn substring(&self, start: usize, len: usize) -> &str {
         let mut char_pos = 0;
         let mut byte_start = 0;
@@ -80,6 +63,7 @@ impl StringUtils for str {
         }
         &self[byte_start..byte_end]
     }
+
     fn slice(&self, range: impl RangeBounds<usize>) -> &str {
         let start = match range.start_bound() {
             Bound::Included(bound) | Bound::Excluded(bound) => *bound,
