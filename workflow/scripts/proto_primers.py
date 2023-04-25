@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 import argparse
 import yaml
 
@@ -97,10 +98,10 @@ def get_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "-o",
-        "--output_dir",
+        "--output_file",
         type=str,
         required=True,
-        help="Path to the output directory where the amplicons and proto primers will be saved."
+        help="Path to the output file to be used to save the amplicons. Use the .json format."
     )
     parser.add_argument(
         "-t",
@@ -139,6 +140,16 @@ def get_parser() -> argparse.ArgumentParser:
         help="The amount by which the overlap will be shifted when generating the amplicons and if the previous overlap returned no primer pairs."
     )
     return parser
+
+def __remove_duplicate_primers(list_of_primers: list[dict]) -> list:
+    seen_primer = set()
+    primers = []
+    for primer_data in list_of_primers:
+        if primer_data["sequence"] in seen_primer:
+            continue
+        seen_primer.add(primer_data["sequence"])
+        primers.append(primer_data)
+    return primers
 
 def __generate_amplicon_and_primers_by_regions(
         region_name: str,
@@ -210,7 +221,8 @@ def __generate_amplicon_and_primers_by_regions(
         if not amplicon_forward_primers and not amplicon_reverse_primers:
             print(f"Failed to find primers for {region_name}-{index} in region {amplicon_offset}-{amplicon_offset + amplicon_size + amplicon_overlap}")
 
-        # clean forward and reverse primers (e.g.: remove duplicates)
+        amplicon_forward_primers = __remove_duplicate_primers(amplicon_forward_primers)
+        amplicon_reverse_primers = __remove_duplicate_primers(amplicon_reverse_primers)
 
         amplicon = {
             "name": f"{region_name}-{index}",
@@ -233,8 +245,6 @@ def main():
         raise Exception(f"The regions file {args.regions} does not exist.")
     if not os.path.exists(args.config_file):
         raise Exception(f"The primer3 config file {args.config_file} does not exist.")
-    if not os.path.exists(args.output_dir):
-        raise Exception(f"The output directory {args.output} does not exist.")
     if not os.path.exists(args.temp_dir):
         os.mkdir(args.temp_dir)
 
@@ -263,12 +273,19 @@ def main():
     seq_record = __extract_sequence_record_from_fasta(args.fasta)
 
     # Generate the amplicons by each regions
-    amplicons_by_regions = {}
+    list_of_regions = [] 
     for i, row in regions.iterrows():
-        __generate_amplicon_and_primers_by_regions(
+        if row["start"] > row["end"]:
+            start = row["end"]
+            end = row["start"]
+        else:
+            start = row["start"]
+            end = row["end"]
+
+        amplicons_with_primers = __generate_amplicon_and_primers_by_regions(
             region_name=row["loci"],
-            region_start=row["start"],
-            region_end=row["end"],
+            region_start=start,
+            region_end=end,
             amplicon_min_overlap=args.min_overlap,
             amplicon_max_overlap=args.max_overlap,
             amplicon_size=args.amplicon_size,
@@ -278,10 +295,25 @@ def main():
             temp_dir=args.temp_dir,
             sequence=seq_record.seq
         )
+        region = {
+            "name": row["loci"],
+            "amplicons": amplicons_with_primers
+        }
+        list_of_regions.append(region)
+    
+    # To Json output
+    output = {
+        "sequence": seq_record.id,
+        "regions": list_of_regions
+    }
+
+    with open(args.output_file, "w") as f:
+        json.dump(output, f, indent=4)
+
 
 if __name__ == "__main__":
-    #try:
+    try:
         main()
-    #except Exception as e:
-    #    sys.stderr.write(f"ERROR: {e}\n")
-    #    sys.exit(1)
+    except Exception as e:
+        sys.stderr.write(f"ERROR: {e}\n")
+        sys.exit(1)
