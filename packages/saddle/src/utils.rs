@@ -6,6 +6,17 @@ pub struct SubsequenceInfo {
     pub end_index: usize,
 }
 
+pub trait RoundUtils {
+    fn round_dp(&self, decimals: usize) -> f64;
+}
+
+impl RoundUtils for f64 {
+    fn round_dp(&self, decimals: usize) -> f64 {
+        let multiplier = 10.0_f64.powi(decimals as i32);
+        (self * multiplier).round() / multiplier
+    }
+}
+
 pub trait PrimerUtils {
     /*
         Returns a substring of the string, between the first argument (inclusive) and the second argument (exclusive).
@@ -13,9 +24,22 @@ pub trait PrimerUtils {
     fn substring(&self, start: usize, len: usize) -> &str;
     fn slice(&self, range: impl RangeBounds<usize>) -> &str;
     fn get_all_substrings_between(&self, min_size: usize, max_size: usize) -> Vec<SubsequenceInfo>;
+    fn numGC(&self) -> usize;
 }
 
 impl PrimerUtils for str {
+    fn numGC(&self) -> usize {
+        let mut numGC = 0;
+        for nucleotide in self.chars() {
+            match nucleotide {
+                'G' => numGC += 1,
+                'C' => numGC += 1,
+                _ => continue,
+            }
+        }
+        numGC
+    }
+
     fn get_all_substrings_between(&self, min_size: usize, max_size: usize) -> Vec<SubsequenceInfo> {
         let mut substrings = Vec::new();
         
