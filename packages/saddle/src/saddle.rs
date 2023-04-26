@@ -26,11 +26,10 @@ fn calculate_loss(has_table: HashMap<String, f64>, primer_set: Vec<AmpliconPrime
     for primer_pair in primer_set {
         let left_primer = primer_pair.left_primer;
         let right_primer = primer_pair.right_primer;
-
     }    
 }
 
-fn pick_random_primer_set(proto_primers: &json::ProtoPrimers) -> Vec<AmpliconPrimer> {
+fn pick_random_primer_set(proto_primers: &json::Regions) -> Vec<AmpliconPrimer> {
     /*
     Pick a Set of primers from the given proto primers
     Here: each amplicon should always have a left and right primer.
@@ -53,18 +52,19 @@ fn pick_random_primer_set(proto_primers: &json::ProtoPrimers) -> Vec<AmpliconPri
         */
         
         let mut primer_set = Vec::new();
-        
-        for amplicon in &proto_primers.amplicons {
-            let random_int_forward = random::<usize>() % amplicon.forward_primers.len();
-            let random_int_reverse = random::<usize>() % amplicon.reverse_primers.len();
-            
-            let primer_set_entry =  AmpliconPrimer {
-                amplicon_name: amplicon.id.clone(),
-                left_primer: amplicon.forward_primers[random_int_forward].sequence.clone(),
-                right_primer: amplicon.reverse_primers[random_int_reverse].sequence.clone(),
-            };
-            
-            primer_set.push(primer_set_entry);
+        for region in &proto_primers.regions {
+            for amplicon in &region.amplicons {
+                let random_int_forward = random::<usize>() % amplicon.forward_primers.len();
+                let random_int_reverse = random::<usize>() % amplicon.reverse_primers.len();
+                
+                let primer_set_entry =  AmpliconPrimer {
+                    amplicon_name: amplicon.name.clone(),
+                    left_primer: amplicon.forward_primers[random_int_forward].sequence.clone(),
+                    right_primer: amplicon.reverse_primers[random_int_reverse].sequence.clone(),
+                };
+                
+                primer_set.push(primer_set_entry);
+            }            
         }
         
         println!("Primer Set: {:?}", primer_set[0].amplicon_name);
@@ -80,9 +80,8 @@ fn calculate_hash_table(hash_table: &mut HashMap<String, f64>, primer_set: Vec<A
 
     For 5' -> 3' sequences, the distance is calculated from the end of the sequence. 
     Since all left and right primer are given 5' -> 3', the distance score for the primer can be calculated as is.
-
-
     */
+
     fn calculate_distance_score(primer_len: usize, end_index: usize) -> f64 {
         let distance = primer_len - end_index;
         let distance_score = 1.0 / (distance + 1) as f64;
