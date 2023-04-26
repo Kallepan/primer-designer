@@ -3,6 +3,7 @@ import sys
 import json
 import argparse
 import yaml
+import asyncio
 
 from Bio import SeqIO
 from Bio.SeqIO import SeqRecord
@@ -10,7 +11,7 @@ from Bio.Seq import Seq
 
 import pandas as pd
 
-from handler import PrimerGenerator
+from handler import PrimerGenerator, AmpliconGenerator
 
 DEFAULT_AMPLICON_SIZE=200
 DEFAULT_MIN_AMPLICON_OVERLAP=50
@@ -151,7 +152,7 @@ def __remove_duplicate_primers(list_of_primers: list[dict]) -> list:
         primers.append(primer_data)
     return primers
 
-def __generate_amplicon_and_primers_by_regions(
+async def __generate_amplicon_and_primers_by_regions(
         region_name: str,
         region_start: int,
         region_end: int,
@@ -203,7 +204,7 @@ def __generate_amplicon_and_primers_by_regions(
                 iteration_index=primer_generation_iteration_index
             )
 
-            forward_primers, reverse_primers = primer_generator.run()
+            forward_primers, reverse_primers = await primer_generator.run()
             # Append non-empty forward_primers and reverse_primers to the amplicons dict
             # if either is not empty and the list does not have entries break this loop
             
@@ -235,7 +236,7 @@ def __generate_amplicon_and_primers_by_regions(
 
     return amplicons
 
-def main():
+async def main():
     args = get_parser().parse_args()
 
     # Error Handling
@@ -274,7 +275,7 @@ def main():
 
     # Generate the amplicons by each regions
     list_of_regions = [] 
-    for i, row in regions.iterrows():
+    async for i, row in AmpliconGenerator(regions=regions):
         if row["start"] > row["end"]:
             start = row["end"]
             end = row["start"]
@@ -282,7 +283,7 @@ def main():
             start = row["start"]
             end = row["end"]
 
-        amplicons_with_primers = __generate_amplicon_and_primers_by_regions(
+        amplicons_with_primers = await __generate_amplicon_and_primers_by_regions(
             region_name=row["loci"],
             region_start=start,
             region_end=end,
@@ -303,7 +304,7 @@ def main():
     
     # To Json output
     output = {
-        "sequence": seq_record.id,
+        "sequence_id": seq_record.id,
         "regions": list_of_regions
     }
 
@@ -312,8 +313,9 @@ def main():
 
 
 if __name__ == "__main__":
+    loop = asyncio.get_event_loop()
     try:
-        main()
+        loop.run_until_complete(main())
     except Exception as e:
         sys.stderr.write(f"ERROR: {e}\n")
         sys.exit(1)

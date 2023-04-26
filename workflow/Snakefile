@@ -4,5 +4,4 @@ min_version("6.3.0")
 
 configfile: "config/config.yaml"
 
-include: "rules/generate_amplicons.smk"
 include: "rules/generate_proto_primers.smk"

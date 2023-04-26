@@ -1,6 +1,8 @@
 import re
 import subprocess
 import os
+import asyncio
+
 from Bio.Seq import Seq 
 
 class PrimerGenerator():
@@ -15,7 +17,7 @@ class PrimerGenerator():
         self.amplicon_id = f"{region_name}-{amplicon_index}-{iteration_index}"
         self.temp_dir = temp_dir
 
-    def run(self) -> tuple[list, list]:
+    async def run(self) -> tuple[list, list]:
         """ 
         Generate the input file for primer3 and write it to a temporary file
         Take the output from primer 3 and parse it to this classes parsers
@@ -26,13 +28,13 @@ class PrimerGenerator():
         
         # Run primer3_core
         command = f"primer3_core < {file_name}"
-        result = subprocess.run(
+        result = await asyncio.create_subprocess_shell(
             command, 
             shell=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE)
         
-        stdout, stderr = result.stdout, result.stderr
+        stdout, stderr = await result.communicate()
         
         if result.returncode != 0:
             raise Exception(f"Primer3 failed with error: {stderr}")
@@ -93,3 +95,19 @@ class PrimerGenerator():
         reverse_primers = self.__extract_primer_data(n_right_primers, output, "RIGHT")
         
         return forward_primers, reverse_primers
+
+import pandas as pd
+import asyncio
+class AmpliconGenerator():
+    def __init__(self, regions: pd.DataFrame):
+        self.regions = regions.iterrows()
+    
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self) -> tuple[str, pd.Series]:
+        try:
+            region = next(self.regions)
+        except StopIteration:
+            raise StopAsyncIteration
+        return region
