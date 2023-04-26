@@ -219,8 +219,11 @@ async def __generate_amplicon_and_primers_by_regions(
 
         # TODO: Add additional stragies for when no primers are found
 
-        if not amplicon_forward_primers and not amplicon_reverse_primers:
+        if not amplicon_forward_primers or not amplicon_reverse_primers:
             print(f"Failed to find primers for {region_name}-{index} in region {amplicon_offset}-{amplicon_offset + amplicon_size + amplicon_overlap}")
+            amplicon_offset += amplicon_size
+            index += 1
+            continue
 
         amplicon_forward_primers = __remove_duplicate_primers(amplicon_forward_primers)
         amplicon_reverse_primers = __remove_duplicate_primers(amplicon_reverse_primers)

@@ -53,21 +53,20 @@ class PrimerGenerator():
 
     def __extract_primer_data(self, n_primers: int, output: str, left_or_right: str) -> list:
         primers = []
-        for i in range(1, n_primers):
+        for i in range(0, n_primers):
             pattern = rf"PRIMER_{left_or_right}_{i}_(SEQUENCE|TM|GC_PERCENT|HAIRPIN_TH)=(\w+.*)\r?\n"
             data_pattern = re.compile(pattern)
             data = re.findall(data_pattern, output)
-            primer_data = {}
+            primer_entry = {}
             for entry in data:
                 key = entry[0].lower()
                 try:
                     value = float(entry[1])
                 except ValueError:
                     value = entry[1]
-                
-                primer_data[key] = value
-            primer_data["length"] = len(primer_data["sequence"])
-            primers.append(primer_data)
+                primer_entry[key] = value
+            primer_entry["length"] = len(primer_entry["sequence"])
+            primers.append(primer_entry)
         return primers
     
     def __parse_output_from_primer3(self, output: bytes) -> tuple[list, list]:
@@ -84,7 +83,6 @@ class PrimerGenerator():
         n_right_primers = int(pattern_search_result[1][1])
 
         print(f"Found {n_left_primers} left primers and {n_right_primers} right primers for sequence {self.amplicon_id}")
-
         """
         With the number of primers returned we iterate over the output
         and extract the data for each primerpair. The data is stored in a dictionary
