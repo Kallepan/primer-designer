@@ -78,12 +78,12 @@ fn replace_primer(proto_primers: Regions, primer_set: &mut Vec<AmpliconPrimer>, 
     }
 
     // get random new primer from proto-primers
-    let potential_primers = proto_primers.regions.iter().find(|region| region.name == *region_name).unwrap().amplicons.iter().find(|amplicon| amplicon.name == *amplicon_name).unwrap();
+    let potential_primers = proto_primers.regions.iter().find(|region| region.region_name == *region_name).unwrap().amplicons.iter().find(|amplicon| amplicon.amplicon_name == *amplicon_name).unwrap();
     let random_int_forward = random::<usize>() % potential_primers.forward_primers.len();
     let random_int_reverse = random::<usize>() % potential_primers.reverse_primers.len();
 
-    primer_set[random_primer_pair_index].left_primer = potential_primers.forward_primers[random_int_forward].sequence.clone();
-    primer_set[random_primer_pair_index].right_primer = potential_primers.reverse_primers[random_int_reverse].sequence.clone();
+    primer_set[random_primer_pair_index].left_primer = potential_primers.forward_primers[random_int_forward].primer_sequence.clone();
+    primer_set[random_primer_pair_index].right_primer = potential_primers.reverse_primers[random_int_reverse].primer_sequence.clone();
 
     let left_primer = &primer_set[random_primer_pair_index].left_primer;
     let right_primer = &primer_set[random_primer_pair_index].right_primer;
@@ -135,10 +135,10 @@ fn pick_random_primer_set(proto_primers: &json::Regions) -> Vec<AmpliconPrimer> 
                 let random_int_reverse = random::<usize>() % amplicon.reverse_primers.len();
                 
                 let primer_set_entry =  AmpliconPrimer {
-                    region: region.name.clone(),
-                    amplicon_name: amplicon.name.clone(),
-                    left_primer: amplicon.forward_primers[random_int_forward].sequence.clone(),
-                    right_primer: amplicon.reverse_primers[random_int_reverse].sequence.clone(),
+                    region: region.region_name.clone(),
+                    amplicon_name: amplicon.amplicon_name.clone(),
+                    left_primer: amplicon.forward_primers[random_int_forward].primer_sequence.clone(),
+                    right_primer: amplicon.reverse_primers[random_int_reverse].primer_sequence.clone(),
                 };
                 
                 primer_set.push(primer_set_entry);
