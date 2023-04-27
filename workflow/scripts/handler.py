@@ -73,8 +73,11 @@ class PrimerGenerator():
                     value = float(entry[1])
                 except ValueError:
                     value = entry[1]
+                if key == "sequence": 
+                    key = "primer_sequence"
                 primer_entry[key] = value
-            primer_entry["length"] = len(primer_entry["sequence"])
+            primer_entry["primer_length"] = len(primer_entry["primer_sequence"])
+            primer_entry["amplicon_sequence"] = str(self.amplicon_sequence)
             primer_entry["amplicon_length"] = len(self.amplicon_sequence)
             primers.append(primer_entry)
         return primers
@@ -92,7 +95,7 @@ class PrimerGenerator():
         n_left_primers = int(pattern_search_result[0][1])
         n_right_primers = int(pattern_search_result[1][1])
 
-        print(f"Found {n_left_primers} left primers and {n_right_primers} right primers for sequence {self.amplicon_id} in {self.pool_type}")
+        print(f"Found {n_left_primers} left primers and {n_right_primers} right primers for sequence {self.amplicon_id} in pool {self.pool_type}.")
 
         """
         With the number of primers returned we iterate over the output

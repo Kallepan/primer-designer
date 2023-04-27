@@ -139,9 +139,9 @@ def __remove_duplicate_primers(list_of_primers: list[dict]) -> list:
     seen_primer = set()
     primers = []
     for primer_data in list_of_primers:
-        if primer_data["sequence"] in seen_primer:
+        if primer_data["primer_sequence"] in seen_primer:
             continue
-        seen_primer.add(primer_data["sequence"])
+        seen_primer.add(primer_data["primer_sequence"])
         primers.append(primer_data)
     return primers
 
@@ -233,7 +233,7 @@ async def __generate_amplicons_and_primers_in_pools(
     
     # generate the amplicons and primers for each pool
     # pool one
-    pool_one_amplicons = []
+    amplicons = []
     for idx, coords in enumerate(pool_one):
         amplicon_forward_primers, amplicon_reverse_primers = await __generate_primers(
             start=coords["start"],
@@ -241,7 +241,7 @@ async def __generate_amplicons_and_primers_in_pools(
             sequence=sequence,
             region_name=region_name,
             idx=idx,
-            pool_type="pool_one",
+            pool_type="1",
             temp_dir=temp_dir,
             primer3_settings=primer3_settings,
             max_amplicon_size=max_amplicon_size,
@@ -249,29 +249,29 @@ async def __generate_amplicons_and_primers_in_pools(
             buffer_region=buffer_region)
 
         if not amplicon_forward_primers or not amplicon_reverse_primers:
-            print(f"Failed to find primers for {region_name}-{idx} in region {coords['start']}-{coords['end']} in pool one.")
+            print(f"Failed to find primers for {region_name}-{idx} in region {coords['start']}-{coords['end']} in pool 1.")
             continue
         
         amplicon_forward_primers = __remove_duplicate_primers(amplicon_forward_primers)
         amplicon_reverse_primers = __remove_duplicate_primers(amplicon_reverse_primers)
 
         amplicon = {
-            "name": f"{region_name}-{idx}",
+            "amplicon_name": f"{region_name}-{idx*2}", # generate uneven numbers for pool one
             "forward_primers": amplicon_forward_primers,
             "reverse_primers": amplicon_reverse_primers,
+            "pool": 1,
         }
-        pool_one_amplicons.append(amplicon)
+        amplicons.append(amplicon)
 
     # pool two
-    pool_two_amplicons = []
-    for idx, coords in enumerate(pool_two):
+    for idx, coords in enumerate(pool_two, 1):
         amplicon_forward_primers, amplicon_reverse_primers = await __generate_primers(
             start=coords["start"],
             end=coords["end"],
             sequence=sequence,
             region_name=region_name,
             idx=idx,
-            pool_type="pool_two",
+            pool_type="2",
             temp_dir=temp_dir,
             primer3_settings=primer3_settings,
             max_amplicon_size=max_amplicon_size,
@@ -279,20 +279,21 @@ async def __generate_amplicons_and_primers_in_pools(
             buffer_region=buffer_region)
 
         if not amplicon_forward_primers or not amplicon_reverse_primers:
-            print(f"Failed to find primers for {region_name}-{idx} in region {coords['start']}-{coords['end']} in pool two.")
+            print(f"Failed to find primers for {region_name}-{idx} in region {coords['start']}-{coords['end']} in pool 2.")
             continue
         
         amplicon_forward_primers = __remove_duplicate_primers(amplicon_forward_primers)
         amplicon_reverse_primers = __remove_duplicate_primers(amplicon_reverse_primers)
 
         amplicon = {
-            "name": f"{region_name}-{idx}",
+            "amplicon_name": f"{region_name}-{idx*2+1}",
             "forward_primers": amplicon_forward_primers,
             "reverse_primers": amplicon_reverse_primers,
+            "pool": 2,
         }
-        pool_two_amplicons.append(amplicon)
+        amplicons.append(amplicon)
     
-    return pool_one_amplicons, pool_two_amplicons
+    return amplicons
 
 async def main():
     args = get_parser().parse_args()
@@ -331,7 +332,7 @@ async def main():
             start = row["start"]
             end = row["end"]
 
-        amplicon_pool_1, amplicon_pool_2 = await __generate_amplicons_and_primers_in_pools(
+        amplicons = await __generate_amplicons_and_primers_in_pools(
             region_start=start,
             region_end=end,
             sequence=seq_record.seq,
@@ -344,9 +345,8 @@ async def main():
             primer3_settings=args.config_file,
         )
         region = {
-            "name": row["loci"],
-            "pool_1": amplicon_pool_1,
-            "pool_2": amplicon_pool_2,
+            "region_name": row["loci"],
+            "amplicons": amplicons,
         }
         list_of_regions.append(region)
     
