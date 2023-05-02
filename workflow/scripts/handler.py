@@ -14,17 +14,17 @@ class PrimerGenerator():
         region_name: str, 
         amplicon_index: int, 
         amplicon_sequence: Seq, 
-        buffer_region: int, 
+        overlap_region_size: int, 
         primer3_settings: str,
-        pool_type: str,
+        pool_name: str,
         temp_dir: str):
 
         self._primer3_settings = primer3_settings
         self.amplicon_sequence = amplicon_sequence
-        self.buffer_region = buffer_region
+        self.overlap_region_size = overlap_region_size
         self.amplicon_id = f"{region_name}-{amplicon_index}"
+        self.pool_name = pool_name
         self.temp_dir = temp_dir
-        self.pool_type = pool_type
 
     async def generate_primers(self) -> tuple[list, list]:
         """ 
@@ -51,7 +51,7 @@ class PrimerGenerator():
         return self.__parse_output_from_primer3(stdout) 
     
     def __write_temp_primer_gen_file(self) -> str:
-        PRIMER3_OK_REGION_LIST=f"0,{self.buffer_region},{len(self.amplicon_sequence) - self.buffer_region},{self.buffer_region}"
+        PRIMER3_OK_REGION_LIST=f"0,{self.overlap_region_size},{len(self.amplicon_sequence) - self.overlap_region_size},{self.overlap_region_size}"
         with open(os.path.join(self.temp_dir, self.amplicon_id), "w") as file:
             file.write(f"SEQUENCE_PRIMER_PAIR_OK_REGION_LIST={PRIMER3_OK_REGION_LIST}\n")
             file.write(f"SEQUENCE_ID={self.amplicon_id}\n")
@@ -95,7 +95,7 @@ class PrimerGenerator():
         n_left_primers = int(pattern_search_result[0][1])
         n_right_primers = int(pattern_search_result[1][1])
 
-        print(f"Found {n_left_primers} left primers and {n_right_primers} right primers for sequence {self.amplicon_id} in pool {self.pool_type}.")
+        print(f"Found {n_left_primers} left primers and {n_right_primers} right primers for sequence {self.amplicon_id} for pool {self.pool_name}.")
 
         """
         With the number of primers returned we iterate over the output

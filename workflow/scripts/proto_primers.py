@@ -14,8 +14,8 @@ import pandas as pd
 from handler import PrimerGenerator, AmpliconGenerator
 
 DEFAULT_AMPLICON_SIZE=200
-DEFAULT_BUFFER_REGION=50
-DEFAULT_BUFFER_SHIFT=10
+DEFAULT_OVERLAP_REGION_SIZE=50
+DEFUALT_OVERLAP_REGION_INCREASE=10
 DEFAULT_MAX_AMPLICON_LENGTH=250
 
 def __load_primer3_settings(path: str) -> str:
@@ -64,10 +64,6 @@ def __extract_sequence_record_from_fasta(path: str) -> SeqRecord:
     return seq[0]
 
 def get_parser() -> argparse.ArgumentParser:
-    """
-        Returns the parser for the script.
-    """
-
     parser = argparse.ArgumentParser(
         description=
         """
@@ -110,28 +106,28 @@ def get_parser() -> argparse.ArgumentParser:
         help="Path to the temporary directory to be used when generating the amplicons."
     )
     parser.add_argument(
-        "--amplicon_size",
+        "--min_amplicon_size",
         type=int,
         default=DEFAULT_AMPLICON_SIZE,
-        help=f"The size of the amplicons to be generated. Default is {DEFAULT_AMPLICON_SIZE}."
+        help=f"The minimum allowed size of the amplicons to be generated. Default is {DEFAULT_AMPLICON_SIZE}."
     )
     parser.add_argument(
-        "--buffer_region",
+        "--overlap_region_size",
         type=int,
-        default=DEFAULT_BUFFER_REGION,
-        help=f"The size of the buffer region to be used when generating the amplicons. Default is {DEFAULT_BUFFER_REGION}."
+        default=DEFAULT_OVERLAP_REGION_SIZE,
+        help=f"The size of the overlap region to be used when generating the amplicons. Default is {DEFAULT_OVERLAP_REGION_SIZE}."
     )
     parser.add_argument(
-        "--buffer_region_shift",
+        "--overlap_region_increase_increment",
         type=int,
-        default=DEFAULT_BUFFER_SHIFT,
-        help=f"The size of the buffer region to be used when generating the amplicons. Default is {DEFAULT_BUFFER_SHIFT}."
+        default=DEFUALT_OVERLAP_REGION_INCREASE,
+        help=f"The increment to be used when increasing the overlap region size. Default is {DEFUALT_OVERLAP_REGION_INCREASE}."
     )
     parser.add_argument(
         "--max_amplicon_size",
         type=int,
         default=DEFAULT_MAX_AMPLICON_LENGTH,
-        help=f"The maximum length of the amplicons to be generated. Default is {DEFAULT_MAX_AMPLICON_LENGTH}."
+        help=f"The maximum allowed length of a generateed amplicon to be generated. Default is {DEFAULT_MAX_AMPLICON_LENGTH}."
     )
     return parser
 
@@ -151,12 +147,13 @@ async def __generate_primers(
     sequence: Seq,
     region_name: str,
     idx: int,
-    temp_dir: str,
     primer3_settings: str,
-    pool_type: str,
     max_amplicon_size: int,
-    buffer_region_shift: int,
-    buffer_region: int):
+    overlap_region_increase_increment: int,
+    overlap_region_size: int,
+    pool_name: str,
+    temp_dir: str,
+    ):
     """
         This function is called by __generate_amplicons_and_primers_in_pools and should
         not be called directly. It generates primers for a given amplicon using primer3.
@@ -172,8 +169,8 @@ async def __generate_primers(
             amplicon_sequence=amplicon_sequence,
             temp_dir=temp_dir,
             primer3_settings=primer3_settings,
-            buffer_region=buffer_region,
-            pool_type=pool_type,
+            overlap_region_size=overlap_region_size,
+            pool_name=pool_name,
         )
         forward_primers, reverse_primers = await primer_generator.generate_primers()
         
@@ -186,67 +183,73 @@ async def __generate_primers(
         if end - start > max_amplicon_size:
             break;
 
-        start -= buffer_region_shift
-        end += buffer_region_shift
-        buffer_region += buffer_region_shift
+        start -= overlap_region_increase_increment
+        end += overlap_region_increase_increment
+        overlap_region_size += overlap_region_increase_increment
 
     return amplicon_forward_primers, amplicon_reverse_primers
 
-async def __generate_amplicons_and_primers_in_pools(
-    region_name: str,
+def __split_region_into_pools(
     region_start: int,
     region_end: int,
-    sequence: Seq,
-    amplicon_size: int,
-    max_amplicon_size: int,
-    buffer_region: int,
-    primer3_settings: str,
-    buffer_region_shift: int,
-    temp_dir: str,
-    ):
-    """
-        Generate primer in 2 pools.
-        For each pool generate the amplicons and the primers.
-        The first pool will start buffer_region before the region start.
-        The second pool starts buffer_region before the first amplicon of the first pool ends.
-    """
-    primer3_settings = __load_primer3_settings(primer3_settings)
-    pool_one = []
-    pool_two = []
+    min_amplicon_size: int,
+    overlap_region_size: int,
+) -> tuple[list[dict], list[dict]]:
+    """Divide a region into 2 pools and generate coords for potential amplicons."""
+    pool_one_coords = []
+    pool_two_coords = []
 
-    curr_pos = region_start - buffer_region
-    end = region_end + buffer_region
+    curr_pos = region_start - overlap_region_size
+    end = region_end + overlap_region_size
 
     # pre_compute the start and ends of amplicons in the pool
     while curr_pos < end:
-        pool_one.append({
+        pool_one_coords.append({
             "start": curr_pos,
-            "end": curr_pos + amplicon_size, 
+            "end": curr_pos + min_amplicon_size, 
         })
-        curr_pos += amplicon_size - buffer_region
+        curr_pos += min_amplicon_size - overlap_region_size
 
-        pool_two.append({
+        pool_two_coords.append({
             "start": curr_pos,
-            "end": curr_pos + amplicon_size,
+            "end": curr_pos + min_amplicon_size,
         })
-        curr_pos += amplicon_size - buffer_region
+        curr_pos += min_amplicon_size - overlap_region_size
+
+    return pool_one_coords, pool_two_coords
+
+async def __generate_primers_for_pool(
+    region_name: str,
+    pool_cords: list[dict],
+    pool_name: str,
+    sequence: Seq,
+    max_amplicon_size: int,
+    overlap_region_size: int,
+    overlap_region_increase_increment: int,
+    primer3_settings: str,
+    temp_dir: str,
+):
+    """Function to generate primers and extract final amplicons for a given pool."""
+
+    primer3_settings = __load_primer3_settings(primer3_settings)
     
     # generate the amplicons and primers for each pool
     # pool one
     amplicons = []
-    for idx, coords in enumerate(pool_one):
+    for idx, coords in enumerate(pool_cords):
         amplicon_forward_primers, amplicon_reverse_primers = await __generate_primers(
             start=coords["start"],
             end=coords["end"],
             sequence=sequence,
             region_name=region_name,
             idx=idx,
-            pool_type="1",
             temp_dir=temp_dir,
             primer3_settings=primer3_settings,
             max_amplicon_size=max_amplicon_size,
-            buffer_region_shift=buffer_region_shift,
-            buffer_region=buffer_region)
+            overlap_region_size=overlap_region_size,
+            overlap_region_increase_increment=overlap_region_increase_increment,
+            pool_name=pool_name,
+        )
 
         if not amplicon_forward_primers or not amplicon_reverse_primers:
             print(f"Failed to find primers for {region_name}-{idx} in region {coords['start']}-{coords['end']} in pool 1.")
@@ -255,44 +258,12 @@ async def __generate_amplicons_and_primers_in_pools(
         amplicon_forward_primers = __remove_duplicate_primers(amplicon_forward_primers)
         amplicon_reverse_primers = __remove_duplicate_primers(amplicon_reverse_primers)
 
-        amplicon = {
-            "amplicon_name": f"{region_name}-{idx*2}", # generate uneven numbers for pool one
+        amplicons.append({
+            "amplicon_name": f"{region_name}-{idx}-{pool_name}",
             "forward_primers": amplicon_forward_primers,
             "reverse_primers": amplicon_reverse_primers,
-            "pool": 1,
-        }
-        amplicons.append(amplicon)
+        })
 
-    # pool two
-    for idx, coords in enumerate(pool_two, 1):
-        amplicon_forward_primers, amplicon_reverse_primers = await __generate_primers(
-            start=coords["start"],
-            end=coords["end"],
-            sequence=sequence,
-            region_name=region_name,
-            idx=idx,
-            pool_type="2",
-            temp_dir=temp_dir,
-            primer3_settings=primer3_settings,
-            max_amplicon_size=max_amplicon_size,
-            buffer_region_shift=buffer_region_shift,
-            buffer_region=buffer_region)
-
-        if not amplicon_forward_primers or not amplicon_reverse_primers:
-            print(f"Failed to find primers for {region_name}-{idx} in region {coords['start']}-{coords['end']} in pool 2.")
-            continue
-        
-        amplicon_forward_primers = __remove_duplicate_primers(amplicon_forward_primers)
-        amplicon_reverse_primers = __remove_duplicate_primers(amplicon_reverse_primers)
-
-        amplicon = {
-            "amplicon_name": f"{region_name}-{idx*2+1}",
-            "forward_primers": amplicon_forward_primers,
-            "reverse_primers": amplicon_reverse_primers,
-            "pool": 2,
-        }
-        amplicons.append(amplicon)
-    
     return amplicons
 
 async def main():
@@ -308,22 +279,22 @@ async def main():
     if not os.path.exists(args.temp_dir):
         os.mkdir(args.temp_dir)
 
-    if args.amplicon_size < 0:
+    if args.min_amplicon_size < 0:
         raise Exception("The amplicon size cannot be less than 0.")
-    if args.buffer_region < 0:
+    if args.overlap_region_size < 0:
         raise Exception("The buffer region cannot be less than 0.")
-    if args.buffer_region_shift < 0:
-        raise Exception("The buffer region shift cannot be less than 0.")
-    
-    
+    if args.max_amplicon_size < 0:
+        raise Exception("The max amplicon size cannot be less than 0.")
+
     # Load the regions
     regions = __load_regions(args.regions)
 
     # Load the sequence
     seq_record = __extract_sequence_record_from_fasta(args.fasta)
 
-    # Generate the amplicons by each regions
-    list_of_regions = [] 
+    # Generate pools for each region containing amplicons and primers
+    pool_one = []
+    pool_two = []
     async for i, row in AmpliconGenerator(regions=regions):
         if row["start"] > row["end"]:
             start = row["end"]
@@ -332,32 +303,45 @@ async def main():
             start = row["start"]
             end = row["end"]
 
-        amplicons = await __generate_amplicons_and_primers_in_pools(
+        pool_one_coords, pool_two_coords = __split_region_into_pools(
             region_start=start,
             region_end=end,
-            sequence=seq_record.seq,
-            region_name=row["loci"],
-            amplicon_size=args.amplicon_size,
-            max_amplicon_size=args.max_amplicon_size,
-            buffer_region=args.buffer_region,
-            buffer_region_shift=args.buffer_region_shift,
-            temp_dir=args.temp_dir,
-            primer3_settings=args.config_file,
+            min_amplicon_size=args.min_amplicon_size,
+            overlap_region_size=args.overlap_region_size,
         )
-        region = {
-            "region_name": row["loci"],
-            "amplicons": amplicons,
-        }
-        list_of_regions.append(region)
-    
-    # To Json output
-    output = {
-        "sequence_id": seq_record.id,
-        "regions": list_of_regions
-    }
 
+        pool_one_amplicons_with_primers = await __generate_primers_for_pool(
+            region_name=row["loci"],
+            pool_cords=pool_one_coords,
+            pool_name="pool_1",
+            sequence=seq_record.seq,
+            max_amplicon_size=args.max_amplicon_size,
+            overlap_region_size=args.overlap_region_size,
+            overlap_region_increase_increment=args.overlap_region_increase_increment,
+            primer3_settings=args.config_file,
+            temp_dir=args.temp_dir,
+        )
+        pool_two_amplicons_with_primers = await __generate_primers_for_pool(
+            region_name=row["loci"],
+            pool_cords=pool_two_coords,
+            pool_name="pool_2",
+            sequence=seq_record.seq,
+            max_amplicon_size=args.max_amplicon_size,
+            overlap_region_size=args.overlap_region_size,
+            overlap_region_increase_increment=args.overlap_region_increase_increment,
+            primer3_settings=args.config_file,
+            temp_dir=args.temp_dir,
+        )
+        pool_one.append({"region_name": row["loci"], "amplicons": pool_one_amplicons_with_primers})
+        pool_two.append({"region_name": row["loci"], "amplicons": pool_two_amplicons_with_primers})
+    
+    # To JSON
+    pools = {
+        "pool_one": pool_one,
+        "pool_two": pool_two,
+    }
     with open(args.output_file, "w") as f:
-        json.dump(output, f, indent=4)
+        json.dump(pools, f, indent=4)
 
 
 if __name__ == "__main__":
