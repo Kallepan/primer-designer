@@ -293,8 +293,8 @@ async def main():
     seq_record = __extract_sequence_record_from_fasta(args.fasta)
 
     # Generate pools for each region containing amplicons and primers
-    pool_one = []
-    pool_two = []
+    pool_one_regions = []
+    pool_two_regions = []
     async for i, row in AmpliconGenerator(regions=regions):
         if row["start"] > row["end"]:
             start = row["end"]
@@ -332,14 +332,21 @@ async def main():
             primer3_settings=args.config_file,
             temp_dir=args.temp_dir,
         )
-        pool_one.append({"region_name": row["loci"], "amplicons": pool_one_amplicons_with_primers})
-        pool_two.append({"region_name": row["loci"], "amplicons": pool_two_amplicons_with_primers})
+        pool_one_regions.append({"region_name": row["loci"], "amplicons": pool_one_amplicons_with_primers})
+        pool_two_regions.append({"region_name": row["loci"], "amplicons": pool_two_amplicons_with_primers})
     
     # To JSON
-    pools = {
-        "pool_one": pool_one,
-        "pool_two": pool_two,
-    }
+    pools = [
+        {
+            "pool_id": 1,
+            "regions": pool_one_regions,
+        },
+        {
+            "pool_id": 2,
+            "regions": pool_two_regions,
+        },
+
+    ]
     with open(args.output_file, "w") as f:
         json.dump(pools, f, indent=4)
 

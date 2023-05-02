@@ -77,8 +77,6 @@ class PrimerGenerator():
                     key = "primer_sequence"
                 primer_entry[key] = value
             primer_entry["primer_length"] = len(primer_entry["primer_sequence"])
-            primer_entry["amplicon_sequence"] = str(self.amplicon_sequence)
-            primer_entry["amplicon_length"] = len(self.amplicon_sequence)
             primers.append(primer_entry)
         return primers
     
