@@ -93,12 +93,9 @@ at some point stop simulated annealing and use gradient descent
     - repeat calculation for 1.5 times the number of generations to reach convergence
 
 # Questions
-- Was ist die optimale Ampliconlänge? 1000 bp? user defined.
+- where to include BLAST?
+    - during SADDLE or after?
 
-- In Saddle werden statt thermodynamische Parameter verinfachte Parameter verwendet. Kann ich das hier auch so machen?
-
-- Problematisch bei der Methode: Target Spezifität wird nicht garantiert. Etwas vorne dranbasteln um das zu entgehen.
-
-- Primer3/Primer BLAST einbinden? Als Test? Oder sogar als initialer Generator
-
-- Programmierung in Python oder C++ oder Go? 
+- Pro-Processing:
+- Altair
+- Responsive plot
