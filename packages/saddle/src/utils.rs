@@ -24,20 +24,20 @@ pub trait PrimerUtils {
     fn substring(&self, start: usize, len: usize) -> &str;
     fn slice(&self, range: impl RangeBounds<usize>) -> &str;
     fn get_all_substrings_between(&self, min_size: usize, max_size: usize) -> Vec<SubsequenceInfo>;
-    fn numGC(&self) -> usize;
+    fn num_gc(&self) -> usize;
 }
 
 impl PrimerUtils for str {
-    fn numGC(&self) -> usize {
-        let mut numGC = 0;
+    fn num_gc(&self) -> usize {
+        let mut num_gc = 0;
         for nucleotide in self.chars() {
             match nucleotide {
-                'G' => numGC += 1,
-                'C' => numGC += 1,
+                'G' => num_gc += 1,
+                'C' => num_gc += 1,
                 _ => continue,
             }
         }
-        numGC
+        num_gc
     }
 
     fn get_all_substrings_between(&self, min_size: usize, max_size: usize) -> Vec<SubsequenceInfo> {
