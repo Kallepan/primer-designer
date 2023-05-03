@@ -2,9 +2,9 @@ use clap::Parser;
 
 #[derive(Parser)]
 #[clap(
-    name = "saddle",
-    version = "0.1.0",
-    author = "J. R. Ullmann ",
+    name = "SADDLE",
+    version = "1.0.0",
+    author = "Kandeepan K.",
     about = "A tool for finding saddle points in time series data."
 )]
 pub struct Opts {
@@ -28,7 +28,7 @@ pub struct Opts {
     #[clap(long)]
     pub max_subsequence_size: Option<usize>,
     #[clap(long)]
-    pub loss_acceptance_probability: Option<f64>,
+    pub simulated_annealing_stop_generation: Option<usize>,
 
 }
 

@@ -36,7 +36,7 @@ pub struct AmpliconPrimerPair {
     pub forward_primer: Primer,
     pub reverse_primer: Primer,
 }
-
+#[derive(Clone)]
 pub struct Set {
     pub amplicon_primer_pairs: Vec<AmpliconPrimerPair>,
     pub loss: f64,

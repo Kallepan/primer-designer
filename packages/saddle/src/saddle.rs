@@ -1,4 +1,4 @@
-use crate::{json, DEBUG};
+use crate::{json};
 use crate::types::{Set, Pool, AmpliconPrimerPair, Region};
 use crate::utils::PrimerUtils;
 
@@ -18,6 +18,7 @@ fn calculate_loss(hash_map: &HashMap<String, f64>, amplicon_primer_pairs: &Vec<A
     }
 
     let mut loss = 0.0;
+
 
     for (sequence, hash_value) in hash_map {
         let mut inverse_distance_sum = 0.0;
@@ -42,7 +43,7 @@ fn calculate_loss(hash_map: &HashMap<String, f64>, amplicon_primer_pairs: &Vec<A
     loss
 }
 
-fn replace_primer_in_set(primer_pool: &Pool, current_primer_set: &Vec<AmpliconPrimerPair>, hash_map: &mut HashMap<String, f64>, subsequence_min_size: usize, subsequence_max_size: usize) -> Vec<AmpliconPrimerPair> {
+fn replace_primer_in_set(primer_pool: &Pool, current_primer_set: Vec<AmpliconPrimerPair>, hash_map: &mut HashMap<String, f64>, subsequence_min_size: usize, subsequence_max_size: usize) -> Vec<AmpliconPrimerPair> {
     /* 
         Replace one primer pair from the given set, by another pair from the list of proto-primers and update the hash map.
     */
@@ -167,7 +168,7 @@ fn calculate_reverse_complement(primer: &str) -> String {
             'G' => reverse_complement.push('C'),
             'C' => reverse_complement.push('G'),
             'N' => reverse_complement.push('N'),
-            _ => panic!("Invalid Nucleotide")
+            _ => panic!("Invalid Nucleotide") // It should not panic, since we do not expect any other nucleotide
         }
     }
     reverse_complement
@@ -179,46 +180,64 @@ pub fn run(
     max_iterations: usize, 
     subsequence_min_size: usize,
     subsequence_max_size: usize,
-    acceptance_probability: f64) {
-
-    let mut hash_map: HashMap<String, f64> = HashMap::new();
-    let mut past_sets: Vec<Set> = Vec::new();
-
+    simulated_annealing_stop_generation: usize) {
+ 
     let pools = match json::load_json_from_file(&input_file_path) {
         Ok(data) => data,
         Err(e) => panic!("Failed to parse JSON file. Error: {}", e)
     };
 
+    fn calculate_acceptance_probability(loss_current_set: f64, loss_temp_set: f64, iteration: usize) -> f64 {
+        let acceptance_probability = ((loss_current_set - loss_temp_set) / iteration as f64 ).exp();
+        acceptance_probability
+    }
+        
     for pool in &pools {
-        let iteration = 0;
+        let mut hash_map: HashMap<String, f64> = HashMap::new();
+        let mut past_sets: Vec<Set> = Vec::new();
 
-        let current_set = pick_random_primer_set(&pool.regions);
-        initialize_hash_map(&mut hash_map, &current_set, subsequence_min_size, subsequence_max_size);
-        let loss = calculate_loss(&hash_map, &current_set);
+        // TODO Multi Threading
+        let mut iteration = 1;
 
-        past_sets.push(Set {
-            loss: loss,
-            amplicon_primer_pairs: current_set.clone(),
-        });
+        let amplicon_primer_pairs = pick_random_primer_set(&pool.regions);
+        initialize_hash_map(&mut hash_map, &amplicon_primer_pairs, subsequence_min_size, subsequence_max_size);
+        let loss = calculate_loss(&hash_map, &amplicon_primer_pairs);
 
         for entry in hash_map.iter() {
             println!("{}: {}", entry.0, entry.1);
         }
 
-        while iteration < max_iterations {
-            let current_set: Vec<AmpliconPrimerPair> = replace_primer_in_set(&pool, &current_set, &mut hash_map, subsequence_min_size, subsequence_max_size);
-            let loss = calculate_loss(&hash_map, &current_set);
+        let mut current_set = Set {
+            amplicon_primer_pairs: amplicon_primer_pairs.clone(),
+            loss,
+        };
+        while iteration <= max_iterations {
+            /*
+                Generate a temp set and calculate the loss by recalculating the hash map. Store the old hash map in case the temp set is not accepted.
+                If the temp set is accepted, store the temp set and continue.
+                If the temp set is not accepted, restore the old hash map, store the temp set, and continue.
+            */
+            let mut temp_set = current_set.clone();
+            let old_hash_map = hash_map.clone();
 
-            if loss < past_sets.last().unwrap().loss {
-                past_sets.push(Set{
-                    loss: loss,
-                    amplicon_primer_pairs: current_set,
-                });
+            temp_set.amplicon_primer_pairs = replace_primer_in_set(pool, temp_set.amplicon_primer_pairs.clone(), &mut hash_map, subsequence_min_size, subsequence_max_size);
+            temp_set.loss = calculate_loss(&hash_map, &temp_set.amplicon_primer_pairs);
+
+            
+            if temp_set.loss <= current_set.loss {
+                past_sets.push(current_set.clone());
+                current_set = temp_set.clone();
+            } else {
+                if iteration > simulated_annealing_stop_generation {
+                    past_sets.push(temp_set.clone());
+                    hash_map = old_hash_map;
+                    continue;
+                }
+
+                let acceptance_probability = calculate_acceptance_probability(current_set.loss, temp_set.loss, iteration);
             }
+            iteration += 1;
         }
-
-
-        // TODO Calculate wether to discard set or keep current
         // TODO Write to file
     }
 
