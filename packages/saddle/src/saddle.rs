@@ -133,29 +133,27 @@ fn initialize_hash_map(hash_map: &mut HashMap<String, f64>, primer_set: &Vec<Amp
     Since all left and right primer are given 5' -> 3', the distance score for the primer can be calculated as is.
     */
 
-    fn calculate_distance_score(primer_len: usize, end_index: usize) -> f64 {
-        let distance = primer_len - end_index;
+    fn calculate_distance_score(primer_length: usize, end_index: usize) -> f64 {
+        let distance = primer_length - end_index;
         let distance_score = 1.0 / (distance + 1) as f64;
         distance_score
+    }
+
+    fn add_primer_to_hash_map(hash_map: &mut HashMap<String, f64>, primer_sequence: &String, primer_length: usize, subsequence_min_size: usize, subsequence_max_size: usize) {
+        for subsequence_info in primer_sequence.get_all_substrings_between(subsequence_min_size, subsequence_max_size) {
+            let distance_score = calculate_distance_score(primer_length, subsequence_info.end_index);
+            
+            let entry = hash_map.entry(subsequence_info.seq).or_insert(0.0);
+            *entry += distance_score;
+        }
     }
 
     for primer_pair in primer_set.iter() {
         let forward_primer = &primer_pair.forward_primer;
         let reverse_primer = &primer_pair.reverse_primer;
-        
-        for subsequence_info in forward_primer.primer_sequence.get_all_substrings_between(subsequence_min_size, subsequence_max_size) {
-            let distance_score = calculate_distance_score(forward_primer.primer_length, subsequence_info.end_index);
-            
-            let entry = hash_map.entry(subsequence_info.seq).or_insert(0.0);
-            *entry += distance_score;
-        }
-        
-        for subsequence_info in reverse_primer.primer_sequence.get_all_substrings_between(subsequence_min_size, subsequence_max_size) {
-            let distance_score = calculate_distance_score(reverse_primer.primer_length, subsequence_info.end_index);
 
-            let entry = hash_map.entry(subsequence_info.seq).or_insert(0.0);
-            *entry += distance_score;
-        }
+        add_primer_to_hash_map(hash_map, &forward_primer.primer_sequence, forward_primer.primer_length, subsequence_min_size, subsequence_max_size);
+        add_primer_to_hash_map(hash_map, &reverse_primer.primer_sequence, reverse_primer.primer_length, subsequence_min_size, subsequence_max_size);
     }
 }
 
@@ -195,10 +193,14 @@ pub fn run(input_file_path: &str) {
         initialize_hash_map(&mut hash_map, &current_set, SUBSEQUENCE_MIN_SIZE, SUBSEQUENCE_MAX_SIZE);
         let loss = calculate_loss(&hash_map, &current_set);
 
-        past_sets.push(Set{
+        past_sets.push(Set {
             loss: loss,
             amplicon_primer_pairs: current_set.clone(),
         });
+
+        for entry in hash_map.iter() {
+            println!("{}: {}", entry.0, entry.1);
+        }
 
         while iteration < MAX_ITERATIONS {
             let current_set: Vec<AmpliconPrimerPair> = replace_primer_in_set(&pool, &current_set, &mut hash_map, SUBSEQUENCE_MIN_SIZE, SUBSEQUENCE_MAX_SIZE);
@@ -213,7 +215,4 @@ pub fn run(input_file_path: &str) {
         }
     }
 
-    for entry in hash_map.iter() {
-        println!("{}: {}", entry.0, entry.1);
-    }
 }
