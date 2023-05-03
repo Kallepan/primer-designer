@@ -1,4 +1,4 @@
-use crate::json;
+use crate::{json, DEBUG};
 use crate::types::{Set, Pool, AmpliconPrimerPair, Region};
 use crate::utils::PrimerUtils;
 
@@ -173,10 +173,13 @@ fn calculate_reverse_complement(primer: &str) -> String {
     reverse_complement
 }
 
-pub fn run(input_file_path: &str) {
-    const MAX_ITERATIONS: usize = 50000;
-    const SUBSEQUENCE_MIN_SIZE: usize = 4;
-    const SUBSEQUENCE_MAX_SIZE: usize = 8;
+pub fn run(
+    input_file_path: &String, 
+    output_file_path: &String, 
+    max_iterations: usize, 
+    subsequence_min_size: usize,
+    subsequence_max_size: usize,
+    acceptance_probability: f64) {
 
     let mut hash_map: HashMap<String, f64> = HashMap::new();
     let mut past_sets: Vec<Set> = Vec::new();
@@ -185,12 +188,12 @@ pub fn run(input_file_path: &str) {
         Ok(data) => data,
         Err(e) => panic!("Failed to parse JSON file. Error: {}", e)
     };
-    
+
     for pool in &pools {
         let iteration = 0;
 
         let current_set = pick_random_primer_set(&pool.regions);
-        initialize_hash_map(&mut hash_map, &current_set, SUBSEQUENCE_MIN_SIZE, SUBSEQUENCE_MAX_SIZE);
+        initialize_hash_map(&mut hash_map, &current_set, subsequence_min_size, subsequence_max_size);
         let loss = calculate_loss(&hash_map, &current_set);
 
         past_sets.push(Set {
@@ -202,8 +205,8 @@ pub fn run(input_file_path: &str) {
             println!("{}: {}", entry.0, entry.1);
         }
 
-        while iteration < MAX_ITERATIONS {
-            let current_set: Vec<AmpliconPrimerPair> = replace_primer_in_set(&pool, &current_set, &mut hash_map, SUBSEQUENCE_MIN_SIZE, SUBSEQUENCE_MAX_SIZE);
+        while iteration < max_iterations {
+            let current_set: Vec<AmpliconPrimerPair> = replace_primer_in_set(&pool, &current_set, &mut hash_map, subsequence_min_size, subsequence_max_size);
             let loss = calculate_loss(&hash_map, &current_set);
 
             if loss < past_sets.last().unwrap().loss {
@@ -213,6 +216,10 @@ pub fn run(input_file_path: &str) {
                 });
             }
         }
+
+
+        // TODO Calculate wether to discard set or keep current
+        // TODO Write to file
     }
 
 }
