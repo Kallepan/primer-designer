@@ -2,7 +2,7 @@ use crate::{json};
 use crate::types::{Set, Pool, AmpliconPrimerPair, Region};
 use crate::utils::PrimerUtils;
 
-use rand::random;
+use rand::{random, Rng};
 use std::collections::HashMap;
 
 fn calculate_loss(hash_map: &HashMap<String, f64>, amplicon_primer_pairs: &Vec<AmpliconPrimerPair>) -> f64 {
@@ -180,24 +180,25 @@ pub fn run(
     max_iterations: usize, 
     subsequence_min_size: usize,
     subsequence_max_size: usize,
-    simulated_annealing_stop_generation: usize) {
- 
+    sa_stop_generation: usize) {
     let pools = match json::load_json_from_file(&input_file_path) {
         Ok(data) => data,
         Err(e) => panic!("Failed to parse JSON file. Error: {}", e)
     };
 
-    fn calculate_acceptance_probability(loss_current_set: f64, loss_temp_set: f64, iteration: usize) -> f64 {
-        let acceptance_probability = ((loss_current_set - loss_temp_set) / iteration as f64 ).exp();
-        acceptance_probability
-    }
-        
     for pool in &pools {
         let mut hash_map: HashMap<String, f64> = HashMap::new();
         let mut past_sets: Vec<Set> = Vec::new();
 
+        // Simulated Annealing Parameters
+        let number_of_primers_in_pool = pool.regions.iter().fold(0, |acc, region| acc + region.amplicons.iter().fold(0, |amp_acc: usize, amplicon| amp_acc + amplicon.forward_primers.len() + amplicon.reverse_primers.len()));
+        let sa_temp_initial = (1000 + 10*number_of_primers_in_pool) as f64;
+        let numsteps = 10.0 + number_of_primers_in_pool as f64/10.0;
+
+
         // TODO Multi Threading
         let mut iteration = 1;
+        let mut sa_temp = sa_temp_initial;
 
         let amplicon_primer_pairs = pick_random_primer_set(&pool.regions);
         initialize_hash_map(&mut hash_map, &amplicon_primer_pairs, subsequence_min_size, subsequence_max_size);
@@ -223,19 +224,36 @@ pub fn run(
             temp_set.amplicon_primer_pairs = replace_primer_in_set(pool, temp_set.amplicon_primer_pairs.clone(), &mut hash_map, subsequence_min_size, subsequence_max_size);
             temp_set.loss = calculate_loss(&hash_map, &temp_set.amplicon_primer_pairs);
 
-            
+            // Simulated Annealing
+            let mut accept: bool = false;
             if temp_set.loss <= current_set.loss {
+                // Better set -> accept
+                accept = true;
+            } else if iteration > sa_stop_generation {
+                // SA Stop generation reached and worse set -> Do not accept
+                accept = false;
+            } else {
+                // Worse set -> Calculate acceptance
+                let acceptance_prob = ((current_set.loss - temp_set.loss) / sa_temp as f64 ).exp();
+                let random_number: f64 = rand::thread_rng().gen();
+                if random_number < acceptance_prob {
+                    accept = true;
+                } else {
+                    accept = false;
+                }
+            }
+            
+            // Implementation of (non)-acceptment of current set
+            if accept {
                 past_sets.push(current_set.clone());
                 current_set = temp_set.clone();
             } else {
-                if iteration > simulated_annealing_stop_generation {
-                    past_sets.push(temp_set.clone());
-                    hash_map = old_hash_map;
-                    continue;
-                }
-
-                let acceptance_probability = calculate_acceptance_probability(current_set.loss, temp_set.loss, iteration);
+                past_sets.push(temp_set.clone());
+                hash_map = old_hash_map;
             }
+
+            // Update SA Temp and iteration index
+            sa_temp -= f64::max(0.0, sa_temp - (sa_temp_initial / numsteps));
             iteration += 1;
         }
         // TODO Write to file
