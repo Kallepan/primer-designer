@@ -12,6 +12,7 @@ import pandas as pd
 from handler import PrimerGenerator, AmpliconGenerator
 from config import Config
 
+
 def __load_regions(path: str) -> pd.DataFrame:
     df = pd.read_csv(
         path,
@@ -23,17 +24,19 @@ def __load_regions(path: str) -> pd.DataFrame:
 
     return df
 
+
 def __extract_sequence_record_from_fasta(path: str) -> SeqRecord:
     with open(path, "r") as file:
         seq = list(SeqIO.parse(file, "fasta"))
-    
+
     if len(seq) == 0:
         raise Exception("No sequences found in fasta file")
-    
+
     if len(seq) > 1:
         raise Exception("More than one sequence found in fasta file")
-    
+
     return seq[0]
+
 
 def __remove_duplicate_primers(list_of_primers: list[dict]) -> list:
     seen_primer = set()
@@ -45,6 +48,7 @@ def __remove_duplicate_primers(list_of_primers: list[dict]) -> list:
         primers.append(primer_data)
     return primers
 
+
 async def __generate_primers(
     start: int,
     end: int,
@@ -55,10 +59,10 @@ async def __generate_primers(
     config: Config,
 ):
     """
-        This function is called by __generate_amplicons_and_primers_in_pools and should
-        not be called directly. It generates primers for a given amplicon using primer3.
-        It it fails, then it returns (None, None) else it returns a predefined format 
-        in which the primers are present e.g.: (forward_primers, reverse_primers).
+    This function is called by __generate_amplicons_and_primers_in_pools and should
+    not be called directly. It generates primers for a given amplicon using primer3.
+    It it fails, then it returns (None, None) else it returns a predefined format
+    in which the primers are present e.g.: (forward_primers, reverse_primers).
     """
     amplicon_forward_primers, amplicon_reverse_primers = [], []
     primer_ok_region_list = config.primer_ok_region_list
@@ -75,22 +79,23 @@ async def __generate_primers(
             config=config,
         )
         forward_primers, reverse_primers = await primer_generator.generate_primers()
-        
+
         amplicon_forward_primers.extend(forward_primers)
         amplicon_reverse_primers.extend(reverse_primers)
 
         if amplicon_forward_primers and amplicon_reverse_primers:
-            break;
-        
+            break
+
         if end - start > config.max_amplicon_size:
-            break;
+            break
 
         start -= config.amplicon_size_step
         end += config.amplicon_size_step
         primer_ok_region_list[0] += config.amplicon_size_step
         primer_ok_region_list[1] += config.amplicon_size_step
-    
+
     return amplicon_forward_primers, amplicon_reverse_primers
+
 
 def __split_region_into_pools(
     region_start: int,
@@ -114,20 +119,25 @@ def __split_region_into_pools(
     pool_one_pointer = start
     pool_two_pointer = start + pool_offset
     while pool_one_pointer < end:
-        pool_one_coords.append({
-            "start": pool_one_pointer,
-            "end": pool_one_pointer + amplicon_size, 
-        })
+        pool_one_coords.append(
+            {
+                "start": pool_one_pointer,
+                "end": pool_one_pointer + amplicon_size,
+            }
+        )
         pool_one_pointer += amplicon_offset + amplicon_size
-    
+
     while pool_two_pointer < end:
-        pool_two_coords.append({
-            "start": pool_two_pointer,
-            "end": pool_two_pointer+ amplicon_size,
-        })
+        pool_two_coords.append(
+            {
+                "start": pool_two_pointer,
+                "end": pool_two_pointer + amplicon_size,
+            }
+        )
         pool_two_pointer += amplicon_offset + amplicon_size
 
     return pool_one_coords, pool_two_coords
+
 
 async def __generate_primers_for_pool(
     region_name: str,
@@ -153,19 +163,24 @@ async def __generate_primers_for_pool(
         )
 
         if not amplicon_forward_primers or not amplicon_reverse_primers:
-            print(f"Failed to find primers for {region_name}-{idx} in region {coords['start']}-{coords['end']} in pool 1.")
+            print(
+                f"Failed to find primers for {region_name}-{idx} in region {coords['start']}-{coords['end']} in pool 1."
+            )
             continue
-        
+
         amplicon_forward_primers = __remove_duplicate_primers(amplicon_forward_primers)
         amplicon_reverse_primers = __remove_duplicate_primers(amplicon_reverse_primers)
 
-        amplicons.append({
-            "amplicon_name": f"{region_name}-{idx}-{pool_name}",
-            "forward_primers": amplicon_forward_primers,
-            "reverse_primers": amplicon_reverse_primers,
-        })
+        amplicons.append(
+            {
+                "amplicon_name": f"{region_name}-{idx}-{pool_name}",
+                "forward_primers": amplicon_forward_primers,
+                "reverse_primers": amplicon_reverse_primers,
+            }
+        )
 
     return amplicons
+
 
 async def main():
     config = Config()
@@ -189,9 +204,7 @@ async def main():
 
         # Generate the optimal pool coordinates
         pool_one_coords, pool_two_coords = __split_region_into_pools(
-            region_start=start,
-            region_end=end,
-            config=config
+            region_start=start, region_end=end, config=config
         )
 
         pool_one_amplicons_with_primers = await __generate_primers_for_pool(
@@ -208,9 +221,13 @@ async def main():
             sequence=seq_record.seq,
             config=config,
         )
-        pool_one_regions.append({"region_name": row["loci"], "amplicons": pool_one_amplicons_with_primers})
-        pool_two_regions.append({"region_name": row["loci"], "amplicons": pool_two_amplicons_with_primers})
-    
+        pool_one_regions.append(
+            {"region_name": row["loci"], "amplicons": pool_one_amplicons_with_primers}
+        )
+        pool_two_regions.append(
+            {"region_name": row["loci"], "amplicons": pool_two_amplicons_with_primers}
+        )
+
     # To JSON
     pools = [
         {
@@ -221,7 +238,6 @@ async def main():
             "pool_id": 2,
             "regions": pool_two_regions,
         },
-
     ]
     with open(config.output_file, "w") as f:
         json.dump(pools, f, indent=4)
