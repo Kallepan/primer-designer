@@ -8,13 +8,13 @@ use clap::Parser;
     about = "A tool for finding saddle points in time series data."
 )]
 pub struct Opts {
-    /// Input file
+    // Input file
     #[clap(short, long)]
     pub input_file: String,
 
-    /// Output file
+    // Output folder
     #[clap(short, long)]
-    pub output_file: String,
+    pub output_folder: String,
 
     // Debug
     #[clap(short, long)]

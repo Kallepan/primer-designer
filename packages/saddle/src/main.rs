@@ -31,7 +31,7 @@ fn main() {
 
     saddle::run(
         &args.input_file, 
-        &args.output_file,
+        &args.output_folder,
         max_iterations,
         min_subsequence_size,
         max_subsequence_size,
