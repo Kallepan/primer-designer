@@ -2,7 +2,7 @@ use crate::{json};
 use crate::types::{Set, Pool, AmpliconPrimerPair, Region};
 use crate::utils::PrimerUtils;
 
-use rand::{random, Rng};
+use rand::random;
 use std::collections::HashMap;
 use std::path::Path;
 
@@ -44,7 +44,7 @@ fn calculate_loss(hash_map: &HashMap<String, f64>, amplicon_primer_pairs: &Vec<A
     loss
 }
 
-fn replace_primer_in_set(primer_pool: &Pool, current_primer_set: Vec<AmpliconPrimerPair>, hash_map: &mut HashMap<String, f64>, subsequence_min_size: usize, subsequence_max_size: usize) -> Vec<AmpliconPrimerPair> {
+fn replace_primer_in_set(primer_pool: &Pool, primer_set: &mut Vec<AmpliconPrimerPair>, hash_map: &mut HashMap<String, f64>, subsequence_min_size: usize, subsequence_max_size: usize) {
     /* 
         Replace one primer pair from the given set, by another pair from the list of proto-primers and update the hash map.
     */
@@ -72,11 +72,11 @@ fn replace_primer_in_set(primer_pool: &Pool, current_primer_set: Vec<AmpliconPri
         }
     }
 
-    let random_primer_pair_index = random::<usize>() % current_primer_set.len();
-    let forward_primer = &current_primer_set[random_primer_pair_index].forward_primer;
-    let reverse_primer = &current_primer_set[random_primer_pair_index].reverse_primer;
-    let region_name = &current_primer_set[random_primer_pair_index].region_name;
-    let amplicon_name = &current_primer_set[random_primer_pair_index].amplicon_name;
+    let random_primer_pair_index = random::<usize>() % primer_set.len();
+    let forward_primer = &primer_set[random_primer_pair_index].forward_primer;
+    let reverse_primer = &primer_set[random_primer_pair_index].reverse_primer;
+    let region_name = &primer_set[random_primer_pair_index].region_name;
+    let amplicon_name = &primer_set[random_primer_pair_index].amplicon_name;
     remove_primer_from_hash_map(hash_map, &forward_primer.primer_sequence, forward_primer.primer_length, subsequence_min_size, subsequence_max_size);
     remove_primer_from_hash_map(hash_map, &reverse_primer.primer_sequence, reverse_primer.primer_length, subsequence_min_size, subsequence_max_size);
 
@@ -85,16 +85,12 @@ fn replace_primer_in_set(primer_pool: &Pool, current_primer_set: Vec<AmpliconPri
     let random_int_forward = random::<usize>() % potential_primers.forward_primers.len();
     let random_int_reverse = random::<usize>() % potential_primers.reverse_primers.len();
 
-    let mut new_primer_set = current_primer_set.clone();
-
-    new_primer_set[random_primer_pair_index].forward_primer = potential_primers.forward_primers[random_int_forward].clone();
-    new_primer_set[random_primer_pair_index].reverse_primer = potential_primers.reverse_primers[random_int_reverse].clone();
+    primer_set[random_primer_pair_index].forward_primer = potential_primers.forward_primers[random_int_forward].clone();
+    primer_set[random_primer_pair_index].reverse_primer = potential_primers.reverse_primers[random_int_reverse].clone();
 
     // Populate HashMap with new values
-    add_primer_to_hash_map(hash_map, &new_primer_set[random_primer_pair_index].forward_primer.primer_sequence, new_primer_set[random_primer_pair_index].forward_primer.primer_length, subsequence_min_size, subsequence_max_size);
-    add_primer_to_hash_map(hash_map, &new_primer_set[random_primer_pair_index].reverse_primer.primer_sequence, new_primer_set[random_primer_pair_index].reverse_primer.primer_length, subsequence_min_size, subsequence_max_size);
-
-    new_primer_set
+    add_primer_to_hash_map(hash_map, &primer_set[random_primer_pair_index].forward_primer.primer_sequence, primer_set[random_primer_pair_index].forward_primer.primer_length, subsequence_min_size, subsequence_max_size);
+    add_primer_to_hash_map(hash_map, &primer_set[random_primer_pair_index].reverse_primer.primer_sequence, primer_set[random_primer_pair_index].reverse_primer.primer_length, subsequence_min_size, subsequence_max_size);
 }
 
 fn pick_random_primer_set(pool: &Vec<Region>) -> Vec<AmpliconPrimerPair> {
@@ -112,7 +108,7 @@ fn pick_random_primer_set(pool: &Vec<Region>) -> Vec<AmpliconPrimerPair> {
         for amplicon in &region.amplicons {
             let random_forward_selector = random::<usize>() % amplicon.forward_primers.len();
             let random_reverse_selector = random::<usize>() % amplicon.reverse_primers.len();
-            
+
             let primer_set_entry =  AmpliconPrimerPair {
                 region_name: region.region_name.clone(),
                 amplicon_name: amplicon.amplicon_name.clone(),
@@ -180,8 +176,7 @@ pub fn run(
     output_folder_path: &String,
     max_iterations: usize, 
     subsequence_min_size: usize,
-    subsequence_max_size: usize,
-    sa_stop_generation: usize)
+    subsequence_max_size: usize)
 {
     
     let pools = match json::load_json_from_file(&input_file_path) {
@@ -193,13 +188,16 @@ pub fn run(
 
     for pool in &pools {
         let mut hash_map: HashMap<String, f64> = HashMap::new();
-        let mut past_sets: Vec<Set> = Vec::new();
+        let mut past_sets = Vec::new();
 
         // Simulated Annealing Parameters
         let number_of_primers_in_pool = pool.regions.iter().fold(0, |acc, region| acc + region.amplicons.iter().fold(0, |amp_acc: usize, amplicon| amp_acc + amplicon.forward_primers.len() + amplicon.reverse_primers.len()));
         let sa_temp_initial = (1000 + 10*number_of_primers_in_pool) as f64;
         let numsteps = 10.0 + number_of_primers_in_pool as f64/10.0;
 
+        println!("Primers in Pool: {}", number_of_primers_in_pool);
+        println!("Initial Temperature: {}", sa_temp_initial);
+        println!("Number of Steps: {}", numsteps);
 
         // TODO Multi Threading
         let mut iteration = 1;
@@ -209,15 +207,12 @@ pub fn run(
         initialize_hash_map(&mut hash_map, &amplicon_primer_pairs, subsequence_min_size, subsequence_max_size);
         let loss = calculate_loss(&hash_map, &amplicon_primer_pairs);
 
-        for entry in hash_map.iter() {
-            println!("{}: {}", entry.0, entry.1);
-        }
-
         let mut current_set = Set {
-            amplicon_primer_pairs: amplicon_primer_pairs.clone(),
+            amplicon_primer_pairs,
             loss,
         };
         while iteration <= max_iterations {
+            println!("Pool: {}, Iteration: {}", pool.pool_id, iteration);
             /*
                 Generate a temp set and calculate the loss by recalculating the hash map. Store the old hash map in case the temp set is not accepted.
                 If the temp set is accepted, store the temp set and continue.
@@ -226,7 +221,7 @@ pub fn run(
             let mut temp_set = current_set.clone();
             let old_hash_map = hash_map.clone();
 
-            temp_set.amplicon_primer_pairs = replace_primer_in_set(pool, temp_set.amplicon_primer_pairs.clone(), &mut hash_map, subsequence_min_size, subsequence_max_size);
+            replace_primer_in_set(pool, &mut temp_set.amplicon_primer_pairs, &mut hash_map, subsequence_min_size, subsequence_max_size);
             temp_set.loss = calculate_loss(&hash_map, &temp_set.amplicon_primer_pairs);
 
             // Simulated Annealing
@@ -234,13 +229,11 @@ pub fn run(
             if temp_set.loss <= current_set.loss {
                 // Better set -> accept
                 accept = true;
-            } else if iteration > sa_stop_generation {
-                // SA Stop generation reached and worse set -> Do not accept
-                accept = false;
             } else {
                 // Worse set -> Calculate acceptance
                 let acceptance_prob = ((current_set.loss - temp_set.loss) / sa_temp as f64 ).exp();
-                let random_number: f64 = rand::thread_rng().gen();
+                let random_number: f64 = random::<f64>();
+                println!("Acceptance Probability: {}, Random Number: {}", acceptance_prob, random_number);
                 if random_number < acceptance_prob {
                     accept = true;
                 } else {
@@ -250,10 +243,10 @@ pub fn run(
             
             // Implementation of (non)-acceptment of current set
             if accept {
-                past_sets.push(current_set.clone());
-                current_set = temp_set.clone();
+                past_sets.push(current_set);
+                current_set = temp_set;
             } else {
-                past_sets.push(temp_set.clone());
+                past_sets.push(temp_set);
                 hash_map = old_hash_map;
             }
 
@@ -262,10 +255,10 @@ pub fn run(
             iteration += 1;
         }
         
-        final_sets.push(current_set.clone());
+        final_sets.push(current_set);
 
         // Write set history to file
-        let file_name = output_folder.join(format!("{}_history.json", pool.pool_id));
+        let file_name = output_folder.join(format!("pool_{}_history.json", pool.pool_id));
         match json::write_sets_to_file(file_name.to_str().unwrap(), past_sets) {
             Ok(_) => println!("Successfully wrote set history to file {}_history.json", pool.pool_id),
             Err(e) => println!("Failed to write to set history. Error: {}", e)

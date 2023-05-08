@@ -7,6 +7,7 @@ mod parser;
 mod logger;
 
 use log;
+use std::time;
 
 fn init(debug: bool) {
     let _ = match log::set_logger(&logger::CONSOLE_LOGGER) {
@@ -29,11 +30,14 @@ fn main() {
     let min_subsequence_size = args.min_subsequence_size.unwrap_or(4);
     let max_subsequence_size = args.max_subsequence_size.unwrap_or(8);
 
+    let start = time::Instant::now();
     saddle::run(
         &args.input_file, 
         &args.output_folder,
         max_iterations,
         min_subsequence_size,
         max_subsequence_size,
-        max_iterations/50)
+    );
+
+    println!("Script used: {}", start.elapsed().as_secs_f32()); 
 }
