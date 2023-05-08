@@ -4,6 +4,7 @@ import os
 import asyncio
 
 from Bio.Seq import Seq 
+from config import Config
 
 class PrimerGenerator():
     """
@@ -13,18 +14,18 @@ class PrimerGenerator():
     def __init__(self, 
         region_name: str, 
         amplicon_index: int, 
-        amplicon_sequence: Seq, 
-        overlap_region_size: int, 
-        primer3_settings: str,
+        amplicon_sequence: Seq,
         pool_name: str,
-        temp_dir: str):
+        primer_ok_region_list: tuple[int, int],
+        config: Config,
+    ):
 
-        self._primer3_settings = primer3_settings
         self.amplicon_sequence = amplicon_sequence
-        self.overlap_region_size = overlap_region_size
         self.amplicon_id = f"{region_name}-{amplicon_index}"
         self.pool_name = pool_name
-        self.temp_dir = temp_dir
+        self.primer_ok_region_list = primer_ok_region_list
+        self._primer3_settings = config.primer3_settings
+        self.temp_dir = config.temp_dir
 
     async def generate_primers(self) -> tuple[list, list]:
         """ 
@@ -51,7 +52,7 @@ class PrimerGenerator():
         return self.__parse_output_from_primer3(stdout) 
     
     def __write_temp_primer_gen_file(self) -> str:
-        PRIMER3_OK_REGION_LIST=f"0,{self.overlap_region_size},{len(self.amplicon_sequence) - self.overlap_region_size},{self.overlap_region_size}"
+        PRIMER3_OK_REGION_LIST=f"0,{self.primer_ok_region_list[0]},{len(self.amplicon_sequence)-self.primer_ok_region_list[1]},{self.primer_ok_region_list[1]}"
         with open(os.path.join(self.temp_dir, self.amplicon_id), "w") as file:
             file.write(f"SEQUENCE_PRIMER_PAIR_OK_REGION_LIST={PRIMER3_OK_REGION_LIST}\n")
             file.write(f"SEQUENCE_ID={self.amplicon_id}\n")
@@ -86,10 +87,11 @@ class PrimerGenerator():
 
         output = str(output, "utf-8")
         pattern_search_result = re.findall(pattern, output)
+        error_pattern = re.compile(fr"PRIMER_ERROR=[a-zA-Z0-9_\- ]+\r?\n")
+        error_search_results = re.findall(error_pattern, output)
+        if len(error_search_results) > 0:
+            raise Exception(f"Primer3 failed with error(s):xw {','.join(error_search_results)}")
 
-        if pattern_search_result is None or len(pattern_search_result) != 2:
-            raise Exception("Primer3 failed to return any primers")
-        
         n_left_primers = int(pattern_search_result[0][1])
         n_right_primers = int(pattern_search_result[1][1])
 
