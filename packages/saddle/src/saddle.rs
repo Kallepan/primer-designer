@@ -4,6 +4,7 @@ use crate::utils::PrimerUtils;
 
 use rand::{random, Rng};
 use std::collections::HashMap;
+use std::path::Path;
 
 fn calculate_loss(hash_map: &HashMap<String, f64>, amplicon_primer_pairs: &Vec<AmpliconPrimerPair>) -> f64 {
     /*
@@ -175,8 +176,8 @@ fn calculate_reverse_complement(primer: &str) -> String {
 }
 
 pub fn run(
-    input_file_path: &String, 
-    output_file_path: &String, 
+    input_file_path: &String,
+    output_folder_path: &String,
     max_iterations: usize, 
     subsequence_min_size: usize,
     subsequence_max_size: usize,
@@ -188,6 +189,7 @@ pub fn run(
         Err(e) => panic!("Failed to parse JSON file. Error: {}", e)
     };
     let mut final_sets = Vec::new();
+    let output_folder = Path::new(output_folder_path);
 
     for pool in &pools {
         let mut hash_map: HashMap<String, f64> = HashMap::new();
@@ -261,11 +263,18 @@ pub fn run(
         }
         
         final_sets.push(current_set.clone());
+
+        // Write set history to file
+        let file_name = output_folder.join(format!("{}_history.json", pool.pool_id));
+        match json::write_sets_to_file(file_name.to_str().unwrap(), past_sets) {
+            Ok(_) => println!("Successfully wrote set history to file {}_history.json", pool.pool_id),
+            Err(e) => println!("Failed to write to set history. Error: {}", e)
+        }
     }
 
-    match json::write_set_to_file(&output_file_path, final_sets) {
-        Ok(_) => println!("Successfully wrote output to file {}", output_file_path),
+    let file_name = output_folder.join("final_sets.json");
+    match json::write_sets_to_file(file_name.to_str().unwrap(), final_sets) {
+        Ok(_) => println!("Successfully wrote output to file {}.", file_name.to_str().unwrap()),
         Err(e) => println!("Failed to write to file. Error: {}", e)
     }
-
 }

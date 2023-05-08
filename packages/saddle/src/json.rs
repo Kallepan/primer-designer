@@ -9,7 +9,7 @@ pub fn load_json_from_file(input_file_path: &str) -> Result<Vec<Pool>, Box<dyn E
     Ok(pools)
 }
 
-pub fn write_set_to_file(file_path: &str, set: Vec<Set>) -> Result<(), Box<dyn Error>>{
+pub fn write_sets_to_file(file_path: &str, set: Vec<Set>) -> Result<(), Box<dyn Error>>{
     let json = serde_json::to_string_pretty(&set).unwrap();
     std::fs::write(file_path, json)?;
 
