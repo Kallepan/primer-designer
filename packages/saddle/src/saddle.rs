@@ -180,11 +180,14 @@ pub fn run(
     max_iterations: usize, 
     subsequence_min_size: usize,
     subsequence_max_size: usize,
-    sa_stop_generation: usize) {
+    sa_stop_generation: usize)
+{
+    
     let pools = match json::load_json_from_file(&input_file_path) {
         Ok(data) => data,
         Err(e) => panic!("Failed to parse JSON file. Error: {}", e)
     };
+    let mut final_sets = Vec::new();
 
     for pool in &pools {
         let mut hash_map: HashMap<String, f64> = HashMap::new();
@@ -256,7 +259,13 @@ pub fn run(
             sa_temp -= f64::max(0.0, sa_temp - (sa_temp_initial / numsteps));
             iteration += 1;
         }
-        // TODO Write to file
+        
+        final_sets.push(current_set.clone());
+    }
+
+    match json::write_set_to_file(&output_file_path, final_sets) {
+        Ok(_) => println!("Successfully wrote output to file {}", output_file_path),
+        Err(e) => println!("Failed to write to file. Error: {}", e)
     }
 
 }

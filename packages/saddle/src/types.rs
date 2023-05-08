@@ -29,14 +29,14 @@ pub struct Pool {
 }
 
 // SADDLE structs
-#[derive(Clone)]
+#[derive(Clone, Serialize)]
 pub struct AmpliconPrimerPair {
     pub region_name: String,
     pub amplicon_name: String,
     pub forward_primer: Primer,
     pub reverse_primer: Primer,
 }
-#[derive(Clone)]
+#[derive(Clone, Serialize)]
 pub struct Set {
     pub amplicon_primer_pairs: Vec<AmpliconPrimerPair>,
     pub loss: f64,
