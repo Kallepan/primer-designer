@@ -39,5 +39,5 @@ fn main() {
         max_subsequence_size,
     );
 
-    println!("Script used: {}", start.elapsed().as_secs_f32()); 
+    println!("Script used: {:?}", start.elapsed()); 
 }

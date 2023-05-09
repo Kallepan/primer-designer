@@ -6,40 +6,54 @@ use rand::random;
 use std::collections::HashMap;
 use std::path::Path;
 
-fn calculate_loss(hash_map: &HashMap<String, f64>, amplicon_primer_pairs: &Vec<AmpliconPrimerPair>) -> f64 {
+use std::time::Instant; // TODO for benchmarking
+
+fn calculate_loss(hash_map: &HashMap<String, f64>, amplicon_primer_pairs: &Vec<AmpliconPrimerPair>, subsequence_min_size: usize, subsequence_max_size: usize) -> f64 {
     /*
         - For every sequence in the hash table
         - find the reverse complement in all primers with the distance to 3' End
         - calculate the loss for every subsequence SUM(1 / (distance_of_revcomp + 1)) * 2^length_of_subsequence * 2^num_gc_of_subsequence * Hashvalue
             - if none are found -> loss = 0
     */
-
-    fn calc_distance(primer_length: usize, found_index: usize, sequence_length: usize) -> f64 {
-        1.0 / (primer_length - (found_index + sequence_length) + 1) as f64
+    fn calculate_distance(primer_length: usize, subsequence_start_index: usize, subsequence_length: usize) -> f64 {
+        1.0 / (primer_length - (subsequence_start_index + subsequence_length) + 1) as f64
     }
 
     let mut loss = 0.0;
 
+    let time = Instant::now();
 
-    for (sequence, hash_value) in hash_map {
-        let mut inverse_distance_sum = 0.0;
-        let reverse_complement = calculate_reverse_complement(&sequence);
-        for primer_pair in amplicon_primer_pairs {
-            let left_primer = &primer_pair.forward_primer;
-            let right_primer = &primer_pair.reverse_primer;
+    for primer_pair in amplicon_primer_pairs {
+        let left_primer = &primer_pair.forward_primer.primer_sequence;
+        let right_primer = &primer_pair.reverse_primer.primer_sequence;
 
-            match left_primer.primer_sequence.find(&reverse_complement) {
-                None => {},
-                Some(found_index) => inverse_distance_sum += calc_distance(left_primer.primer_length, found_index, sequence.len())
+        for subsequence_info in left_primer.get_all_substrings_between(subsequence_min_size, subsequence_max_size) {
+            let rev_comp = calculate_reverse_complement(&subsequence_info.seq);
+            let hash_value = match hash_map.get(&rev_comp) {
+                None => continue,
+                Some(value) => value,
             };
-            match right_primer.primer_sequence.find(&reverse_complement) {
-                None => {},
-                Some(found_index) => inverse_distance_sum += calc_distance(right_primer.primer_length, found_index, sequence.len())
-             };
+            
+            loss += hash_value *
+            calculate_distance(left_primer.len(), subsequence_info.start_index, subsequence_info.seq.len()) *
+                2.0_f64.powi(subsequence_info.seq.len() as i32) * 2.0_f64.powi(subsequence_info.seq.num_gc() as i32);
         }
-        let badness = inverse_distance_sum*hash_value*2.0_f64.powi(sequence.len() as i32)*2.0_f64.powi(sequence.num_gc() as i32);
-        loss += badness;
+
+        for subsequence_info in right_primer.get_all_substrings_between(subsequence_min_size, subsequence_max_size) {
+            let rev_comp = calculate_reverse_complement(&subsequence_info.seq);
+            let hash_value = match hash_map.get(&rev_comp) {
+                None => continue,
+                Some(value) => value,
+            };
+            
+            loss += hash_value *
+            calculate_distance(right_primer.len(), subsequence_info.start_index, subsequence_info.seq.len()) *
+                2.0_f64.powi(subsequence_info.seq.len() as i32) * 2.0_f64.powi(subsequence_info.seq.num_gc() as i32);
+       }
     }
+    // TODO Debug
+    println!("Loss: {}", loss);
+    println!("Time for one loss: {:?}", time.elapsed());
 
     loss
 }
@@ -205,7 +219,8 @@ pub fn run(
 
         let amplicon_primer_pairs = pick_random_primer_set(&pool.regions);
         initialize_hash_map(&mut hash_map, &amplicon_primer_pairs, subsequence_min_size, subsequence_max_size);
-        let loss = calculate_loss(&hash_map, &amplicon_primer_pairs);
+
+        let loss = calculate_loss(&hash_map, &amplicon_primer_pairs, subsequence_min_size, subsequence_max_size);
 
         let mut current_set = Set {
             amplicon_primer_pairs,
@@ -222,10 +237,10 @@ pub fn run(
             let old_hash_map = hash_map.clone();
 
             replace_primer_in_set(pool, &mut temp_set.amplicon_primer_pairs, &mut hash_map, subsequence_min_size, subsequence_max_size);
-            temp_set.loss = calculate_loss(&hash_map, &temp_set.amplicon_primer_pairs);
-
+            temp_set.loss = calculate_loss(&hash_map, &temp_set.amplicon_primer_pairs, subsequence_min_size, subsequence_max_size);
+            
             // Simulated Annealing
-            let mut accept: bool = false;
+            let accept;
             if temp_set.loss <= current_set.loss {
                 // Better set -> accept
                 accept = true;
