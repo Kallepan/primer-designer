@@ -1,82 +1,66 @@
-# Program
-- written in python (snakemake)
+# Workflow
 
-# Requirements
-## Amplicon
-    - 1000 bp TODO
-## Primers
-    - no appends necessary
-    - reduce hairpin
-    - melting temperature
-    - test for intra and inter primer (pair) interaction
-    - option to test against other strains (binding capability) exclude unwanted targets
+## 0. Preprocessing
+- Create an UI in which the user can see targetable regions in the genome.
+- The user should be able to select regions of interest and the target organism.
 
-    > checked in evaluation function
-    > calculated for each primer pair
-    > complexity: O(n!)
-# Procedure
-## Workflow
-1. Generate DNA Targets
-    - Download genome of target species
-    - take points of interest as an input
-    - generate desired amplicon regions +- K bp Amplicon size
-2. Generate PCR Primers (see Algorigthms)
-    - generate upper primers
-    - generate lower primers
-3. Evaluate initial set of Primers
-    - Randomly select pcr targets -> Set x
-    - Set composition:
-        - even numbers: forward
-        - odd numbers: reverse
-    - Evaluation function for whole set
-        - compare each primer with each other -> B(p1, p1), B(p1, p2) ...
-        - L(Sx) = SUM(B(pa,pb)) | a >= b
-    - set current_set = initial_set
-4. Generate Temporary Set
-    - replace one or more primers from the current set by random replacement
-5. Calculate new set
-```python
-if L(temporary_set) <= L(current_set)
-    current_set  = temporary_set
-else
-    current_set = current_set     (with probability 1-p)
-    current_set = temporary_set   (with probability p)
+## 1. Proto-Primers Generation
 
-probability = C(g, L(temporary_set) - L(current_set))
-```
-6. Repeat 4-5 until convergence
+- Generate all possible primers using Primer3
+- Allow the user to change primer3 config settings (tm, primer length, gc content)
+- Simple wrapper written in python to call primer3
+- Generation:
+    - Two pools
+    - Define regions of interest which are divided into amplicons
+    - Each amplicons is flanked by forward and reverse primers
+- Store output in json file
+- Generate as many proto-primers as possible
 
+### Algorithm
+- Generate optimal coordinates for amplicons:
+    - Pool1: AMP1-BUFFER-AMP2-BUFFER-AMP3-BUFFER-AMP4...
+    - Pool2: XXAMP1-BUFFER-AMP2-BUFFER-AMP3-BUFFER-AMP4...
+    - Basically pool2 is the same as pool1, but with a X bp overlap between amplicons.
+- Generate primers for each amplicon using primer3:
+    - Forward primer: 5'->3'
+    - Reverse primer: 3'->5' (outputed in 5'->3' direction)
+    If no primers could be placed apply some pre-defined logic:
+        - Increase Amplicon X bases in both directions up to a certain amount
+        - Increase the are in which the primers can be placed (e.g.: 0-20 is now 0-30)
+        - Skip the generation of the primer for this amplicon
+- Store the primers in a json file along with meta information
 
-# Algorithms
-## Primer generation
-1. Proto Primers (Adatapted form Oli2go)
-    - determine pivot point in genome to calculate primers in
-    - determine amplicon size in upper and lower direction
-    - specificity check by blasting against selected ncbi databases
-    - gc between 35 und 80%
-    - tm between 55 and 65
-    - accepted properties in primer design:
-        - melting temperature around X degress
-        - dG values around -10.5 to -12.5 kcal/mol
-2. Generate Primer sets from given primers
-    - associate primers in pairs
-3. Calculate Badness
-    - sum of all badness values of all primer possible pairs
-    - badness between two primers:complementary sequences
-        - **(2^len * 2^numGC)/((d1+1)(d2+1))**
-            - d = distance between subsequence and 3' end of primer
-            - len = length of subsequence
-            - numGC = number of GC bases in subsequence
-        - max subsequence length of 8
-    - generate all possible sub sequences of length 4 to 8 nt
-    - determine if the reverse complement of the subsequence is present in the other primer
-    - calculate the badness value for each subsequence and store the distance in a hashtable as **Sum(1/d+1)**
-    - When looking the badness up: **2^len * 2^numGC / (1+d) * HashTable[reverse_complement(subsequence)]**
-4. Generate Temp Primer set
-    - replace one or more primers from the current set by random replacement
-    - replacement of more than one primer set is possible but can lead to slowdown
-5. Calculate new set
-    - set new set to be either temp set or old set depending on badness and probability of switching
+## 2. Filter Proto-Primers
+- Filter the primers using bowtie:
+    The basic idea is to align all primers to the reference genome and filter out primer pairs! that have multiple alignments in the target organism or one alignment in a genome to be excluded.
+
+- Pre-Processing:
+    - Generate Fasta file from the primer json.
+    - Determine which primers are to be included in the fasta file.
+    - If an amplicon only has one primer in a direction, then do not included that one.
+    - Generate a reference index file for the reference fasta file.
+    - Indexes to include
+        - human -> negative
+        - target organism -> ensure specificity (e.g.: only allow one match or matches with a certain distance above a threshold)
+
+- Processing:
+    - Ensure that not only 100 % matches are found. E.G.: X bp mismatch should be allowed.
+    - Parse information about location in the strand. Eg. If two or more alignments are found, determine if either are on differing strands.
+    - Calculate in the positions of the primers in the alignment. Distances greater than X bp should be ignored.
+
+- Post-Processing:
+    - Remove problematic primers from the proto-primers.json file.
+    - Write output to new file.
+
+## 3. SADDLE
+- Run the SADDLE algorithm on the filtered primers.
+- SADDLE is a simulated annealing algorithm that optimizes primer sets for a given set of parameters.
+### Algorithm
+1. Generate a Set
+2. Calculate loss for set (L = SUM(Badness(p1,p2))), where p1 and p2 are primers in the set
+3. Generate a temporary set by replacing one or more primers from the current set by random replacement
+4. Calculate loss for temporary set
+5. Accept or reject temporary set
 ```python
 if L(temporary_set) <= L(current_set):
     current_set  = temporary_set
@@ -84,21 +68,7 @@ else:
     current_set = current_set     #(with probability 1-p)
     current_set = temporary_set   #(with probability p)
 ```
-probability = C(g, L(temporary_set) - L(current_set))
-p = exp(-L(temporary_set) - L(current_set)) / C(g)
-g -> number of generations
-at some point stop simulated annealing and use gradient descent
+6. Repeat 3-5 until convergence
 
-6. repeat steps 4 to 5 until convergence
-    - repeat calculation for 1.5 times the number of generations to reach convergence
-
-# Questions
-- Was ist die optimale Ampliconlänge? 1000 bp? user defined.
-
-- In Saddle werden statt thermodynamische Parameter verinfachte Parameter verwendet. Kann ich das hier auch so machen?
-
-- Problematisch bei der Methode: Target Spezifität wird nicht garantiert. Etwas vorne dranbasteln um das zu entgehen.
-
-- Primer3/Primer BLAST einbinden? Als Test? Oder sogar als initialer Generator
-
-- Programmierung in Python oder C++ oder Go? 
+## 4. Profit
+- Output the final primer set to a file.
