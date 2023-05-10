@@ -65,7 +65,10 @@ async def __generate_primers(
     in which the primers are present e.g.: (forward_primers, reverse_primers).
     """
     amplicon_forward_primers, amplicon_reverse_primers = [], []
+    # the amplicon grows therefore we need to extract this and modify this value locally
     primer_ok_region_list = config.primer_ok_region_list
+    # keep track of wether the amplicon is increasing in size too much into the pool_offset
+    buffer_encroachment_counter  = 0
     while True:
         # Extract the amplicon sequence
         amplicon_sequence = sequence[start:end]
@@ -85,7 +88,12 @@ async def __generate_primers(
 
         if amplicon_forward_primers and amplicon_reverse_primers:
             break
+        
+        # prevent amplicons size to increase beyond 1/2 of the buffer region
+        if buffer_encroachment_counter >= config.pool_offset / 2:
+            break
 
+        # Do not allow amplicons to be larger than max_amplicon_size
         if end - start > config.max_amplicon_size:
             break
 
@@ -93,6 +101,7 @@ async def __generate_primers(
         end += config.amplicon_size_step
         primer_ok_region_list[0] += config.amplicon_size_step
         primer_ok_region_list[1] += config.amplicon_size_step
+        buffer_encroachment_counter += config.amplicon_size_step
 
     return amplicon_forward_primers, amplicon_reverse_primers
 
@@ -163,9 +172,7 @@ async def __generate_primers_for_pool(
         )
 
         if not amplicon_forward_primers or not amplicon_reverse_primers:
-            print(
-                f"Failed to find primers for {region_name}-{idx} in region {coords['start']}-{coords['end']} in pool 1."
-            )
+            print(f"Failed to find primers for {region_name}-{idx} in region {coords['start']}-{coords['end']} in pool 1.")
             continue
 
         amplicon_forward_primers = __remove_duplicate_primers(amplicon_forward_primers)
