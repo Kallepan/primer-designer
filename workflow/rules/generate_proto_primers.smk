@@ -22,7 +22,7 @@ rule generate_proto_primers:
     conda:
         "../envs/primers.yaml"
     output: 
-        files = expand("results/{{species}}.proto_primers.{pool}.json", pool=range(1, config["pool_count"] + 1)),
+        files = expand("results/{{species}}.{pool}.proto_primers.json", pool=range(1, config["pool_count"] + 1)),
         file = "results/{species}.proto_primers.json"
     log:
         out = "logs/{species}.proto_primers.log"

@@ -249,7 +249,7 @@ async def main():
     ]
 
     for i, pool in enumerate(pools):
-        path = os.path.join(config.output_folder, f"{species}.proto_primers.{i + 1}.json")
+        path = os.path.join(config.output_folder, f"{species}.{i + 1}.proto_primers.json")
         with open(path, 'w') as file:
             json.dump(pool, file, indent=4)
     
