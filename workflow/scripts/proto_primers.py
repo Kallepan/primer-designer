@@ -197,6 +197,7 @@ async def main():
 
     # Load the sequence
     seq_record = __extract_sequence_record_from_fasta(config.fasta)
+    species = config.fasta.split("/")[-1].split(".")[0]
 
     # Generate pools for each region containing amplicons and primers
     pool_one_regions = []
@@ -246,9 +247,14 @@ async def main():
             "regions": pool_two_regions,
         },
     ]
-    with open(config.output_file, "w") as f:
-        json.dump(pools, f, indent=4)
 
+    for i, pool in enumerate(pools):
+        path = os.path.join(config.output_folder, f"{species}.proto_primers.{i + 1}.json")
+        with open(path, 'w') as file:
+            json.dump(pool, file, indent=4)
+    
+    with open(os.path.join(config.output_folder, f"{species}.proto_primers.json"), 'w') as file:
+        json.dump(pools, file, indent=4)
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
