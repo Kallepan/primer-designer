@@ -1,0 +1,8 @@
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - bowtie==1.3.1
+  - tbb==2021.9.0
+  - libxml2==2.10.4
+prefix: /homes/kkandeepan/mambaforge/envs/snakemake
