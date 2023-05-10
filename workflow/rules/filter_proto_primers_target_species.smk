@@ -21,7 +21,7 @@ rule create_index_for_target_species:
         "bowtie-build {input} {params.outdir}/{wildcards.species} >> {log} 2>&1"
 
 rule align_primers_to_species:
-    input: 
+    input:
         expand("tmp/index/{{species}}.{version}.ebwt", version=range(1, 4)),
         expand("tmp/index/{{species}}.rev.{version}.ebwt", version=range(1, 2)),
         primers_fasta = "results/{species}.{pool}.proto_primers.fasta"
