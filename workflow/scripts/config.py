@@ -73,10 +73,10 @@ class Config:
         )
         parser.add_argument(
             "-o",
-            "--output_file",
+            "--output_folder",
             type=str,
             required=True,
-            help="Path to the output file to be used to save the amplicons. Use the .json format.",
+            help="Path to the output folder to be used to save the amplicons.",
         )
         parser.add_argument(
             "-t",
