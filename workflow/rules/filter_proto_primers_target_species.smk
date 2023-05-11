@@ -31,4 +31,4 @@ rule align_primers_to_species:
     log: "logs/{species}.{pool}.filtered_primers.log"
     conda: "../envs/bowtie.yaml"
     shell:
-        "python scripts/align_primers.py --primers_input {input.primers_fasta} --index_input {params.index} --output_file {output} >> {log} 2>&1"
+        "python scripts/align_primers.py --primer_fasta {input.primers_fasta} --index_input {params.index} --output_file {output} >> {log} 2>&1"
