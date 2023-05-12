@@ -59,13 +59,17 @@ def __parse_alignment(raw_alignment: str):
     alignment["matches"] = alignment["matches"].apply(lambda x: int(x) +1)
     return alignment
 
+def __write_to_csv(alignment: pd.DataFrame, output: str):
+    alignment.to_csv(output, index=False, header=True, sep=",")
+
 def main():
     args = get_parser()
     raw_alignment = __run_bowtie(args)
     alignment = __parse_alignment(raw_alignment)
-    print(alignment.head(10))
-
-
-
+    if args.output:
+        __write_to_csv(alignment, args.output)
+    
+    
+    
 if __name__ == "__main__":
     main()

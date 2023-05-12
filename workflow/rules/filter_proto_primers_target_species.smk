@@ -25,10 +25,21 @@ rule align_primers_to_species:
         expand("tmp/index/{{species}}.{version}.ebwt", version=range(1, 4)),
         expand("tmp/index/{{species}}.rev.{version}.ebwt", version=range(1, 2)),
         primers_fasta = "results/{species}.{pool}.proto_primers.fasta"
-    output: "results/{species}.{pool}.filtered_primers.json"
+    output: "results/{species}.{pool}.alignment.csv"
     params:
         index = "tmp/index/{species}"
     log: "logs/{species}.{pool}.filtered_primers.log"
     conda: "../envs/bowtie.yaml"
     shell:
-        "python scripts/align_primers.py --primer_fasta {input.primers_fasta} --index_input {params.index} --output_file {output} >> {log} 2>&1"
+        "python workflow/scripts/align_primers.py --primers {input.primers_fasta} --index {params.index} --output {output} >> {log} 2>&1"
+
+rule filter_primers_by_alignment:
+    input: 
+        alignment = "results/{species}.{pool}.alignment.csv",
+        original_primers = "results/{species}.{pool}.proto_primers.json"
+    output: "results/{species}.{pool}.filtered_primers.json"
+    log: "logs/{species}.{pool}.filtered_primers.log"
+    conda:
+        "../envs/primers.yaml"
+    shell:
+        "python workflow/scripts/filter_primers_by_alignment.py --alignment {input.alignment} --primers {input.original_primers} --output {output} >> {log} 2>&1"
