@@ -1,3 +1,4 @@
+import os
 
 rule format_primers_into_fasta:
     input: "results/{species}.{pool}.proto_primers.json"
@@ -8,26 +9,27 @@ rule format_primers_into_fasta:
     shell:
         "python workflow/scripts/format_into_fasta.py --input {input} --output {output} >> {log} 2>&1"
 
-rule create_index_for_target_species:
-    input: "data/{species}.fasta"
+rule create_index_for_target:
+    input: 
+        fasta = "data/{species}.fasta"
     output:
-        temp(expand("tmp/index/{{species}}.{version}.ebwt", version=range(1, 4))),
-        temp(expand("tmp/index/{{species}}.rev.{version}.ebwt", version=range(1, 2)))
+        temp(expand("tmp/indexes/{{species}}.{version}.ebwt", version=range(1, 4))),
+        temp(expand("tmp/indexes/{{species}}.rev.{version}.ebwt", version=range(1, 2)))
     params:
-        outdir = "tmp/index/"
+        outdir = lambda w, input: os.path.join("tmp", "indexes", os.path.splitext(os.path.basename(input.fasta))[0])
     log: "logs/{species}.filtered_primers.log"
     conda: "../envs/bowtie.yaml"
     shell:
-        "bowtie-build {input} {params.outdir}/{wildcards.species} >> {log} 2>&1"
+        "bowtie-build {input.fasta} {params.outdir} >> {log} 2>&1"
 
 rule align_primers_to_species:
     input:
-        expand("tmp/index/{{species}}.{version}.ebwt", version=range(1, 4)),
-        expand("tmp/index/{{species}}.rev.{version}.ebwt", version=range(1, 2)),
+        expand("tmp/indexes/{{species}}.{version}.ebwt", version=range(1, 4)),
+        expand("tmp/indexes/{{species}}.rev.{version}.ebwt", version=range(1, 2)),
         primers_fasta = "results/{species}.{pool}.proto_primers.fasta"
     output: "results/{species}.{pool}.alignment.csv"
     params:
-        index = "tmp/index/{species}"
+        index = lambda w, input: os.path.join("tmp", "indexes", os.path.basename(input.primers_fasta).split(".")[0])
     log: "logs/{species}.{pool}.filtered_primers.log"
     conda: "../envs/bowtie.yaml"
     shell:

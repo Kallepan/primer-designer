@@ -68,7 +68,7 @@ async def __generate_primers(
     # the amplicon grows therefore we need to extract this and modify this value locally
     primer_ok_region_list = config.primer_ok_region_list
     # keep track of wether the amplicon is increasing in size too much into the pool_offset
-    buffer_encroachment_counter  = 0
+    buffer_encroachment_counter = 0
     while True:
         # Extract the amplicon sequence
         amplicon_sequence = sequence[start:end]
@@ -88,7 +88,7 @@ async def __generate_primers(
 
         if amplicon_forward_primers and amplicon_reverse_primers:
             break
-        
+
         # prevent amplicons size to increase beyond 1/2 of the buffer region
         if buffer_encroachment_counter >= config.pool_offset / 2:
             break
@@ -172,7 +172,9 @@ async def __generate_primers_for_pool(
         )
 
         if not amplicon_forward_primers or not amplicon_reverse_primers:
-            print(f"Failed to find primers for {region_name}-{idx} in region {coords['start']}-{coords['end']} in pool 1.")
+            print(
+                f"Failed to find primers for {region_name}-{idx} in region {coords['start']}-{coords['end']} in pool 1."
+            )
             continue
 
         amplicon_forward_primers = __remove_duplicate_primers(amplicon_forward_primers)
@@ -249,12 +251,17 @@ async def main():
     ]
 
     for i, pool in enumerate(pools):
-        path = os.path.join(config.output_folder, f"{species}.{i + 1}.proto_primers.json")
-        with open(path, 'w') as file:
+        path = os.path.join(
+            config.output_folder, f"{species}.{i + 1}.proto_primers.json"
+        )
+        with open(path, "w") as file:
             json.dump(pool, file, indent=4)
-    
-    with open(os.path.join(config.output_folder, f"{species}.proto_primers.json"), 'w') as file:
+
+    with open(
+        os.path.join(config.output_folder, f"{species}.proto_primers.json"), "w"
+    ) as file:
         json.dump(pools, file, indent=4)
+
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()

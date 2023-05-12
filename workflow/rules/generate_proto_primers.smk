@@ -3,6 +3,8 @@ rule create_tmp_dir:
         "data/{species}.fasta"
     log:
         out = "logs/{species}.proto_primers.log"
+    conda:
+        "../envs/primers.yaml"
     output:
         temp(directory("tmp/{species}/"))
     shell:

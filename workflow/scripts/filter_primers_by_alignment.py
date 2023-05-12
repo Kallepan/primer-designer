@@ -1,6 +1,8 @@
 import argparse
 import pandas as pd
 import json
+import sys
+
 
 def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Filter primers by alignment")
@@ -30,28 +32,32 @@ def __write_output(primers: dict, output: str) -> None:
     with open(output, "w") as file:
         json.dump(primers, file, indent=4)
 
+
 def __get_primers_to_remove(alignment: pd.DataFrame) -> list:
     # TODO implement method to get primers to remove
-    return []    
+    return []
+
 
 def main():
     args = get_args()
 
     # Read alignment file
     alignment = pd.read_csv(args.alignment, sep="\t", header=0)
-    print(alignment.head())
 
     # Read primer file
     with open(args.primers, "r") as file:
         original_primers = json.load(file)
-    
 
     # Filter primers by alignment
-    
 
     # Write output
     # TODO change method to write output
     __write_output(original_primers, args.output)
 
+
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        print(e)
+        sys.exit(1)
