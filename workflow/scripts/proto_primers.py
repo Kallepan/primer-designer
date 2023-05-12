@@ -10,7 +10,7 @@ from Bio.Seq import Seq
 import pandas as pd
 
 from handler import PrimerGenerator, AmpliconGenerator
-from config import Config
+from configs import PrimerGenConfig
 
 
 def __load_regions(path: str) -> pd.DataFrame:
@@ -56,7 +56,7 @@ async def __generate_primers(
     region_name: str,
     idx: int,
     pool_name: str,
-    config: Config,
+    config: PrimerGenConfig,
 ):
     """
     This function is called by __generate_amplicons_and_primers_in_pools and should
@@ -109,7 +109,7 @@ async def __generate_primers(
 def __split_region_into_pools(
     region_start: int,
     region_end: int,
-    config: Config,
+    config: PrimerGenConfig,
 ) -> tuple[list[dict], list[dict]]:
     """
     Divide a region into 2 pools and generate coordinates for potential amplicons.
@@ -153,7 +153,7 @@ async def __generate_primers_for_pool(
     pool_cords: list[dict],
     pool_name: str,
     sequence: Seq,
-    config: Config,
+    config: PrimerGenConfig,
 ):
     """Function to generate primers and extract final amplicons for a given pool and 'optimal' coordinates set."""
 
@@ -190,7 +190,7 @@ async def __generate_primers_for_pool(
 
 
 async def main():
-    config = Config()
+    config = PrimerGenConfig()
 
     # Load the regions
     regions = __load_regions(config.regions)

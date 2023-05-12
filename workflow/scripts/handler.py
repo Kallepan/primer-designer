@@ -4,7 +4,7 @@ import os
 import asyncio
 
 from Bio.Seq import Seq
-from config import Config
+from configs import PrimerGenConfig
 
 
 class PrimerGenerator:
@@ -19,7 +19,7 @@ class PrimerGenerator:
         amplicon_sequence: Seq,
         pool_name: str,
         primer_ok_region_list: tuple[int, int],
-        config: Config,
+        config: PrimerGenConfig,
     ):
         self.amplicon_sequence = amplicon_sequence
         self.amplicon_id = f"{region_name}-{amplicon_index}"

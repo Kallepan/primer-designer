@@ -30,7 +30,7 @@ def load_primer3_settings(path: str) -> str:
     return settings_str
 
 
-class Config:
+class PrimerGenConfig:
     """
     Contains all the config for the proto primers script along with the arguments.
     """
