@@ -1,6 +1,5 @@
 import argparse
 import subprocess
-import os
 import sys
 
 from io import StringIO
@@ -15,8 +14,13 @@ def get_parser() -> argparse.Namespace:
     parser.add_argument(
         "--primers", type=str, required=True, help="Fasta file containing primers"
     )
-    parser.add_argument("--index", type=str, required=True, help="Path to index files")
-    parser.add_argument("--output", type=str, help="Output file name")
+    parser.add_argument(
+        "--index", type=str, required=True, help="Path to index files"
+    )
+    parser.add_argument(
+        # Optional outpout file
+        "--output", type=str, required=False, help="Output file name"
+    )
 
     return parser.parse_args()
 
@@ -52,21 +56,31 @@ def __parse_alignment(raw_alignment: str):
         ],
     )
     # matches is reported as additional matches, therefore we need to add 1 to get the actual number of matches
+    # also we do not need mismatches descriptor
     alignment["matches"] = alignment["matches"].apply(lambda x: int(x) + 1)
+    alignment = alignment.drop(columns=["mismatches_descriptor"])
+
+    # Convert merged primer string to multiple columns
+    # primer_region|primer_amplicon|primer_strand|primer_id
+    alignment[["primer_region", "primer_amplicon", "primer_strand", "primer_id"]] = alignment["primer"].apply(lambda x: pd.Series(str(x).split("|")))
+
     return alignment
 
 
 def __write_to_csv(alignment: pd.DataFrame, output: str):
-    alignment.to_csv(output, index=False, header=True, sep=",")
-
+    alignment.to_csv(output, index=False, header=True, sep="\t")
 
 def main():
+    print("Aligning primers to reference genome")
     args = get_parser()
     raw_alignment = __run_bowtie(args)
     alignment = __parse_alignment(raw_alignment)
     if args.output:
         __write_to_csv(alignment, args.output)
 
-
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        print(e, file=sys.stderr)
+        sys.exit(1)

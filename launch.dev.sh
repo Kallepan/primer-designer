@@ -1,12 +1,11 @@
 #!/bin/bash
 
+python3 workflow/scripts/filter_primers_by_alignment.py --alignment results/myc_tuberculosis_h37Rv.1.alignment.csv --primers results/myc_tuberculosis_h37Rv.1.proto_primers.json --output results/myc_tuberculosis_h37Rv.1.filtered_primers.json
+exit 0
+
 rm results/*
-rm results/myc_tuberculosis_h37Rv/*
-rm tmp/*
-rm tmp/indexes/*
+rm results/* -rf
+rm tmp/* -rf
 rm logs/*
-
-# python3 workflow/scripts/proto_primers.py -f data/myc_tuberculosis_h37Rv.fasta -p config/primer3_settings.yaml -r data/loci_formatted.csv -t tmp/ -o results/test.json
-
 
 snakemake --use-conda -p results/myc_tuberculosis_h37Rv.1.filtered_primers.json --cores 2

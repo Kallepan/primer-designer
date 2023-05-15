@@ -4,7 +4,6 @@ import argparse
 import os
 from io import TextIOWrapper
 
-
 def __parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", type=str, required=True)
@@ -70,4 +69,5 @@ def main():
 
 
 if __name__ == "__main__":
+    print("Formatting primers into fasta")
     main()

@@ -1,12 +1,8 @@
 rule create_tmp_dir:
-    input:
-        "data/{species}.fasta"
-    log:
-        out = "logs/{species}.proto_primers.log"
-    conda:
-        "../envs/primers.yaml"
-    output:
-        temp(directory("tmp/{species}/"))
+    input: "data/{species}.fasta"
+    log: "logs/{species}.proto_primers.log"
+    conda: "../envs/primers.yaml"
+    output: temp(directory("tmp/{species}/"))
     shell:
         "mkdir -p {output}"
 
