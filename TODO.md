@@ -44,13 +44,16 @@
         - target organism -> ensure specificity (e.g.: only allow one match or matches with a certain distance above a threshold)
 
 - Processing:
-    - Ensure that not only 100 % matches are found. E.G.: X bp mismatch should be allowed.
-    - Parse information about location in the strand. Eg. If two or more alignments are found, determine if either are on differing strands.
-    - Calculate in the positions of the primers in the alignment. Distances greater than X bp should be ignored.
-
-- Post-Processing:
-    - Remove problematic primers from the proto-primers.json file.
-    - Write output to new file.
+    1. Find all primers not aligning to the original site:
+        - Primers aligning multiple times
+        - Primers with mismatches
+        - Primers aligning to the wrong strand
+    2. For each primer, find all primers aligning to the other strand within a certain distance
+    3. Calculate a badness score for each primer considering:
+        - the amount of mismatches
+        - misalignments for the primer
+        - the amount of adjacent primers (inverse the distance)
+    4. Append the score in the filtered_proto_primers.json file and output
 
 ## 3. SADDLE
 - Run the SADDLE algorithm on the filtered primers.
@@ -72,3 +75,7 @@ else:
 
 ## 4. Profit
 - Output the final primer set to a file.
+
+
+# Notes
+- log primer matches which were not filtered out but have some kind of issue
