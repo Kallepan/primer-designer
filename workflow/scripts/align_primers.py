@@ -5,6 +5,7 @@ import sys
 from io import StringIO
 import pandas as pd
 
+DEFAULT_NUMBER_OF_MISMATCHES = 3
 
 def get_parser() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -21,12 +22,18 @@ def get_parser() -> argparse.Namespace:
         # Optional outpout file
         "--output", type=str, required=False, help="Output file name"
     )
+    parser.add_argument(
+        "--mismatches",
+        type=int,
+        default=DEFAULT_NUMBER_OF_MISMATCHES,
+        help=f"Number of mismatches allowed. Default: {DEFAULT_NUMBER_OF_MISMATCHES}",
+    )
 
     return parser.parse_args()
 
 
 def __run_bowtie(args: argparse.Namespace):
-    shell_cmd = f"bowtie -v 0 -a -x {args.index} -f {args.primers}"
+    shell_cmd = f"bowtie -v {args.mismatches} -a -x {args.index} -f {args.primers}"
     sp = subprocess.run(
         shell_cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True
     )
@@ -36,7 +43,14 @@ def __run_bowtie(args: argparse.Namespace):
     return sp.stdout.decode("utf-8")
 
 
-def __parse_alignment(raw_alignment: str):
+def __parse_alignment(raw_alignment: str) -> pd.DataFrame:
+    def decode_strand(symbol: str) -> str:
+        if symbol == "+":
+            return "forward"
+        if symbol == "-":
+            return "reverse"
+        return "unknown"
+
     """Takes the tab seperated output from the alignment and parses it to a pandas dataframe"""
     tsv_string = StringIO(raw_alignment)
 
@@ -56,14 +70,15 @@ def __parse_alignment(raw_alignment: str):
         ],
     )
     # matches is reported as additional matches, therefore we need to add 1 to get the actual number of matches
-    # also we do not need mismatches descriptor
     alignment["matches"] = alignment["matches"].apply(lambda x: int(x) + 1)
-    alignment = alignment.drop(columns=["mismatches_descriptor"])
 
     # Convert merged primer string to multiple columns
     # primer_region|primer_amplicon|primer_strand|primer_id
+    # Reformat strand to forward/reverse
+    # Drop primer column
     alignment[["primer_region", "primer_amplicon", "primer_strand", "primer_id"]] = alignment["primer"].apply(lambda x: pd.Series(str(x).split("|")))
-
+    alignment["strand"] = alignment["strand"].apply(decode_strand)
+    
     return alignment
 
 

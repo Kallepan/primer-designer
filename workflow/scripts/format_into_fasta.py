@@ -21,18 +21,18 @@ def __get_sequence_from_primer(primer: dict) -> str:
 
 
 def __extract_primer(
-    primers: list[dict], file: TextIOWrapper, region_name: str, amplicon_name: str
+    primers: list[dict], 
+    file: TextIOWrapper, 
+    region_name: str, 
+    amplicon_name: str, 
+    strand: str
 ) -> None:
     if not primers:
         return None
 
-    # do not add primers if there is only one
-    if len(primers) == 1:
-        return None
-
     for i, primer in enumerate(primers):
         sequence = __get_sequence_from_primer(primer)
-        name_str = f">{region_name}|{amplicon_name}|forward|{i}\n"
+        name_str = f">{region_name}|{amplicon_name}|{strand}|{i}\n"
         file.write(name_str)
         file.write(sequence)
         file.write("\n")
@@ -48,10 +48,10 @@ def __write_fasta(data: dict, file: TextIOWrapper):
             # Extract the sequence frome the primer and write to file
             # Name Encoding: region_name|amplicon_name|(forward || reverse)|index
             __extract_primer(
-                amplicon["forward_primers"], file, region_name, amplicon_name
+                amplicon["forward_primers"], file, region_name, amplicon_name, "forward"
             )
             __extract_primer(
-                amplicon["reverse_primers"], file, region_name, amplicon_name
+                amplicon["reverse_primers"], file, region_name, amplicon_name, "reverse"
             )
 
 

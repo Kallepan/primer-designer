@@ -265,9 +265,8 @@ async def main():
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
-    # TODO: enable this
-    # try:
-    loop.run_until_complete(main())
-    # except Exception as e:
-    #     sys.stderr.write(f"ERROR: {e}\n")
-    #     sys.exit(1)
+    try:
+        loop.run_until_complete(main())
+    except Exception as e:
+        sys.stderr.write(f"ERROR: {e}\n")
+        sys.exit(1)

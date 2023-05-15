@@ -28,11 +28,12 @@ rule align_primers_to_species:
         primers_fasta = "results/{species}.{pool}.proto_primers.fasta"
     output: "results/{species}.{pool}.alignment.csv"
     params:
-        index = lambda w, input: os.path.join("tmp", "indexes", os.path.basename(input.primers_fasta).split(".")[0])
+        index = lambda w, input: os.path.join("tmp", "indexes", os.path.basename(input.primers_fasta).split(".")[0]),
+        mismatches = config["mismatches"]
     log: "logs/{species}.{pool}.align.log"
     conda: "../envs/bowtie.yaml"
     shell:
-        "python3 workflow/scripts/align_primers.py --primers {input.primers_fasta} --index {params.index} --output {output} &>> {log}"
+        "python3 workflow/scripts/align_primers.py --primers {input.primers_fasta} --index {params.index} --output {output} --mismatches {params.mismatches} &>> {log}"
 
 rule filter_primers_by_alignment:
     input: 
@@ -40,7 +41,15 @@ rule filter_primers_by_alignment:
         original_primers = "results/{species}.{pool}.proto_primers.json"
     output: "results/{species}.{pool}.filtered_primers.json"
     log: "logs/{species}.{pool}.filter.log"
+    params:
+        adjacency_limit = config["adjacency_limit"]
+        
     conda:
         "../envs/primers.yaml"
     shell:
-        "python3 workflow/scripts/filter_primers_by_alignment.py --alignment {input.alignment} --primers {input.original_primers} --output {output} &>> {log}"
+        """ python3 workflow/scripts/filter_primers_by_alignment.py \
+        --alignment {input.alignment} \
+        --primers {input.original_primers} \
+        --output {output} \
+        --adjacency_limit {params.adjacency_limit} \
+        &>> {log} """
