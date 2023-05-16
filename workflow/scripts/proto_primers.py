@@ -1,6 +1,5 @@
 import os
 import sys
-import json
 import asyncio
 
 from Bio import SeqIO
@@ -12,6 +11,7 @@ import pandas as pd
 from handler import PrimerGenerator, AmpliconGenerator
 from configs import PrimerGenConfig
 
+import sqlite3
 
 def __load_regions(path: str) -> pd.DataFrame:
     df = pd.read_csv(
@@ -55,7 +55,7 @@ async def __generate_primers(
     sequence: Seq,
     region_name: str,
     idx: int,
-    pool_name: str,
+    pool_id: int,
     config: PrimerGenConfig,
 ):
     """
@@ -77,7 +77,7 @@ async def __generate_primers(
             region_name=region_name,
             amplicon_index=idx,
             amplicon_sequence=amplicon_sequence,
-            pool_name=pool_name,
+            pool_id=pool_id,
             primer_ok_region_list=primer_ok_region_list,
             config=config,
         )
@@ -151,9 +151,10 @@ def __split_region_into_pools(
 async def __generate_primers_for_pool(
     region_name: str,
     pool_cords: list[dict],
-    pool_name: str,
+    pool_id: str,
     sequence: Seq,
     config: PrimerGenConfig,
+    db: sqlite3.Connection
 ):
     """Function to generate primers and extract final amplicons for a given pool and 'optimal' coordinates set."""
 
@@ -167,7 +168,7 @@ async def __generate_primers_for_pool(
             sequence=sequence,
             region_name=region_name,
             idx=idx,
-            pool_name=pool_name,
+            pool_id=pool_id,
             config=config,
         )
 
@@ -180,9 +181,25 @@ async def __generate_primers_for_pool(
         amplicon_forward_primers = __remove_duplicate_primers(amplicon_forward_primers)
         amplicon_reverse_primers = __remove_duplicate_primers(amplicon_reverse_primers)
 
+        for forward_primer in amplicon_forward_primers:
+            db.execute(
+                """
+                INSERT INTO proto_primers(pool, region_name, amplicon_name, strand, primer_sequence, primer_length, tm, gc_percent, hairpin_th, badness)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (pool_id, region_name, f"{region_name}-{idx}-{pool_id}", "forward", forward_primer["primer_sequence"], forward_primer["primer_length"], forward_primer["tm"], forward_primer["gc_percent"], forward_primer["hairpin_th"], 0.0)
+            )
+
+        for reverse_primer in amplicon_reverse_primers:
+            db.execute(
+                """
+                INSERT INTO proto_primers(pool, region_name, amplicon_name, strand, primer_sequence, primer_length, tm, gc_percent, hairpin_th, badness)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (pool_id, region_name, f"{region_name}-{idx}-{pool_id}", "reverse", reverse_primer["primer_sequence"], reverse_primer["primer_length"], reverse_primer["tm"], reverse_primer["gc_percent"], reverse_primer["hairpin_th"], None)
+            )
+
         amplicons.append(
             {
-                "amplicon_name": f"{region_name}-{idx}-{pool_name}",
+                "amplicon_name": f"{region_name}-{idx}-{pool_id}",
                 "forward_primers": amplicon_forward_primers,
                 "reverse_primers": amplicon_reverse_primers,
             }
@@ -190,20 +207,47 @@ async def __generate_primers_for_pool(
 
     return amplicons
 
+def setup_db(config: PrimerGenConfig, species: str):
+    """
+    Setup the database tables: proto_primers
+    each pool has the columns:
+    pool, region_name, amplicon_name, strand, primer_sequence, primer_length, tm, gc_percent, hairpin_th, badness  
+    """
+    db = sqlite3.connect(os.path.join(config.output_dir, f"{species}.db"))
+    cursor = db.cursor()
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS proto_primers(
+            primer_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            pool INT NOT NULL,
+            region_name TEXT NOT NULL,
+            amplicon_name TEXT NOT NULL,
+            strand TEXT NOT NULL,
+            primer_sequence TEXT NOT NULL,
+            primer_length INT,
+            tm REAL,
+            gc_percent REAL,
+            hairpin_th REAL,
+            badness REAL,
+            UNIQUE(pool, region_name, amplicon_name, strand, primer_sequence)
+        )
+        """
+    )
+    db.execute("CREATE INDEX IF NOT EXISTS idx_primers ON proto_primers(pool, region_name, amplicon_name, strand)")
+    db.commit()
+    return db
 
 async def main():
     config = PrimerGenConfig()
-
     # Load the regions
     regions = __load_regions(config.regions)
 
     # Load the sequence
     seq_record = __extract_sequence_record_from_fasta(config.fasta)
     species = config.fasta.split("/")[-1].split(".")[0]
+    db = setup_db(config, species)
 
     # Generate pools for each region containing amplicons and primers
-    pool_one_regions = []
-    pool_two_regions = []
     async for i, row in AmpliconGenerator(regions=regions):
         if row["start"] > row["end"]:
             start = row["end"]
@@ -217,56 +261,31 @@ async def main():
             region_start=start, region_end=end, config=config
         )
 
-        pool_one_amplicons_with_primers = await __generate_primers_for_pool(
+        await __generate_primers_for_pool(
             region_name=row["loci"],
             pool_cords=pool_one_coords,
-            pool_name="pool_1",
+            pool_id=1,
             sequence=seq_record.seq,
             config=config,
+            db=db,
         )
-        pool_two_amplicons_with_primers = await __generate_primers_for_pool(
+        await __generate_primers_for_pool(
             region_name=row["loci"],
             pool_cords=pool_two_coords,
-            pool_name="pool_2",
+            pool_id=2,
             sequence=seq_record.seq,
             config=config,
-        )
-        pool_one_regions.append(
-            {"region_name": row["loci"], "amplicons": pool_one_amplicons_with_primers}
-        )
-        pool_two_regions.append(
-            {"region_name": row["loci"], "amplicons": pool_two_amplicons_with_primers}
+            db=db,
         )
 
-    # To JSON
-    pools = [
-        {
-            "pool_id": 1,
-            "regions": pool_one_regions,
-        },
-        {
-            "pool_id": 2,
-            "regions": pool_two_regions,
-        },
-    ]
-
-    for i, pool in enumerate(pools):
-        path = os.path.join(
-            config.output_folder, f"{species}.{i + 1}.proto_primers.json"
-        )
-        with open(path, "w") as file:
-            json.dump(pool, file, indent=4)
-
-    with open(
-        os.path.join(config.output_folder, f"{species}.proto_primers.json"), "w"
-    ) as file:
-        json.dump(pools, file, indent=4)
-
+    db.commit()
+    db.close()
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
+    loop.run_until_complete(main()) #TODO change me
     try:
-        loop.run_until_complete(main())
+        pass
     except Exception as e:
         sys.stderr.write(f"ERROR: {e}\n")
         sys.exit(1)

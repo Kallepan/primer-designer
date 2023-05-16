@@ -17,13 +17,13 @@ class PrimerGenerator:
         region_name: str,
         amplicon_index: int,
         amplicon_sequence: Seq,
-        pool_name: str,
+        pool_id: int,
         primer_ok_region_list: tuple[int, int],
         config: PrimerGenConfig,
     ):
         self.amplicon_sequence = amplicon_sequence
         self.amplicon_id = f"{region_name}-{amplicon_index}"
-        self.pool_name = pool_name
+        self.pool_id = pool_id
         self.primer_ok_region_list = primer_ok_region_list
         self._primer3_settings = config.primer3_settings
         self.temp_dir = config.temp_dir
@@ -101,7 +101,7 @@ class PrimerGenerator:
         n_right_primers = int(pattern_search_result[1][1])
 
         print(
-            f"Found {n_left_primers} left primers and {n_right_primers} right primers for sequence {self.amplicon_id} for pool {self.pool_name}."
+            f"Found {n_left_primers} left primers and {n_right_primers} right primers for sequence {self.amplicon_id} for pool {self.pool_id}."
         )
 
         """

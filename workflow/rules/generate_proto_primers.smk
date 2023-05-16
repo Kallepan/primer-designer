@@ -19,9 +19,8 @@ rule generate_proto_primers:
         pool_count = config["pool_count"]
     conda:
         "../envs/primers.yaml"
-    output: 
-        files = expand("results/{{species}}.{pool}.proto_primers.json", pool=range(1, config["pool_count"] + 1)),
-        file = "results/{species}.proto_primers.json"
+    output:
+        "results/{species}.db"
     log:
         out = "logs/{species}.proto_primers.log"
     shell:

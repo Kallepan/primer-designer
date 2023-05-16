@@ -8,4 +8,4 @@ rm results/* -rf
 rm tmp/* -rf
 rm logs/*
 
-snakemake --use-conda -p results/myc_tuberculosis_h37Rv.1.filtered_primers.json --cores 2
+snakemake --use-conda -p results/myc_tuberculosis_h37Rv.db --cores 2

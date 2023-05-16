@@ -73,10 +73,10 @@ class PrimerGenConfig:
         )
         parser.add_argument(
             "-o",
-            "--output_folder",
+            "--output_dir",
             type=str,
             required=True,
-            help="Path to the output folder to be used to save the amplicons.",
+            help="Path to the output directory to be used to save the amplicons.",
         )
         parser.add_argument(
             "-t",
