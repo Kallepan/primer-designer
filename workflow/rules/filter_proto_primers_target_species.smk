@@ -13,13 +13,21 @@ rule create_index_for_target:
     shell:
         "bowtie-build {input.fasta} {params.outdir} >> {log} 2>&1"
 
-rule format_primers_into_fasta:
-    input: "results/{species}.{pool}.proto_primers.json"
-    output: "results/{species}.{pool}.proto_primers.fasta"
-    log: "logs/{species}.{pool}.format.log"
+rule all:
+    input: expand("results/{{species}}.{pool}.proto_primers.fasta", pool=range(0, config["pool_count"]))
+    output: "results/{species}.summary.csv"
+    shell:
+        "touch {output}"
+        
+rule format_pool_into_fasta:
+    input: "results/{species}.db"
+    output:
+        file = "results/{species}.{pool}.proto_primers.fasta"
+    log:
+        file = "logs/{species}.{pool}.format.log"
     conda: "../envs/primers.yaml"
     shell:
-        "python3 workflow/scripts/format_into_fasta.py --input {input} --output {output} &>> {log}"
+        "python3 workflow/scripts/format_into_fasta.py --input {input} --output {output.file} --pool {wildcards.pool} &>> {log.file}"
 
 rule align_primers_to_species:
     input:

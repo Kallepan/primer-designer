@@ -174,7 +174,7 @@ async def __generate_primers_for_pool(
 
         if not amplicon_forward_primers or not amplicon_reverse_primers:
             print(
-                f"Failed to find primers for {region_name}-{idx} in region {coords['start']}-{coords['end']} in pool 1."
+                f"Failed to find primers for {region_name}-{idx} in region {coords['start']}-{coords['end']} in {pool_id}."
             )
             continue
 
@@ -264,7 +264,7 @@ async def main():
         await __generate_primers_for_pool(
             region_name=row["loci"],
             pool_cords=pool_one_coords,
-            pool_id=1,
+            pool_id=0,
             sequence=seq_record.seq,
             config=config,
             db=db,
@@ -272,7 +272,7 @@ async def main():
         await __generate_primers_for_pool(
             region_name=row["loci"],
             pool_cords=pool_two_coords,
-            pool_id=2,
+            pool_id=1,
             sequence=seq_record.seq,
             config=config,
             db=db,
