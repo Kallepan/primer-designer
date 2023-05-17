@@ -24,7 +24,6 @@ def __load_regions(path: str) -> pd.DataFrame:
 
     return df
 
-
 def __extract_sequence_record_from_fasta(path: str) -> SeqRecord:
     with open(path, "r") as file:
         seq = list(SeqIO.parse(file, "fasta"))
@@ -182,20 +181,22 @@ async def __generate_primers_for_pool(
         amplicon_reverse_primers = __remove_duplicate_primers(amplicon_reverse_primers)
 
         for forward_primer in amplicon_forward_primers:
-            db.execute(
-                """
-                INSERT INTO proto_primers(pool, region_name, amplicon_name, strand, primer_sequence, primer_length, tm, gc_percent, hairpin_th, badness)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (pool_id, region_name, f"{region_name}-{idx}-{pool_id}", "forward", forward_primer["primer_sequence"], forward_primer["primer_length"], forward_primer["tm"], forward_primer["gc_percent"], forward_primer["hairpin_th"], 0.0)
-            )
+            with db:
+                db.execute(
+                    """
+                    INSERT INTO proto_primers(pool, region_name, amplicon_name, strand, primer_sequence, primer_length, tm, gc_percent, hairpin_th, badness)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (pool_id, region_name, f"{region_name}-{idx}-{pool_id}", "forward", forward_primer["primer_sequence"], forward_primer["primer_length"], forward_primer["tm"], forward_primer["gc_percent"], forward_primer["hairpin_th"], 0.0)
+                )
 
         for reverse_primer in amplicon_reverse_primers:
-            db.execute(
-                """
-                INSERT INTO proto_primers(pool, region_name, amplicon_name, strand, primer_sequence, primer_length, tm, gc_percent, hairpin_th, badness)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (pool_id, region_name, f"{region_name}-{idx}-{pool_id}", "reverse", reverse_primer["primer_sequence"], reverse_primer["primer_length"], reverse_primer["tm"], reverse_primer["gc_percent"], reverse_primer["hairpin_th"], None)
-            )
+            with db:
+                db.execute(
+                    """
+                    INSERT INTO proto_primers(pool, region_name, amplicon_name, strand, primer_sequence, primer_length, tm, gc_percent, hairpin_th, badness)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (pool_id, region_name, f"{region_name}-{idx}-{pool_id}", "reverse", reverse_primer["primer_sequence"], reverse_primer["primer_length"], reverse_primer["tm"], reverse_primer["gc_percent"], reverse_primer["hairpin_th"], None)
+                )
 
         amplicons.append(
             {
@@ -214,27 +215,26 @@ def setup_db(config: PrimerGenConfig, species: str):
     pool, region_name, amplicon_name, strand, primer_sequence, primer_length, tm, gc_percent, hairpin_th, badness  
     """
     db = sqlite3.connect(os.path.join(config.output_dir, f"{species}.db"))
-    cursor = db.cursor()
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS proto_primers(
-            primer_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            pool INT NOT NULL,
-            region_name TEXT NOT NULL,
-            amplicon_name TEXT NOT NULL,
-            strand TEXT NOT NULL,
-            primer_sequence TEXT NOT NULL,
-            primer_length INT,
-            tm REAL,
-            gc_percent REAL,
-            hairpin_th REAL,
-            badness REAL,
-            UNIQUE(pool, region_name, amplicon_name, strand, primer_sequence)
+    with db:
+        db.execute(
+            """
+            CREATE TABLE IF NOT EXISTS proto_primers(
+                primer_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                pool INT NOT NULL,
+                region_name TEXT NOT NULL,
+                amplicon_name TEXT NOT NULL,
+                strand TEXT NOT NULL,
+                primer_sequence TEXT NOT NULL,
+                primer_length INT,
+                tm REAL,
+                gc_percent REAL,
+                hairpin_th REAL,
+                badness REAL,
+                UNIQUE(pool, region_name, amplicon_name, strand, primer_sequence)
+            )
+            """
         )
-        """
-    )
-    db.execute("CREATE INDEX IF NOT EXISTS idx_primers ON proto_primers(pool, region_name, amplicon_name, strand)")
-    db.commit()
+        db.execute("CREATE INDEX IF NOT EXISTS idx_primers ON proto_primers(pool, region_name, amplicon_name, strand)")
     return db
 
 async def main():
@@ -278,7 +278,6 @@ async def main():
             db=db,
         )
 
-    db.commit()
     db.close()
 
 if __name__ == "__main__":

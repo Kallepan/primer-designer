@@ -23,6 +23,12 @@ def get_parser() -> argparse.Namespace:
         "--db", type=str, required=False, help="Path to database file"
     )
     parser.add_argument(
+        "--output", type=str, required=False, help="Path to output file"
+    )
+    parser.add_argument(
+        "--pool", type=int, required=False, help="Pool number"
+    )
+    parser.add_argument(
         "--mismatches",
         type=int,
         default=DEFAULT_NUMBER_OF_MISMATCHES,
@@ -43,7 +49,7 @@ def __run_bowtie(args: argparse.Namespace):
     return sp.stdout.decode("utf-8")
 
 
-def __parse_alignment(raw_alignment: str) -> pd.DataFrame:
+def __parse_alignment(raw_alignment: str, args: argparse.Namespace) -> pd.DataFrame:
     def decode_strand(symbol: str) -> str:
         if symbol == "+":
             return "forward"
@@ -59,7 +65,7 @@ def __parse_alignment(raw_alignment: str) -> pd.DataFrame:
         sep="\t",
         header=None,
         names=[
-            "primer",
+            "primer_id",
             "strand",
             "chromosome",
             "position",
@@ -72,41 +78,66 @@ def __parse_alignment(raw_alignment: str) -> pd.DataFrame:
     # matches is reported as additional matches, therefore we need to add 1 to get the actual number of matches
     alignment["matches"] = alignment["matches"].apply(lambda x: int(x) + 1)
 
-    # Convert merged primer string to multiple columns
-    # primer_region|primer_amplicon|primer_strand|primer_id
     # Reformat strand to forward/reverse
-    # Drop primer column
-    alignment[["primer_region", "primer_amplicon", "primer_strand", "primer_id"]] = alignment["primer"].apply(lambda x: pd.Series(str(x).split("|")))
     alignment["strand"] = alignment["strand"].apply(decode_strand)
-    
+    alignment["pool"] = args.pool
     return alignment
-
-
-def __write_to_csv(alignment: pd.DataFrame, output: str):
-    alignment.to_csv(output, index=False, header=True, sep="\t")
 
 def setup_db(args: argparse.Namespace) -> sqlite3.Connection:
     db = sqlite3.connect(args.db)
 
     # Create table if it doesn't exist
     # alignment consists of the following columns:
+    # pool|primer_id|strand|chromosome|position|sequence|read_quality|matches|mismatches_descriptor
+    # primer_id is a foreign key to the proto_primers table
     db.execute(
         """
-        CREATE TABLE IF NOT EXISTS primer_alignments ("""
+        CREATE TABLE IF NOT EXISTS primer_alignments (
+            pool INT NOT NULL,
+            primer_id TEXT NOT NULL,
+            strand TEXT NOT NULL,
+            chromosome TEXT NOT NULL,
+            position INT NOT NULL,
+            sequence TEXT NOT NULL,
+            read_quality TEXT NOT NULL,
+            matches INT NOT NULL,
+            mismatches_descriptor TEXT,
+
+            FOREIGN KEY (primer_id) REFERENCES proto_primers (primer_id)
+        );
+        """
     )
 
+    db.execute(
+        """
+        CREATE INDEX IF NOT EXISTS primer_alignments_index ON primer_alignments (pool, primer_id, position, matches);
+        """
+    )
+
+    db.commit()
+    return db
 
 def main():
     print("Aligning primers to reference genome")
+
     args = get_parser()
+    db = setup_db(args)
     raw_alignment = __run_bowtie(args)
-    alignment = __parse_alignment(raw_alignment)
-    if args.output:
-        __write_to_csv(alignment, args.output)
+    alignment = __parse_alignment(raw_alignment, args)
+
+    # write output to csv and database
+    alignment.to_sql("primer_alignments", db, if_exists="append", index=False)
+    alignment.to_csv(args.output, index=False)
+    
+    db.commit()
+    print("Wrote primer alignments to database")
+    
+    db.close()
 
 if __name__ == "__main__":
+    main()
     try:
-        main()
+        pass
     except Exception as e:
         print(e, file=sys.stderr)
         sys.exit(1)

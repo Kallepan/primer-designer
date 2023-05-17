@@ -14,7 +14,7 @@ rule create_index_for_target:
         "bowtie-build {input.fasta} {params.outdir} >> {log} 2>&1"
 
 rule all:
-    input: expand("log/{{species}}.{pool}.alignment.log", pool=range(0, config["pool_count"]))
+    input: expand("results/{{species}}.{pool}.alignment.csv", pool=range(0, config["pool_count"]))
     output: "results/{species}.summary.csv"
     shell:
         "touch {output}"
@@ -33,16 +33,24 @@ rule align_primers_to_species:
     input:
         expand("tmp/indexes/{{species}}.{version}.ebwt", version=range(1, 5)),
         expand("tmp/indexes/{{species}}.rev.{version}.ebwt", version=range(1, 3)),
-        primers_fasta = "results/{species}.{pool}.proto_primers.fasta"
+        primers_fasta = "results/{species}.{pool}.proto_primers.fasta",
         db = "results/{species}.db"
-    output: 
+    output: "results/{species}.{pool}.alignment.csv"
+    log: "logs/{species}.{pool}.alignment.log"
     params:
         index = lambda w, input: os.path.join("tmp", "indexes", os.path.basename(input.primers_fasta).split(".")[0]),
         mismatches = config["mismatches"]
-    log: "logs/{species}.{pool}.alignment.log"
     conda: "../envs/bowtie.yaml"
     shell:
-        "python3 workflow/scripts/align_primers.py --primers {input.primers_fasta} --index {params.index} --db {input.db} --mismatches {params.mismatches} &>> {log}"
+        """
+        python3 workflow/scripts/align_primers.py \
+            --primers {input.primers_fasta} \
+            --index {params.index} \
+            --db {input.db} \
+            --pool {wildcards.pool} \
+            --mismatches {params.mismatches} \
+            --output {output}
+        """
 
 rule filter_primers_by_alignment:
     input: 

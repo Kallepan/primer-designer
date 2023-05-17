@@ -25,7 +25,7 @@ def __write_fasta(db: sqlite3.Connection, args: argparse.Namespace) -> None:
         primers = db.execute(
             """
                 SELECT primer_id, primer_sequence FROM proto_primers WHERE pool = ? ORDER BY primer_id ASC;
-            """, 
+            """,
             (args.pool,)
         ).fetchall()
 
