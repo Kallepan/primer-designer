@@ -1,20 +1,16 @@
 import argparse
 import sys
-import sqlite3
+
+from db import DBHandler
 
 def __parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input", type=str, required=True)
+    parser.add_argument("--db", type=str, required=True)
     parser.add_argument("--output", type=str, required=True)
     parser.add_argument("--pool", type=int, required=True)
     return parser.parse_args()
 
-def __setup_db_connection(input_db_file: str) -> sqlite3.Connection:
-    con = sqlite3.connect(input_db_file)
-
-    return con
-
-def __write_fasta(db: sqlite3.Connection, args: argparse.Namespace) -> None:
+def __write_fasta(db: DBHandler, args: argparse.Namespace) -> None:
     pools = db.execute(
         """
             SELECT DISTINCT pool FROM proto_primers ORDER BY pool ASC;
@@ -22,12 +18,12 @@ def __write_fasta(db: sqlite3.Connection, args: argparse.Namespace) -> None:
     )
 
     with open(args.output, "w") as file:
-        primers = db.execute(
+        primers = db.select(
             """
                 SELECT primer_id, primer_sequence FROM proto_primers WHERE pool = ? ORDER BY primer_id ASC;
             """,
             (args.pool,)
-        ).fetchall()
+        )
 
         for primer in primers:
             id = primer[0]
@@ -37,13 +33,12 @@ def __write_fasta(db: sqlite3.Connection, args: argparse.Namespace) -> None:
             file.write("\n")
 
 def main():
+    print("Formatting primers into fasta")
     args = __parse_args()
-    db = __setup_db_connection(args.input)
+    db = DBHandler(args.db)
     __write_fasta(db, args)
-    db.close()
 
 if __name__ == "__main__":
-    print("Formatting primers into fasta")
     try:
         main()
     except Exception as e:

@@ -3,8 +3,8 @@ import subprocess
 import sys
 
 from io import StringIO
+from db import DBHandler
 import pandas as pd
-import sqlite3
 
 DEFAULT_NUMBER_OF_MISMATCHES = 3
 
@@ -83,56 +83,20 @@ def __parse_alignment(raw_alignment: str, args: argparse.Namespace) -> pd.DataFr
     alignment["pool"] = args.pool
     return alignment
 
-def setup_db(args: argparse.Namespace) -> sqlite3.Connection:
-    db = sqlite3.connect(args.db)
-
-    # Create table if it doesn't exist
-    # alignment consists of the following columns:
-    # pool|primer_id|strand|chromosome|position|sequence|read_quality|matches|mismatches_descriptor
-    # primer_id is a foreign key to the proto_primers table
-    db.execute(
-        """
-        CREATE TABLE IF NOT EXISTS primer_alignments (
-            pool INT NOT NULL,
-            primer_id TEXT NOT NULL,
-            strand TEXT NOT NULL,
-            chromosome TEXT NOT NULL,
-            position INT NOT NULL,
-            sequence TEXT NOT NULL,
-            read_quality TEXT NOT NULL,
-            matches INT NOT NULL,
-            mismatches_descriptor TEXT,
-
-            FOREIGN KEY (primer_id) REFERENCES proto_primers (primer_id)
-        );
-        """
-    )
-
-    db.execute(
-        """
-        CREATE INDEX IF NOT EXISTS primer_alignments_index ON primer_alignments (pool, primer_id, position, matches);
-        """
-    )
-
-    db.commit()
-    return db
-
 def main():
     print("Aligning primers to reference genome")
 
     args = get_parser()
-    db = setup_db(args)
+    db = DBHandler(args.db)
+    db.setup_alignments_table()
     raw_alignment = __run_bowtie(args)
     alignment = __parse_alignment(raw_alignment, args)
 
     # write output to csv and database
-    alignment.to_sql("primer_alignments", db, if_exists="append", index=False)
+    alignment.to_sql("primer_alignments", db.con, if_exists="append", index=False, chunksize=1000)
     alignment.to_csv(args.output, index=False)
     
-    db.commit()
     print("Wrote primer alignments to database")
-    
-    db.close()
 
 if __name__ == "__main__":
     main()

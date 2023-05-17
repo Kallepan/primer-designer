@@ -27,7 +27,7 @@ rule format_pool_into_fasta:
         file = "logs/{species}.{pool}.format.log"
     conda: "../envs/primers.yaml"
     shell:
-        "python3 workflow/scripts/format_into_fasta.py --input {input} --output {output.file} --pool {wildcards.pool} &>> {log.file}"
+        "python3 workflow/scripts/format_into_fasta.py --db {input} --output {output.file} --pool {wildcards.pool} &>> {log.file}"
 
 rule align_primers_to_species:
     input:
