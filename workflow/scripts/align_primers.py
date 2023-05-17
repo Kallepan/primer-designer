@@ -4,6 +4,7 @@ import sys
 
 from io import StringIO
 import pandas as pd
+import sqlite3
 
 DEFAULT_NUMBER_OF_MISMATCHES = 3
 
@@ -19,8 +20,7 @@ def get_parser() -> argparse.Namespace:
         "--index", type=str, required=True, help="Path to index files"
     )
     parser.add_argument(
-        # Optional outpout file
-        "--output", type=str, required=False, help="Output file name"
+        "--db", type=str, required=False, help="Path to database file"
     )
     parser.add_argument(
         "--mismatches",
@@ -84,6 +84,17 @@ def __parse_alignment(raw_alignment: str) -> pd.DataFrame:
 
 def __write_to_csv(alignment: pd.DataFrame, output: str):
     alignment.to_csv(output, index=False, header=True, sep="\t")
+
+def setup_db(args: argparse.Namespace) -> sqlite3.Connection:
+    db = sqlite3.connect(args.db)
+
+    # Create table if it doesn't exist
+    # alignment consists of the following columns:
+    db.execute(
+        """
+        CREATE TABLE IF NOT EXISTS primer_alignments ("""
+    )
+
 
 def main():
     print("Aligning primers to reference genome")
