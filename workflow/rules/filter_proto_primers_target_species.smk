@@ -14,7 +14,7 @@ rule create_index_for_target:
         "bowtie-build {input.fasta} {params.outdir} >> {log} 2>&1"
 
 rule all:
-    input: expand("results/{{species}}.{pool}.alignment.csv", pool=range(0, config["pool_count"]))
+    input: expand("results/{{species}}.{pool}.evaluated_primers.json", pool=range(0, config["pool_count"]))
     output: "results/{species}.summary.csv"
     shell:
         "touch {output}"
@@ -49,23 +49,22 @@ rule align_primers_to_species:
             --db {input.db} \
             --pool {wildcards.pool} \
             --mismatches {params.mismatches} \
-            --output {output}
+            --output {output} &>> {log}
         """
 
-rule filter_primers_by_alignment:
-    input: 
+rule eval_primers_with_target:
+    input:
         alignment = "results/{species}.{pool}.alignment.csv",
-        original_primers = "results/{species}.{pool}.proto_primers.json"
-    output: "results/{species}.{pool}.filtered_primers.json"
-    log: "logs/{species}.{pool}.filter.log"
+        db = "results/{species}.db",
+    output: "results/{species}.{pool}.evaluated_primers.json"
+    log: "logs/{species}.{pool}.evaluation.log"
     params:
         adjacency_limit = config["adjacency_limit"]
     conda:
         "../envs/primers.yaml"
     shell:
-        """ python3 workflow/scripts/filter_primers_by_alignment.py \
-        --alignment {input.alignment} \
-        --primers {input.original_primers} \
+        """python3 workflow/scripts/eval_primers_with_target.py \
+        --db {input.db} \
         --output {output} \
         --adjacency_limit {params.adjacency_limit} \
-        &>> {log} """
+        --pool {wildcards.pool} &>> {log}"""

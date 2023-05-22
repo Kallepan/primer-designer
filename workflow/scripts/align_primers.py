@@ -26,7 +26,7 @@ def get_parser() -> argparse.Namespace:
         "--output", type=str, required=False, help="Path to output file"
     )
     parser.add_argument(
-        "--pool", type=int, required=False, help="Pool number"
+        "--pool", type=str, required=False, help="Pool number"
     )
     parser.add_argument(
         "--mismatches",
@@ -93,7 +93,7 @@ def main():
     alignment = __parse_alignment(raw_alignment, args)
 
     # write output to csv and database
-    alignment.to_sql("primer_alignments", db.con, if_exists="append", index=False, chunksize=1000)
+    alignment.to_sql("alignments", db.con, if_exists="append", index=False, chunksize=1000)
     alignment.to_csv(args.output, index=False)
     
     print("Wrote primer alignments to database")

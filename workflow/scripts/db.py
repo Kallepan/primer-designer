@@ -1,12 +1,15 @@
 import sqlite3
 
 class DBHandler():
+    def parse_primers_to_json(self):
+        pass
+
     def setup_alignments_table(self):
         with self.con:
             self.con.execute(
                 """
-                CREATE TABLE IF NOT EXISTS primer_alignments (
-                    pool INT NOT NULL,
+                CREATE TABLE IF NOT EXISTS alignments (
+                    pool VARCHAR NOT NULL,
                     primer_id TEXT NOT NULL,
                     strand TEXT NOT NULL,
                     chromosome TEXT NOT NULL,
@@ -21,11 +24,9 @@ class DBHandler():
                 """
             )
 
-            self.con.execute(
-                """
-                CREATE INDEX IF NOT EXISTS primer_alignments_index ON primer_alignments (pool, primer_id, position, matches);
-                """
-            )
+            self.con.execute("""CREATE INDEX IF NOT EXISTS alignments_index ON alignments(pool)""")
+            self.con.execute("""CREATE INDEX IF NOT EXISTS alignments_index ON alignments(strand)""")
+            self.con.execute("""CREATE INDEX IF NOT EXISTS alignments_index ON alignments(pool, primer_id, position, matches)""")
 
     def setup_proto_primers_table(self):
         with self.con:
@@ -46,7 +47,7 @@ class DBHandler():
                 )
             """)
             self.con.execute("CREATE INDEX IF NOT EXISTS idx_primers ON proto_primers(pool, region_name, amplicon_name, strand)")
-            self.con.execute("CREATE INDEX IF NOT EXISTS idx_primers_badness ON proto_primers(badness)")
+            self.con.execute("CREATE INDEX IF NOT EXISTS idx_primers_badness ON proto_primers(pool)")
 
     def __init__(self, path_to_db: str) -> None:
         con = sqlite3.connect(path_to_db)

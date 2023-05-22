@@ -130,3 +130,7 @@ dmypy.json
 
 # Ignore Snakemake files
 .snakemake/
+
+# Ignore csv and tsv files
+*.csv
+*.tsv
