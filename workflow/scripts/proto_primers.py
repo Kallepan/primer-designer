@@ -152,13 +152,12 @@ async def __generate_primers_for_pool(
     pool_id: str,
     sequence: Seq,
     config: PrimerGenConfig,
-    db: DBHandler
+    list_of_primers: list[dict],
 ):
     """Function to generate primers and extract final amplicons for a given pool and 'optimal' coordinates set."""
 
     # generate the amplicons and primers for each pool
-    # pool one
-    amplicons = []
+    # keep track of those in pd.Dataframe object to later export to sqlite database   
     for idx, coords in enumerate(pool_cords):
         amplicon_forward_primers, amplicon_reverse_primers = await __generate_primers(
             start=coords["start"],
@@ -179,31 +178,39 @@ async def __generate_primers_for_pool(
         amplicon_forward_primers = __remove_duplicate_primers(amplicon_forward_primers)
         amplicon_reverse_primers = __remove_duplicate_primers(amplicon_reverse_primers)
 
-        for forward_primer in amplicon_forward_primers:            
-            db.execute(
-                """
-                INSERT INTO proto_primers(pool, region_name, amplicon_name, strand, primer_sequence, primer_length, tm, gc_percent, hairpin_th, badness)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (pool_id, region_name, f"{region_name}-{idx}-{pool_id}", "forward", forward_primer["primer_sequence"], forward_primer["primer_length"], forward_primer["tm"], forward_primer["gc_percent"], forward_primer["hairpin_th"], 0.0)
+        for primer in amplicon_forward_primers:    
+            list_of_primers.append(
+                {
+                    "pool": pool_id,
+                    "region_name": region_name,
+                    "amplicon_name": f"{region_name}-{idx}-{pool_id}",
+                    "strand": "forward",
+                    "primer_sequence": primer["primer_sequence"],
+                    "primer_length": primer["primer_length"],
+                    "tm": primer["tm"],
+                    "gc_percent": primer["gc_percent"],
+                    "hairpin_th": primer["hairpin_th"],
+                    "badness": 0.0,
+                }
+            )
+        
+        for primer in amplicon_reverse_primers:
+            list_of_primers.append(
+                {
+                    "pool": pool_id,
+                    "region_name": region_name,
+                    "amplicon_name": f"{region_name}-{idx}-{pool_id}",
+                    "strand": "reverse",
+                    "primer_sequence": primer["primer_sequence"],
+                    "primer_length": primer["primer_length"],
+                    "tm": primer["tm"],
+                    "gc_percent": primer["gc_percent"],
+                    "hairpin_th": primer["hairpin_th"],
+                    "badness": 0.0,
+                }
             )
 
-        for reverse_primer in amplicon_reverse_primers:
-            db.execute(
-                """
-                INSERT INTO proto_primers(pool, region_name, amplicon_name, strand, primer_sequence, primer_length, tm, gc_percent, hairpin_th, badness)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (pool_id, region_name, f"{region_name}-{idx}-{pool_id}", "reverse", reverse_primer["primer_sequence"], reverse_primer["primer_length"], reverse_primer["tm"], reverse_primer["gc_percent"], reverse_primer["hairpin_th"], None)
-            )
-
-        amplicons.append(
-            {
-                "amplicon_name": f"{region_name}-{idx}-{pool_id}",
-                "forward_primers": amplicon_forward_primers,
-                "reverse_primers": amplicon_reverse_primers,
-            }
-        )
-
-    return amplicons
+    return list_of_primers
 
 async def main():
     config = PrimerGenConfig()
@@ -217,6 +224,7 @@ async def main():
     db.setup_proto_primers_table()
 
     # Generate pools for each region containing amplicons and primers
+    list_of_primers = []
     async for i, row in AmpliconGenerator(regions=regions):
         if row["start"] > row["end"]:
             start = row["end"]
@@ -236,16 +244,21 @@ async def main():
             pool_id=0,
             sequence=seq_record.seq,
             config=config,
-            db=db,
+            list_of_primers=list_of_primers,
         )
+
         await __generate_primers_for_pool(
             region_name=row["loci"],
             pool_cords=pool_two_coords,
             pool_id=1,
             sequence=seq_record.seq,
             config=config,
-            db=db,
+            list_of_primers=list_of_primers,
         )
+
+    # Export the primers to a sqlite database
+    df = pd.DataFrame(list_of_primers)
+    df.to_sql("proto_primers", db.con, if_exists="append", index=False, chunksize=1000)
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
