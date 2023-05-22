@@ -93,7 +93,7 @@ def main():
     alignment = __parse_alignment(raw_alignment, args)
 
     # write output to csv and database
-    alignment.to_sql("alignments", db.con, if_exists="append", index=False, chunksize=1000)
+    alignment.to_sql("alignments", db.con, if_exists="append", index=False)
     alignment.to_csv(args.output, index=False)
     
     print("Wrote primer alignments to database")

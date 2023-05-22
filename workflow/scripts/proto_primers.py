@@ -258,7 +258,7 @@ async def main():
 
     # Export the primers to a sqlite database
     df = pd.DataFrame(list_of_primers)
-    df.to_sql("proto_primers", db.con, if_exists="append", index=False, chunksize=1000)
+    df.to_sql("proto_primers", db.con, if_exists="append", index=False)
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
