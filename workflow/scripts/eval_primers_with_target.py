@@ -105,7 +105,7 @@ def calculate_badness(db: DBHandler, args: argparse.Namespace) -> None:
     )
     # TODO: DEBUG
     summary_df.to_csv("tmp/summary.tsv", sep="\t", index=False)
-
+    # summary_df.sort_values(by="primer_id", ascending=True, inplace=True)
     with open(args.output, "w") as f:
         f.write(summary_df.to_json(orient="records"))
 

@@ -9,8 +9,8 @@ class DBHandler():
             self.con.execute(
                 """
                 CREATE TABLE IF NOT EXISTS alignments (
-                    pool VARCHAR NOT NULL,
-                    primer_id TEXT NOT NULL,
+                    pool TEXT NOT NULL,
+                    primer_id INT NOT NULL,
                     strand TEXT NOT NULL,
                     chromosome TEXT NOT NULL,
                     position INT NOT NULL,
