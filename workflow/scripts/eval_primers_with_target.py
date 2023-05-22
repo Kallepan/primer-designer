@@ -91,12 +91,23 @@ def calculate_badness(db: DBHandler, args: argparse.Namespace) -> None:
         problematic_primers,
         columns = ["primer_id", "pool", "amplicon_name", "position", "matches", "mismatches_descriptor", "strand", "adjacent_primer_id", "adjacent_pool", "adjacent_amplicon_name", "adjacent_position", "adjacent_matches", "adjacent_mismatches_descriptor", "adjacent_strand"]
     )
-
     # TODO: DEBUG
-    problematic_primers_df.to_csv("problematic_primers.tsv", sep="\t", index=False)
+    problematic_primers_df.to_csv("tmp/problematic_primers.tsv", sep="\t", index=False)
 
-    # Now calculate the score of each primer and append it to the database
-    
+    # Now calculate the score of each problematic primer and append it to the database
+    # Take into consideration if any adjacent primers are present
+
+    grouped_primers = problematic_primers_df.groupby("primer_id")
+    summary_df = grouped_primers.agg(
+        primer_id=("primer_id", "first"),
+        adjacent_alignments=("adjacent_primer_id", "count"), # count the amount of adjacent primers
+        total_problematic=("primer_id", "count"), # count the amount of alignments + adjacent primers 
+    )
+    # TODO: DEBUG
+    summary_df.to_csv("tmp/summary.tsv", sep="\t", index=False)
+
+    with open(args.output, "w") as f:
+        f.write(summary_df.to_json(orient="records"))
 
 def main():
     args = get_args()

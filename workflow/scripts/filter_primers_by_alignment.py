@@ -1,3 +1,9 @@
+"""
+DEPRECATED
+This script is deprecated and will be removed in the future.
+"""
+
+
 import argparse
 import pandas as pd
 import json
