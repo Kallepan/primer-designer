@@ -1,5 +1,5 @@
 use crate::{json};
-use crate::types::{Set, Pool, AmpliconPrimerPair, Region};
+use crate::json::{Set, Pool, AmpliconPrimerPair, Region};
 use crate::utils::PrimerUtils;
 
 use rand::random;

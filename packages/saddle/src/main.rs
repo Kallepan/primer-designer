@@ -2,7 +2,6 @@ mod saddle;
 mod json;
 mod errors;
 mod utils;
-mod types;
 mod parser;
 mod logger;
 
