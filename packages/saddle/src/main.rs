@@ -4,6 +4,7 @@ mod errors;
 mod utils;
 mod parser;
 mod logger;
+mod sqlite;
 
 use log;
 use std::time;
@@ -37,6 +38,5 @@ fn main() {
         min_subsequence_size,
         max_subsequence_size,
     );
-
     println!("Script used: {:?}", start.elapsed()); 
 }
