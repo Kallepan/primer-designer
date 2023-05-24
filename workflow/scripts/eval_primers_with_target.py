@@ -55,7 +55,7 @@ def calculate_badness(db: DBHandler, args: argparse.Namespace) -> None:
         """
         -- Select all problematic primers
         WITH problematic_primers AS (
-            SELECT alignments.primer_id, alignments.pool, proto_primers.amplicon_name, alignments.position, alignments.matches, alignments.mismatches_descriptor, alignments.strand
+            SELECT alignments.primer_id AS problematic_primer_id, alignments.pool AS problematic_pool, proto_primers.amplicon_name AS problematic_amplicon_name, alignments.position AS problematic_position, alignments.matches AS problematic_matches, alignments.mismatches_descriptor AS problematic_mismatches_descriptor, alignments.strand AS problematic_alignment_strand, proto_primers.strand AS problematic_original_strand
             FROM alignments 
             LEFT JOIN proto_primers ON alignments.primer_id = proto_primers.primer_id
             WHERE alignments.pool = ? AND (
@@ -65,7 +65,7 @@ def calculate_badness(db: DBHandler, args: argparse.Namespace) -> None:
             )
         ), -- now add the adjacent primers to these primers
         formatted_alignments AS (
-            SELECT alignments.primer_id, alignments.pool, proto_primers.amplicon_name, alignments.position, alignments.matches, alignments.mismatches_descriptor, alignments.strand
+            SELECT alignments.primer_id, alignments.pool, proto_primers.amplicon_name, alignments.position, alignments.matches, alignments.mismatches_descriptor, alignments.strand AS alignment_strand, proto_primers.strand AS original_strand
             FROM alignments
             LEFT JOIN proto_primers ON alignments.primer_id = proto_primers.primer_id
             WHERE alignments.pool = ?
@@ -73,23 +73,41 @@ def calculate_badness(db: DBHandler, args: argparse.Namespace) -> None:
         SELECT * 
         FROM problematic_primers
         LEFT JOIN formatted_alignments AS adjacent_primers ON
-        problematic_primers.amplicon_name <> adjacent_primers.amplicon_name AND
-        problematic_primers.strand <> adjacent_primers.strand AND
-        problematic_primers.pool = adjacent_primers.pool AND
+        problematic_amplicon_name <> adjacent_primers.amplicon_name AND
+        problematic_alignment_strand <> adjacent_primers.alignment_strand AND
+        problematic_pool = adjacent_primers.pool AND
         CASE
-            WHEN problematic_primers.strand = 'forward' THEN
-                adjacent_primers.position >= problematic_primers.position AND
-                adjacent_primers.position <= problematic_primers.position + ? -- limit
-            WHEN problematic_primers.strand = 'reverse' THEN
-                adjacent_primers.position <= problematic_primers.position AND
-                adjacent_primers.position >= problematic_primers.position - ? -- limit
+            WHEN problematic_alignment_strand = 'forward' THEN
+                adjacent_primers.position >= problematic_position AND
+                adjacent_primers.position <= problematic_position + ? -- limit
+            WHEN problematic_alignment_strand = 'reverse' THEN
+                adjacent_primers.position <= problematic_position AND
+                adjacent_primers.position >= problematic_position - ? -- limit
         END
         """, (args.pool, args.pool, args.adjacency_limit, args.adjacency_limit)
     )
 
     problematic_primers_df = pd.DataFrame(
         problematic_primers,
-        columns = ["primer_id", "pool", "amplicon_name", "position", "matches", "mismatches_descriptor", "strand", "adjacent_primer_id", "adjacent_pool", "adjacent_amplicon_name", "adjacent_position", "adjacent_matches", "adjacent_mismatches_descriptor", "adjacent_strand"]
+        columns = [
+            "problematic_primer_id",
+            "problematic_pool",
+            "problematic_amplicon_name",
+            "problematic_position",
+            "problematic_matches",
+            "problematic_mismatches_descriptor",
+            "problematic_alignment_strand",
+            "problematic_original_strand",
+            "adjacent_primer_id",
+            "adjacent_pool",
+            "adjacent_amplicon_name",
+            "adjacent_position",
+            "adjacent_matches",
+            "adjacent_mismatches_descriptor",
+            "adjacent_alignment_strand",
+            "adjacent_original_strand",
+        ],
+        dtype=["int64", "string", "string", "int64", "int64", "string", "string", "string", "int64", "string", "string", "int64", "int64", "string", "string", "string"]
     )
     # TODO: DEBUG
     problematic_primers_df.to_csv("tmp/problematic_primers.tsv", sep="\t", index=False)
@@ -97,17 +115,18 @@ def calculate_badness(db: DBHandler, args: argparse.Namespace) -> None:
     # Now calculate the score of each problematic primer and append it to the database
     # Take into consideration if any adjacent primers are present
 
-    grouped_primers = problematic_primers_df.groupby("primer_id")
+    grouped_primers = problematic_primers_df.groupby("problematic_primer_id")
     summary_df = grouped_primers.agg(
-        primer_id=("primer_id", "first"),
+        primer_id=("problematic_primer_id", "first"),
         adjacent_alignments=("adjacent_primer_id", "count"), # count the amount of adjacent primers
-        total_problematic=("primer_id", "count"), # count the amount of alignments + adjacent primers 
+        total_problematic=("problematic_primer_id", "count"), # count the amount of alignments + adjacent primers 
     )
-    # TODO: DEBUG
-    summary_df.to_csv("tmp/summary.tsv", sep="\t", index=False)
-    # summary_df.sort_values(by="primer_id", ascending=True, inplace=True)
-    with open(args.output, "w") as f:
-        f.write(summary_df.to_json(orient="records"))
+    # Export summary scores to dataframe and csv
+    summary_df.to_csv(args.output , sep="\t", index=False)
+
+    # Export the summary df to the database    
+    # Update the proto_primers table with the badness score
+    # Drop the temporary table if it exists
 
 def main():
     args = get_args()

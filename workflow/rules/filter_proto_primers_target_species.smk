@@ -56,7 +56,7 @@ rule eval_primers_with_target:
     input:
         alignment = "results/{species}.{pool}.alignment.csv",
         db = "results/{species}.db",
-    output: "results/{species}.{pool}.evaluated_primers.json"
+    output: "results/{species}.{pool}.scores.csv"
     log: "logs/{species}.{pool}.evaluation.log"
     params:
         adjacency_limit = config["adjacency_limit"]
@@ -67,4 +67,18 @@ rule eval_primers_with_target:
         --db {input.db} \
         --output {output} \
         --adjacency_limit {params.adjacency_limit} \
+        --pool {wildcards.pool} &>> {log}"""
+
+rule export_to_json:
+    input:
+        scores = "results/{species}.{pool}.scores.csv",
+        db = "results/{species}.db",
+    output: "results/{species}.{pool}.evaluated_primers.json"
+    log: "logs/{species}.{pool}.export.log"
+    conda:
+        "../envs/primers.yaml"
+    shell:
+        """python3 workflow/scripts/format_to_json.py \
+        --db {input.db} \
+        --output {output} \
         --pool {wildcards.pool} &>> {log}"""
