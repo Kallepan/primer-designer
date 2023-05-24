@@ -2,6 +2,8 @@ amplicon_size: 200
 amplicon_buffer_size: 50
 pool_count: 2 # This value does not affect the results and changing it just breaks snakemake. So don't change it.
 
-# The following values are used to filter the primers
-adjacency_limit: 500
-mismatches: 3
+# Alignment params
+max_mismatches: 3
+
+# The following primers limit the number of problematic primers
+max_adjacency_limit: 500

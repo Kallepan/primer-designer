@@ -106,7 +106,7 @@ def __calculate_badness(alignment: pd.DataFrame, args: argparse.Namespace) -> li
     alignment = alignment.merge(problematic_primers[["primer", "badness"]], on="primer", how="left", indicator=False)
 
     alignment.fillna(0, inplace=True)
-    alignment = alignment.groupby(["primer_region", "primer_amplicon", "primer_strand", "primer_id"]).agg(
+    alignment = alignment.groupby(["primer_region", "primer_amplicon", "primer_strand", "id"]).agg(
         badness=("badness", "sum"),
     ).reset_index()
 
@@ -132,7 +132,7 @@ def __add_values_to_json(original_primers: dict, alignment: pd.DataFrame, args: 
                     (alignment["primer_region"] == region_name) &
                     (alignment["primer_amplicon"] == amplicon_name) &
                     (alignment["primer_strand"] == "forward") &
-                    (alignment["primer_id"] == k)
+                    (alignment["id"] == k)
                 ]["badness"].values[0]
                 amplicon["forward_primers"][k] = primer
 
@@ -141,7 +141,7 @@ def __add_values_to_json(original_primers: dict, alignment: pd.DataFrame, args: 
                     (alignment["primer_region"] == region_name) &
                     (alignment["primer_amplicon"] == amplicon_name) &
                     (alignment["primer_strand"] == "reverse") &
-                    (alignment["primer_id"] == k)
+                    (alignment["id"] == k)
                 ]["badness"].values[0]
                 amplicon["reverse_primers"][k] = primer
 
@@ -154,7 +154,7 @@ def main():
     args = get_args()
 
     # Read alignment file
-    # Columns: primer	strand	chromosome	position	sequence	read_quality	matches	primer_region	primer_amplicon	primer_strand	primer_id
+    # Columns: primer	strand	chromosome	position	sequence	read_quality	matches	primer_region	primer_amplicon	primer_strand	id
     dtypes = {
         "primer": "str",
         "strand": "str",
@@ -166,7 +166,7 @@ def main():
         "primer_region": "str",
         "primer_amplicon": "str",
         "primer_strand": "str",
-        "primer_id": "int",
+        "id": "int",
     }
     alignment = pd.read_csv(args.alignment, sep="\t", header=0, dtype=dtypes)
 

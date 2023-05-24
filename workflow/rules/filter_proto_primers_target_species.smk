@@ -39,7 +39,7 @@ rule align_primers_to_species:
     log: "logs/{species}.{pool}.alignment.log"
     params:
         index = lambda w, input: os.path.join("tmp", "indexes", os.path.basename(input.primers_fasta).split(".")[0]),
-        mismatches = config["mismatches"]
+        mismatches = config["max_mismatches"]
     conda: "../envs/bowtie.yaml"
     shell:
         """
@@ -59,7 +59,7 @@ rule eval_primers_with_target:
     output: "results/{species}.{pool}.scores.csv"
     log: "logs/{species}.{pool}.evaluation.log"
     params:
-        adjacency_limit = config["adjacency_limit"]
+        adjacency_limit = config["max_adjacency_limit"]
     conda:
         "../envs/primers.yaml"
     shell:

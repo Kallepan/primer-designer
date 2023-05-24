@@ -40,9 +40,9 @@ def __remove_duplicate_primers(list_of_primers: list[dict]) -> list:
     seen_primer = set()
     primers = []
     for primer_data in list_of_primers:
-        if primer_data["primer_sequence"] in seen_primer:
+        if primer_data["sequence"] in seen_primer:
             continue
-        seen_primer.add(primer_data["primer_sequence"])
+        seen_primer.add(primer_data["sequence"])
         primers.append(primer_data)
     return primers
 
@@ -185,8 +185,8 @@ async def __generate_primers_for_pool(
                     "region_name": region_name,
                     "amplicon_name": f"{region_name}-{idx}-{pool_id}",
                     "strand": "forward",
-                    "primer_sequence": primer["primer_sequence"],
-                    "primer_length": primer["primer_length"],
+                    "sequence": primer["sequence"],
+                    "length": primer["length"],
                     "tm": primer["tm"],
                     "gc_percent": primer["gc_percent"],
                     "hairpin_th": primer["hairpin_th"],
@@ -201,8 +201,8 @@ async def __generate_primers_for_pool(
                     "region_name": region_name,
                     "amplicon_name": f"{region_name}-{idx}-{pool_id}",
                     "strand": "reverse",
-                    "primer_sequence": primer["primer_sequence"],
-                    "primer_length": primer["primer_length"],
+                    "sequence": primer["sequence"],
+                    "length": primer["length"],
                     "tm": primer["tm"],
                     "gc_percent": primer["gc_percent"],
                     "hairpin_th": primer["hairpin_th"],

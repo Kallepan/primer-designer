@@ -10,8 +10,8 @@ class DBHandler():
                 """
                 CREATE TABLE IF NOT EXISTS alignments (
                     pool TEXT NOT NULL,
-                    primer_id INT NOT NULL,
-                    strand TEXT NOT NULL,
+                    id INT NOT NULL,
+                    aligned_to TEXT NOT NULL,
                     chromosome TEXT NOT NULL,
                     position INT NOT NULL,
                     sequence TEXT NOT NULL,
@@ -19,35 +19,38 @@ class DBHandler():
                     matches INT NOT NULL,
                     mismatches_descriptor TEXT,
 
-                    FOREIGN KEY (primer_id) REFERENCES proto_primers (primer_id)
+                    FOREIGN KEY (id) REFERENCES proto_primers (id)
                 );
                 """
             )
 
             self.con.execute("""CREATE INDEX IF NOT EXISTS alignments_index ON alignments(pool)""")
-            self.con.execute("""CREATE INDEX IF NOT EXISTS alignments_index ON alignments(strand)""")
-            self.con.execute("""CREATE INDEX IF NOT EXISTS alignments_index ON alignments(pool, primer_id, position, matches)""")
+            self.con.execute("""CREATE INDEX IF NOT EXISTS alignments_index ON alignments(id)""")
+            self.con.execute("""CREATE INDEX IF NOT EXISTS alignments_index ON alignments(aligned_to)""")
+            self.con.execute("""CREATE INDEX IF NOT EXISTS alignments_index ON alignments(pool, id, position, matches)""")
 
     def setup_proto_primers_table(self):
         with self.con:
             self.con.execute("""
                 CREATE TABLE IF NOT EXISTS proto_primers(
-                    primer_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
                     pool INT NOT NULL,
                     region_name TEXT NOT NULL,
                     amplicon_name TEXT NOT NULL,
                     strand TEXT NOT NULL,
-                    primer_sequence TEXT NOT NULL,
-                    primer_length INT,
+                    sequence TEXT NOT NULL,
+                    length INT,
                     tm REAL,
                     gc_percent REAL,
                     hairpin_th REAL,
                     badness REAL,
-                    UNIQUE(pool, region_name, amplicon_name, strand, primer_sequence)
+                    UNIQUE(pool, region_name, amplicon_name, strand, sequence)
                 )
             """)
-            self.con.execute("CREATE INDEX IF NOT EXISTS idx_primers ON proto_primers(pool, region_name, amplicon_name, strand)")
+            
+            self.con.execute("CREATE INDEX IF NOT EXISTS idx_primers_badness ON proto_primers(id)")
             self.con.execute("CREATE INDEX IF NOT EXISTS idx_primers_badness ON proto_primers(pool)")
+            self.con.execute("CREATE INDEX IF NOT EXISTS idx_primers ON proto_primers(pool, region_name, amplicon_name, strand)")
 
     def __init__(self, path_to_db: str) -> None:
         con = sqlite3.connect(path_to_db)

@@ -78,9 +78,9 @@ class PrimerGenerator:
                 except ValueError:
                     value = entry[1]
                 if key == "sequence":
-                    key = "primer_sequence"
+                    key = "sequence"
                 primer_entry[key] = value
-            primer_entry["primer_length"] = len(primer_entry["primer_sequence"])
+            primer_entry["length"] = len(primer_entry["sequence"])
             primers.append(primer_entry)
         return primers
 

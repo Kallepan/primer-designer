@@ -50,7 +50,7 @@ def __run_bowtie(args: argparse.Namespace):
 
 
 def __parse_alignment(raw_alignment: str, args: argparse.Namespace) -> pd.DataFrame:
-    def decode_strand(symbol: str) -> str:
+    def decode_aligned_to(symbol: str) -> str:
         if symbol == "+":
             return "forward"
         if symbol == "-":
@@ -65,8 +65,8 @@ def __parse_alignment(raw_alignment: str, args: argparse.Namespace) -> pd.DataFr
         sep="\t",
         header=None,
         names=[
-            "primer_id",
-            "strand",
+            "id",
+            "aligned_to",
             "chromosome",
             "position",
             "sequence",
@@ -78,8 +78,8 @@ def __parse_alignment(raw_alignment: str, args: argparse.Namespace) -> pd.DataFr
     # matches is reported as additional matches, therefore we need to add 1 to get the actual number of matches
     alignment["matches"] = alignment["matches"].apply(lambda x: int(x) + 1)
 
-    # Reformat strand to forward/reverse
-    alignment["strand"] = alignment["strand"].apply(decode_strand)
+    # Reformat aligned_to to forward/reverse
+    alignment["aligned_to"] = alignment["aligned_to"].apply(decode_aligned_to)
     alignment["pool"] = args.pool
     return alignment
 
