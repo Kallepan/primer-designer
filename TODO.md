@@ -79,3 +79,15 @@ else:
 
 # Notes
 - log primer matches which were not filtered out but have some kind of issue
+- optional hard filter or just score
+- Score: manuell berechnen
+- Problematischer Primer zusätzlicher Filter:
+    3 ' Ende mismatches sind gut -> nicht in problematische Primer
+- Faktoren: 
+    - Wie oft misaligned der Primer (problematic primer) (x^misalignments) wobei x < 1 und > 0
+    - Wie weit entfernt liegt der Reverse Primer vom Forward Primer
+        - Ab einem Cutoff betrachten wir uns die problematischen Alignments gar nicht
+        - Ab X bp Abstand wird es weniger problematisch (konstant) Amplicon bp + 75 %
+        - Unter X bp Abstand wird es problematisch (konstant) Amplicon bp + 25 %
+    - Wie viele mismatches hat der Primer !
+- Self badness wird zur SADDLE Funktion hinzugefügt
