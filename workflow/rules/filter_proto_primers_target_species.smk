@@ -78,7 +78,7 @@ rule export_to_json:
     conda:
         "../envs/primers.yaml"
     shell:
-        """python3 workflow/scripts/format_to_json.py \
+        """python3 workflow/scripts/format_into_json.py \
         --db {input.db} \
         --output {output} \
         --pool {wildcards.pool} &>> {log}"""

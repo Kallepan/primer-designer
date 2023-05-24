@@ -49,10 +49,14 @@
         - Primers with mismatches
         - Primers aligning to the wrong strand
     2. For each primer, find all primers aligning to the other strand within a certain distance
+        - use a "hard" cutoff to remove reverse primers above a certain distance
+        - use a "soft" cutoff to score primers above a certain distance
+        - use another cutoff to remove problematic primers with a certain amount of mismatches
     3. Calculate a badness score for each primer considering:
         - the amount of mismatches
         - misalignments for the primer
-        - the amount of adjacent primers (inverse the distance)
+        - the amount of adjacent primers
+        - the amount of mismatches in the sequence
     4. Append the score in the filtered_proto_primers.json file and output
 
 ## 3. SADDLE

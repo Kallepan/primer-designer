@@ -51,23 +51,8 @@ def calculate_badness(db: DBHandler, args: argparse.Namespace) -> None:
             - the amount of adjacent primers (inverse the distance)
         4. Append the score to the database and json file
     """
-    proto_primers = db.select(
-        """
-        SELECT id, amplicon_name, strand, sequence
-        FROM proto_primers
-        WHERE pool = ?
-        ORDER BY id ASC
-        """, (args.pool,)
-    )
-    pd.DataFrame(
-        proto_primers,
-        columns = [
-            "id",
-            "amplicon_name",
-            "strand",
-            "sequence",
-        ]
-    ).to_csv("tmp/proto_primers.tsv", sep="\t", index=False)
+    # Find all primers not aligning to the original site and associate them with primers aligning to the other strand within a certain distance
+    # 
     problematic_primers = db.select(
         """
         -- Select all problematic primers
@@ -98,10 +83,10 @@ def calculate_badness(db: DBHandler, args: argparse.Namespace) -> None:
         CASE
             WHEN problematic_aligned_to = 'forward' THEN
                 adjacent_primers.position >= problematic_position AND
-                adjacent_primers.position <= problematic_position + ? -- limit
+                adjacent_primers.position <= problematic_position + ? -- adjacency_limit
             WHEN problematic_aligned_to = 'reverse' THEN
                 adjacent_primers.position <= problematic_position AND
-                adjacent_primers.position >= problematic_position - ? -- limit
+                adjacent_primers.position >= problematic_position - ? -- adjacency_limit
         END
         """, (args.pool, args.pool, args.adjacency_limit, args.adjacency_limit)
     )
@@ -141,25 +126,6 @@ def calculate_badness(db: DBHandler, args: argparse.Namespace) -> None:
     )
     # Export summary scores to dataframe and csv
     summary_df.to_csv(args.output , sep="\t", index=False)
-
-    alignments = db.select(
-        """
-        SELECT id, position, matches, mismatches_descriptor, aligned_to
-        FROM alignments
-        WHERE pool = ?
-        ORDER BY id ASC
-        """, (args.pool,)
-    )
-    pd.DataFrame(
-        alignments,
-        columns = [
-            "id",
-            "position",
-            "matches",
-            "mismatches_descriptor",
-            "aligned_to",
-        ]
-    ).to_csv("tmp/alignments.tsv", sep="\t", index=False)
 
     # Export the summary df to the database    
     # Update the proto_primers table with the badness score
