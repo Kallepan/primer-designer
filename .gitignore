@@ -134,3 +134,5 @@ dmypy.json
 # Ignore csv and tsv files
 *.csv
 *.tsv
+
+helper_scripts/
