@@ -48,7 +48,6 @@ def __run_bowtie(args: argparse.Namespace):
 
     return sp.stdout.decode("utf-8")
 
-
 def __parse_alignment(raw_alignment: str, args: argparse.Namespace) -> pd.DataFrame:
     def decode_aligned_to(symbol: str) -> str:
         if symbol == "+":
@@ -65,7 +64,7 @@ def __parse_alignment(raw_alignment: str, args: argparse.Namespace) -> pd.DataFr
         sep="\t",
         header=None,
         names=[
-            "id",
+            "primer_id",
             "aligned_to",
             "chromosome",
             "position",
