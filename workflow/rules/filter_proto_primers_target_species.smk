@@ -52,11 +52,36 @@ rule align_primers_to_species:
             --output {output} &>> {log}
         """
 
-rule eval_primers_with_target:
+rule score_alignments:
     input:
         alignment = "results/{species}.{pool}.alignment.csv",
         db = "results/{species}.db",
-    output: "results/{species}.{pool}.scores.csv"
+    output: "results/{species}.{pool}.alignment.scoring.csv"
+    log: "logs/{species}.{pool}.alignment.scoring.log"
+    conda: "../envs/primers.yaml"
+    params:
+        match_multiplier = config["match_multiplier"],
+        primer_end_cutoff = config["primer_end_cutoff"],
+        close_to_3_prime_factor = config["close_to_3_prime_factor"],
+        far_from_3_prime_factor = config["far_from_3_prime_factor"],
+        base_penalty = config["base_penalty"]
+    shell:
+        """python3 workflow/scripts/score_alignments.py \
+        --db {input.db} \
+        --output {output} \
+        --pool {wildcards.pool} \
+        --match_multiplier {params.match_multiplier} \
+        --primer_end_cutoff {params.primer_end_cutoff} \
+        --close_to_3_prime_factor {params.close_to_3_prime_factor} \
+        --far_from_3_prime_factor {params.far_from_3_prime_factor} \
+        --base_penalty {params.base_penalty} \
+        &>> {log}"""
+
+rule eval_primers_with_target:
+    input:
+        scoring = "results/{species}.{pool}.alignment.scoring.csv",
+        db = "results/{species}.db",
+    output: "results/{species}.{pool}.primer.scoring.csv"
     log: "logs/{species}.{pool}.evaluation.log"
     params:
         adjacency_limit = config["max_adjacency_limit"]
@@ -71,7 +96,7 @@ rule eval_primers_with_target:
 
 rule export_to_json:
     input:
-        scores = "results/{species}.{pool}.scores.csv",
+        scoring = "results/{species}.{pool}.primer.scoring.csv",
         db = "results/{species}.db",
     output: "results/{species}.{pool}.evaluated_primers.json"
     log: "logs/{species}.{pool}.export.log"

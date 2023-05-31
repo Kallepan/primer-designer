@@ -14,7 +14,7 @@ class DBHandler():
                     position INT NOT NULL,
                     sequence TEXT NOT NULL,
                     matches INT NOT NULL,
-                    score REAL,
+                    score REAL DEFAULT 0.0,
                     read_quality TEXT NO NULL,
                     mismatches_descriptor TEXT,
 
