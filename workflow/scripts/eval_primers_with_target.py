@@ -32,6 +32,11 @@ def get_args() -> argparse.Namespace:
         default=DEFAULT_ADJACENCY_LIMIT,
         help=f"Limit within which primers of opposite strand are considered adjancent enough to be problematic. Default: {DEFAULT_ADJACENCY_LIMIT}",
     )
+    parser.add_argument(
+        "--hard_filter",
+        action="store_true",
+        help=f"Enabling this option removes primers which misalign and have primers on the reverse complement strand adjacent to the alignment in the direction of amplification."
+    )
 
     return parser.parse_args()
 
