@@ -27,6 +27,7 @@ class DBHandler():
             self.con.execute("""CREATE INDEX IF NOT EXISTS idx_alignments_pool ON alignments(pool)""")
             self.con.execute("""CREATE INDEX IF NOT EXISTS idx_alignments_primer_id ON alignments(primer_id)""")
             self.con.execute("""CREATE INDEX IF NOT EXISTS idx_alignments_aligned_to ON alignments(aligned_to)""")
+            self.con.execute("""CREATE INDEX IF NOT EXISTS idx_alignments_position ON alignments(position)""")
             self.con.execute("""CREATE INDEX IF NOT EXISTS idx_alignments_multi ON alignments(pool, id, position, matches)""")
 
     def setup_proto_primers_table(self):
@@ -52,6 +53,7 @@ class DBHandler():
             self.con.execute("CREATE INDEX IF NOT EXISTS idx_primers_id ON proto_primers(id)")
             self.con.execute("CREATE INDEX IF NOT EXISTS idx_primers_sequence ON proto_primers(sequence)")
             self.con.execute("CREATE INDEX IF NOT EXISTS idx_primers_pool ON proto_primers(pool)")
+            self.con.execute("CREATE INDEX IF NOT EXISTS idx_primers_amplicon_name ON proto_primers(amplicon_name)")
             self.con.execute("CREATE INDEX IF NOT EXISTS idx_primers_multi ON proto_primers(pool, region_name, amplicon_name, strand)")
 
     def __init__(self, path_to_db: str) -> None:
