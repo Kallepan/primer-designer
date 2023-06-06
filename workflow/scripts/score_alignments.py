@@ -2,11 +2,10 @@ import argparse
 from db import DBHandler
 import pandas as pd
 
-MATCH_MULTIPLIER = 1
-PRIMER_END_CUTOFF = 5
-CLOSE_TO_3_PRIME_FACTOR = 0.5
-FAR_FROM_3_PRIME_FACTOR = 0.1
+MISMATCH_WEIGHT = 0.5
+ALIGNMENT_WEIGHT = 0.5
 BASE_PENALTY = 100
+
 def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Score alignments from bowtie")
     parser.add_argument(
@@ -28,30 +27,18 @@ def get_args() -> argparse.Namespace:
         help="Pool number to evaluate",
     )
     
-    # optional arguments
+    # Optional Args
     parser.add_argument(
-        "--match_multiplier",
-        type=int,
-        default=MATCH_MULTIPLIER,
-        help=f"Penalty multiplier for each alignment match not at the original position. Default: {MATCH_MULTIPLIER}",
-    )
-    parser.add_argument(
-        "--primer_end_cutoff",
-        type=int,
-        default=PRIMER_END_CUTOFF,
-        help=f"Number of bases from the 3' End of the primer where the close_to_3_prime_factor is applied. Default: {PRIMER_END_CUTOFF}",
-    )
-    parser.add_argument(
-        "--close_to_3_prime_factor",
+        "--mismatch_weight",
         type=float,
-        default=CLOSE_TO_3_PRIME_FACTOR,
-        help=f"Penalty for each mismatch within primer_end_cutoff bases from the 3' End of the primer. Default: {CLOSE_TO_3_PRIME_FACTOR}",
+        default=MISMATCH_WEIGHT,
+        help=f"Weight applied to each mismatch of the alignment. Default: {MISMATCH_WEIGHT}",
     )
     parser.add_argument(
-        "--far_from_3_prime_factor",
+        "--alignment_weight",
         type=float,
-        default=FAR_FROM_3_PRIME_FACTOR,
-        help=f"Penalty for each mismatch outside primer_end_cutoff bases from the 3' End of the primer. Default: {FAR_FROM_3_PRIME_FACTOR}",
+        default=ALIGNMENT_WEIGHT,
+        help=f"Weight applied to each alignment to the strand. Default: {ALIGNMENT_WEIGHT}",
     )
     parser.add_argument(
         "--base_penalty",
@@ -69,7 +56,7 @@ def get_alignments(db: DBHandler, args: argparse.Namespace) -> pd.DataFrame:
         FROM alignments
         LEFT JOIN proto_primers ON alignments.primer_id = proto_primers.id
         WHERE alignments.pool = ? AND (
-            -- Filter out correct alignments so they don't get scored
+            -- Filter out correct alignments so they don't get scored, default: 0.0
             alignments.matches <> 1 OR
             alignments.mismatches_descriptor IS NOT NULL OR
             proto_primers.strand <> alignments.aligned_to
@@ -84,29 +71,32 @@ def get_alignments(db: DBHandler, args: argparse.Namespace) -> pd.DataFrame:
     return df
 
 def score_alignments(alignments: pd.DataFrame, args: argparse.Namespace) -> pd.DataFrame:
-    def calc_score(row: pd.Series, match_multiplier: int, primer_end_cutoff: int, close_to_3_prime_factor: int, far_from_3_prime_factor: int, base_penalty: int) -> float:
+    def calc_score(row: pd.Series, base_penalty: int, alignment_weight: int, mismatch_weight: float) -> float:
         # Calculate the score for each alignment
-        # The alignments calculated here should all be incorrect alignments
+        # The alignments calculated here should all be mismatched alignments
         mismatch_descriptor = row["mismatches_descriptor"]
         sequence = row["primer_sequence"]
         sequence_len = len(sequence)
         matches = row["matches"]
-        # Filter correct alignments
+        # If no mismatches are present, alignments get the base penalty
         if mismatch_descriptor is None:
-            return matches * match_multiplier + base_penalty
-        
+            return matches * base_penalty * alignment_weight
+
         # Try to find out where in the primer the mismatch is located
         mismatches = mismatch_descriptor.split(",")
-        badness = matches * match_multiplier + base_penalty
+        badness = matches * base_penalty * alignment_weight
+        distance_sum = 1.0
         for mismatch in mismatches:
             mismatch_pos = int(mismatch.split(":")[0])
-            distance_from_3_prime = sequence_len - mismatch_pos
-            # The closer the mismatch is to the 3' end of the primer, the more unlikely this alignment is, so the lower the penalty
-            badness -= (close_to_3_prime_factor if distance_from_3_prime < primer_end_cutoff else far_from_3_prime_factor) * distance_from_3_prime
+            # Calculate the distance from the 3' end of the primer by taking the length of the sequence and subtracting the mismatch position index + 1
+            distance_from_3_prime = sequence_len - (mismatch_pos + 1)
+            distance_sum += distance_from_3_prime
+        # Calculate the final formula
+        badness -= 1/distance_sum * len(mismatches) * mismatch_weight
         badness = max(badness, 0)
         return badness
 
-    alignments["score"] = alignments.apply(calc_score, axis=1, args=(args.match_multiplier, args.primer_end_cutoff, args.close_to_3_prime_factor, args.far_from_3_prime_factor, args.base_penalty))
+    alignments["score"] = alignments.apply(calc_score, axis=1, args=(args.base_penalty, args.alignment_weight, args.mismatch_weight,))
 
     return alignments
 
@@ -122,6 +112,7 @@ def to_db(alignments: pd.DataFrame, db: DBHandler, args: argparse.Namespace) -> 
     )
 
 def main():
+    print("Running score_alignments.py")
     args = get_args()
     db = DBHandler(args.db)
     alignments = get_alignments(db, args)
@@ -129,5 +120,4 @@ def main():
     to_db(scored_alignments, db, args)
 
 if __name__ == "__main__":
-    print("Running score_alignments.py")
     main()

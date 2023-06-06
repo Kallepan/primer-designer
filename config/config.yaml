@@ -5,11 +5,9 @@ pool_count: 2 # This value does not affect the results and changing it just brea
 # Alignment params
 max_mismatches: 3 # must be between 0 and 3
 # Misalignment score params (incorrect alignments are penalized)
-match_multiplier: 1
-primer_end_cutoff: 5
+alignment_weight: 0.5
+mismatch_weight: 0.5
 base_penalty: 100
-close_to_3_prime_factor: 0.5
-far_from_3_prime_factor: 0.1
 
 # The following primers limit the number of problematic primers
 max_adjacency_limit: 500

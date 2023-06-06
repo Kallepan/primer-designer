@@ -60,20 +60,16 @@ rule score_alignments:
     log: "logs/{species}.{pool}.alignment.scoring.log"
     conda: "../envs/primers.yaml"
     params:
-        match_multiplier = config["match_multiplier"],
-        primer_end_cutoff = config["primer_end_cutoff"],
-        close_to_3_prime_factor = config["close_to_3_prime_factor"],
-        far_from_3_prime_factor = config["far_from_3_prime_factor"],
-        base_penalty = config["base_penalty"]
+        base_penalty = config["base_penalty"],
+        alignment_weight = config["alignment_weight"],
+        mismatch_weight = config["mismatch_weight"],
     shell:
         """python3 workflow/scripts/score_alignments.py \
         --db {input.db} \
         --output {output} \
         --pool {wildcards.pool} \
-        --match_multiplier {params.match_multiplier} \
-        --primer_end_cutoff {params.primer_end_cutoff} \
-        --close_to_3_prime_factor {params.close_to_3_prime_factor} \
-        --far_from_3_prime_factor {params.far_from_3_prime_factor} \
+        --alignment_weight {params.alignment_weight} \
+        --mismatch_weight {params.mismatch_weight} \
         --base_penalty {params.base_penalty} \
         &>> {log}"""
 
