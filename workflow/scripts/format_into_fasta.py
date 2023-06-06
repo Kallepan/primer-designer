@@ -18,13 +18,12 @@ def __write_fasta(db: DBHandler, args: argparse.Namespace) -> None:
     )
 
     with open(args.output, "w") as file:
-        primers = db.select(
+        primers, column_names = db.select(
             """
                 SELECT id, sequence FROM proto_primers WHERE pool = ? ORDER BY id ASC;
             """,
             (args.pool,)
         )
-
         for primer in primers:
             id = primer[0]
             sequence = primer[1]

@@ -63,7 +63,7 @@ def get_args() -> argparse.Namespace:
 
 def get_alignments(db: DBHandler, args: argparse.Namespace) -> pd.DataFrame:
     # Extract all alignments along with the sequence of the primer
-    alignments = db.select(
+    alignments, column_names = db.select(
         """
         SELECT alignments.id, alignments.primer_id, alignments.aligned_to, alignments.matches, alignments.sequence, alignments.mismatches_descriptor, proto_primers.sequence AS primer_sequence, proto_primers.strand AS primer_strand
         FROM alignments
@@ -79,7 +79,7 @@ def get_alignments(db: DBHandler, args: argparse.Namespace) -> pd.DataFrame:
     )
     df = pd.DataFrame(
         alignments,
-        columns=["id", "primer_id", "aligned_to", "matches", "sequence", "mismatches_descriptor", "primer_sequence", "primer_strand"]
+        columns=column_names,
     )
     return df
 

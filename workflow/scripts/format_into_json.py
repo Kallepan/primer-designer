@@ -28,7 +28,7 @@ def get_args() -> argparse.Namespace:
     return parser.parse_args()
 
 def __write_json(db: str, output: str, pool: str) -> None:
-    primers = db.select(
+    primers, column_names = db.select(
         """
             SELECT id, pool, region_name, amplicon_name, strand, sequence, length, tm, gc_percent, hairpin_th, badness
             FROM proto_primers
@@ -38,7 +38,7 @@ def __write_json(db: str, output: str, pool: str) -> None:
     
     df = pd.DataFrame(
         primers, 
-        columns=["id", "pool", "region_name", "amplicon_name", "strand", "sequence", "length", "tm", "gc_percent", "hairpin_th", "badness"],
+        columns=column_names,
         dtype="string"
     )
     

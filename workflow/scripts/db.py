@@ -44,6 +44,7 @@ class DBHandler():
                     gc_percent REAL,
                     hairpin_th REAL,
                     badness REAL,
+                    discarded BOOLEAN DEFAULT FALSE,
                     UNIQUE(pool, region_name, amplicon_name, strand, sequence)
                 )
             """)
@@ -57,10 +58,11 @@ class DBHandler():
         con = sqlite3.connect(path_to_db)
         self.con = con
 
-    def select(self, *args, **kwargs) -> list:
+    def select(self, *args, **kwargs) -> tuple[list, list]:
+        """ Returns a tuple of (rows, column_names)"""
         try:
             with self.con:
-                return self.con.execute(*args, **kwargs).fetchall()
+                return self.con.execute(*args, **kwargs).fetchall(), [x[0] for x in self.con.execute(*args, **kwargs).description]
         except Exception as e:
             raise e
 
@@ -75,6 +77,13 @@ class DBHandler():
         try:
             with self.con:
                 return self.con.executemany(*args, **kwargs)
+        except Exception as e:
+            raise e
+
+    def get_columns(self, table_name: str) -> list:
+        try:
+            with self.con:
+                return [x[1] for x in self.con.execute(f"PRAGMA table_info({table_name})").fetchall()]
         except Exception as e:
             raise e
 
