@@ -1,5 +1,13 @@
+"""
+Take each problematic primer (primer not aligning to the original site) and calculate a badness score for it.
+This score consists of the following components:
+    - Sum of 'Score' of each alignment (mismatches, mismatches_descriptor, matches) is precalculated in the database
+    - If other complementary primers are found within a certain distance, the score is increased further
+    - Optional hard filter to remove problematic primers with a score above a certain threshold
+    - Soft filter (default) to calculate the score and store it in the database, but not remove the primers from the database
+"""
+
 import argparse
-import sys
 import pandas as pd
 
 from db import DBHandler
@@ -32,111 +40,98 @@ def get_args() -> argparse.Namespace:
         default=DEFAULT_ADJACENCY_LIMIT,
         help=f"Limit within which primers of opposite strand are considered adjancent enough to be problematic. Default: {DEFAULT_ADJACENCY_LIMIT}",
     )
+    parser.add_argument(
+    # TODO: implement hard filter
+        "--hard_filter",
+        action="store_true",
+        help="If set, primers with a badness score above a certain threshold are marked as discarded in the database",
+    )
 
     return parser.parse_args()
 
-def calculate_badness(db: DBHandler, args: argparse.Namespace) -> None:
-    """
-    Calculate the self-badness for each proto_primer in the database and output the result to the database as well as a json file.
-    The self badness is calculated using following algorithm:
-
-        1. Find all primers not aligning to the original site:
-            - Primers aligning multiple times
-            - Primers with mismatches
-            - Primers aligning to the wrong strand
-        2. For each primer, find all primers aligning to the other strand within a certain distance not of the same amplicon
-        3. Calculate a badness score for each primer considering:
-            - the amount of mismatches
-            - misalignments for the primer
-            - the amount of adjacent primers (inverse the distance)
-        4. Append the score to the database and json file
-    """
-    # Find all primers not aligning to the original site and associate them with primers aligning to the other strand within a certain distance
-    # 
-    problematic_primers = db.select(
-        """
-        -- Select all problematic primers
-        WITH problematic_primers AS (
-            SELECT alignments.id AS problematic_id, alignments.pool AS problematic_pool, proto_primers.amplicon_name AS problematic_amplicon_name, alignments.position AS problematic_position, alignments.matches AS problematic_matches, alignments.mismatches_descriptor AS problematic_mismatches_descriptor, alignments.aligned_to AS problematic_aligned_to, proto_primers.strand AS problematic_original_strand
-            FROM alignments 
-            LEFT JOIN proto_primers ON alignments.id = proto_primers.id
-            WHERE alignments.pool = ? AND (
-                alignments.matches > 1 OR 
-                alignments.mismatches_descriptor IS NOT NULL OR 
-                alignments.aligned_to <> proto_primers.strand
-            )
-            ORDER BY alignments.id ASC
-        ), -- now add the adjacent primers to these primers
-        formatted_alignments AS (
-            SELECT alignments.id, alignments.pool, proto_primers.amplicon_name, alignments.position, alignments.matches, alignments.mismatches_descriptor, alignments.aligned_to AS alignment_aligned_to, proto_primers.strand AS original_strand
+def get_alignments_with_adjacent_primers(db: DBHandler, args: argparse.Namespace) -> pd.DataFrame:
+    """ Returns all alignments with adjacent primers """
+    data, columns = db.select("""
+        WITH formatted_alignments AS (
+            -- Select all alignments from the pool and add information from proto_primers
+            SELECT 
+                alignments.id, 
+                alignments.primer_id, 
+                alignments.position, 
+                alignments.score, 
+                alignments.aligned_to,
+                alignments.pool,
+                proto_primers.amplicon_name
             FROM alignments
-            LEFT JOIN proto_primers ON alignments.id = proto_primers.id
+            LEFT JOIN proto_primers
+            ON 
+                proto_primers.id = alignments.primer_id AND
+                proto_primers.pool = alignments.pool
             WHERE alignments.pool = ?
-        ) -- now we have the alignments with their corresponding strand & amplicon_name
-        SELECT * 
-        FROM problematic_primers
-        LEFT JOIN formatted_alignments AS adjacent_primers ON
-        problematic_amplicon_name <> adjacent_primers.amplicon_name AND
-        problematic_aligned_to <> adjacent_primers.alignment_aligned_to AND
-        problematic_pool = adjacent_primers.pool AND
-        -- The following code should be done in python not in sql, because it is not very readable
-        CASE
-            WHEN problematic_aligned_to = 'forward' THEN
-                adjacent_primers.position >= problematic_position AND
-                adjacent_primers.position <= problematic_position + ? -- adjacency_limit
-            WHEN problematic_aligned_to = 'reverse' THEN
-                adjacent_primers.position <= problematic_position AND
-                adjacent_primers.position >= problematic_position - ? -- adjacency_limit
-        END
-        """, (args.pool, args.pool, args.adjacency_limit, args.adjacency_limit)
+        )
+        SELECT
+            alignments.id AS alignment_id,
+            alignments.primer_id AS alignment_primer_id,
+            alignments.position AS alignment_position,
+            alignments.score AS alignment_score,
+            alignments.aligned_to AS alignment_aligned_to,
+            alignments.amplicon_name AS alignment_amplicon_name,
+            adjacent_alignments.id AS adjacent_alignment_id,
+            adjacent_alignments.primer_id AS adjacent_alignment_primer_id,
+            adjacent_alignments.position AS adjacent_alignment_position,
+            adjacent_alignments.score AS adjacent_alignment_score,
+            adjacent_alignments.aligned_to AS adjacent_alignment_aligned_to,
+            adjacent_alignments.amplicon_name AS adjacent_alignment_amplicon_name,
+            alignments.pool AS pool
+        FROM formatted_alignments AS alignments
+        INNER JOIN formatted_alignments AS adjacent_alignments
+        ON 
+            -- Select all alignments from the pool that are adjacent to the current alignment. Ignore the same amplicon and the same strand
+            adjacent_alignments.amplicon_name <> alignments.amplicon_name AND 
+            adjacent_alignments.aligned_to <> alignments.aligned_to AND
+            CASE
+                -- Find only adjacent alignments (withing adjacency_limit) on the same strand
+                WHEN alignments.aligned_to = 'forward' THEN
+                    adjacent_alignments.position >= alignments.position AND
+                    adjacent_alignments.position <= alignments.position + ?
+                WHEN alignments.aligned_to = 'reverse' THEN
+                    adjacent_alignments.position <= alignments.position AND
+                    adjacent_alignments.position >= alignments.position - ?
+            END
+        ORDER BY alignments.id ASC
+    """, (args.pool, args.adjacency_limit, args.adjacency_limit))
+    return pd.DataFrame(
+        data,
+        columns=columns
     )
 
-    problematic_primers_df = pd.DataFrame(
-        problematic_primers,
-        columns = [
-            "problematic_id",
-            "problematic_pool",
-            "problematic_amplicon_name",
-            "problematic_position",
-            "problematic_matches",
-            "problematic_mismatches_descriptor",
-            "problematic_alignment_strand",
-            "problematic_original_strand",
-            "adjacent_id",
-            "adjacent_pool",
-            "adjacent_amplicon_name",
-            "adjacent_position",
-            "adjacent_matches",
-            "adjacent_mismatches_descriptor",
-            "adjacent_alignment_strand",
-            "adjacent_original_strand",
-        ]
+def calculate_badness_for_proto_primers(args: argparse.Namespace, proto_primers: pd.DataFrame, alignments: pd.DataFrame, adjacent_alignments: pd.DataFrame) -> pd.DataFrame:
+    """ Calculate the badness score for each primer taking into account the alignments """
+    # sum all alignment scores for each primer
+    primers_alignment_scores = alignments.groupby("primer_id")["score"].sum()
+    
+    # sum all alignment scores for each primer with adjacent primers
+
+def filter_primers_with_multiple_alignments(alignments: pd.DataFrame) -> pd.DataFrame:
+    pass
+
+def get_db_table(db: DBHandler, table_name: str, args: argparse.Namespace) -> pd.DataFrame:
+    """ Returns the specified table as a pandas dataframe """
+    data, columns = db.select(f"SELECT * FROM {table_name} WHERE pool = ?", (args.pool,))
+    return pd.DataFrame(
+        data,
+        columns=columns
     )
-    # TODO: DEBUG
-    problematic_primers_df.to_csv("tmp/problematic_primers.tsv", sep="\t", index=False)
-
-    # Now calculate the score of each problematic primer and append it to the database
-    # Take into consideration if any adjacent primers are present
-
-    grouped_primers = problematic_primers_df.groupby("problematic_id")
-    summary_df = grouped_primers.agg(
-        id=("problematic_id", "first"),
-        adjacent_alignments=("adjacent_id", "count"), # count the amount of adjacent primers
-        total_problematic=("problematic_id", "count"), # count the amount of alignments + adjacent primers 
-    )
-    # Export summary scores to dataframe and csv
-    summary_df.to_csv(args.output , sep="\t", index=False)
-
-    # Export the summary df to the database    
-    # Update the proto_primers table with the badness score
-    # Drop the temporary table if it exists
 
 def main():
+    print("Evaluating primers against target species")
     args = get_args()
     db = DBHandler(args.db)
-
-    calculate_badness(db, args)
+    proto_primers = get_db_table(db, "proto_primers", args)
+    alignments = get_db_table(db, "alignments", args)
+    alignments_with_adjacent_alignments = get_alignments_with_adjacent_primers(db, args)
+    alignments_with_adjacent_alignments.to_csv("temp.csv", index=False)
+    calculate_badness_for_proto_primers(args, proto_primers, alignments, alignments_with_adjacent_alignments)
 
 if __name__ == "__main__":
-    print("Evaluating primers against target species")
     main()

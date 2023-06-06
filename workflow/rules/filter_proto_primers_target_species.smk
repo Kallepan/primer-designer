@@ -56,8 +56,8 @@ rule score_alignments:
     input:
         alignment = "results/{species}.{pool}.alignment.csv",
         db = "results/{species}.db",
-    output: "results/{species}.{pool}.alignment.scoring.csv"
-    log: "logs/{species}.{pool}.alignment.scoring.log"
+    output: "results/{species}.{pool}.alignment.scores.csv"
+    log: "logs/{species}.{pool}.alignment.scores.log"
     conda: "../envs/primers.yaml"
     params:
         base_penalty = config["base_penalty"],
@@ -75,9 +75,9 @@ rule score_alignments:
 
 rule eval_primers_with_target:
     input:
-        scoring = "results/{species}.{pool}.alignment.scoring.csv",
+        scores = "results/{species}.{pool}.alignment.scores.csv",
         db = "results/{species}.db",
-    output: "results/{species}.{pool}.primer.scoring.csv"
+    output: "results/{species}.{pool}.proto_primers.scores.csv"
     log: "logs/{species}.{pool}.evaluation.log"
     params:
         adjacency_limit = config["max_adjacency_limit"]
@@ -92,7 +92,7 @@ rule eval_primers_with_target:
 
 rule export_to_json:
     input:
-        scoring = "results/{species}.{pool}.primer.scoring.csv",
+        scores = "results/{species}.{pool}.proto_primers.scores.csv",
         db = "results/{species}.db",
     output: "results/{species}.{pool}.evaluated_primers.json"
     log: "logs/{species}.{pool}.export.log"
