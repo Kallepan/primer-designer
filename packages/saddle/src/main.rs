@@ -4,7 +4,6 @@ mod errors;
 mod utils;
 mod parser;
 mod logger;
-mod sqlite;
 
 use log;
 use std::time;

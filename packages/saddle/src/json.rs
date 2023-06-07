@@ -3,11 +3,11 @@ use serde::{Deserialize, Serialize};
 #[derive(Deserialize, Serialize, Clone)]
 pub struct Primer {
     pub primer_sequence: String,
-    pub tm: f32,
-    pub gc_percent: f32,
-    pub hairpin_th: f32,
+    pub tm: f64,
+    pub gc_percent: f64,
+    pub hairpin_th: f64,
     pub primer_length: usize,
-    pub badness: f32,
+    pub badness: f64,
 }
 #[derive(Deserialize, Serialize, Clone)]
 pub struct Amplicon {
@@ -42,9 +42,9 @@ pub struct Set {
 //
 use std::error::Error;
 
-pub fn load_json_from_file(input_file_path: &str) -> Result<Vec<Pool>, Box<dyn Error>> {
+pub fn load_json_from_file(input_file_path: &str) -> Result<Pool, Box<dyn Error>> {
     let file_content = std::fs::read_to_string(&input_file_path)?;
-    let pools: Vec<Pool> = serde_json::from_str(&file_content)?;
+    let pools: Pool = serde_json::from_str(&file_content)?;
 
     Ok(pools)
 }
