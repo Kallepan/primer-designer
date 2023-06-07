@@ -64,7 +64,7 @@ rule score_alignments:
         alignment_weight = config["alignment_weight"],
         mismatch_weight = config["mismatch_weight"],
     shell:
-        """python3 workflow/scripts/score_alignments.py \
+        """python3 workflow/scripts/target_score_alignments.py \
         --db {input.db} \
         --output {output} \
         --pool {wildcards.pool} \
@@ -84,7 +84,7 @@ rule eval_primers_with_target:
     conda:
         "../envs/primers.yaml"
     shell:
-        """python3 workflow/scripts/eval_primers_with_target.py \
+        """python3 workflow/scripts/target_eval_primers.py \
         --db {input.db} \
         --output {output} \
         --adjacency_limit {params.adjacency_limit} \

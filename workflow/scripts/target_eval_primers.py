@@ -98,6 +98,7 @@ def get_alignments_with_adjacent_primers(db: DBHandler, args: argparse.Namespace
                     adjacent_alignments.position <= alignments.position AND
                     adjacent_alignments.position >= alignments.position - ?
             END
+        -- select only misaligned primers
         ORDER BY alignments.id ASC
     """, (args.pool, args.adjacency_limit, args.adjacency_limit))
     return pd.DataFrame(
@@ -130,7 +131,7 @@ def main():
     proto_primers = get_db_table(db, "proto_primers", args)
     alignments = get_db_table(db, "alignments", args)
     alignments_with_adjacent_alignments = get_alignments_with_adjacent_primers(db, args)
-    alignments_with_adjacent_alignments.to_csv("temp.csv", index=False)
+    alignments_with_adjacent_alignments.to_csv("temp.tsv",sep='\t', index=False)
     calculate_badness_for_proto_primers(args, proto_primers, alignments, alignments_with_adjacent_alignments)
 
 if __name__ == "__main__":

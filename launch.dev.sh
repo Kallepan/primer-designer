@@ -8,4 +8,5 @@ rm logs/*
 
 snakemake --use-conda -p results/myc_tuberculosis_h37Rv.summary.csv --cores 2
 
-python3 helper_scripts/dump.py
+cd helper_scripts
+python3 dump.py
