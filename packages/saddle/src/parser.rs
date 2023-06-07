@@ -5,7 +5,7 @@ use clap::Parser;
     name = "SADDLE",
     version = "1.0.0",
     author = "Kandeepan K.",
-    about = "A tool for finding saddle points in time series data."
+    about = "A tool for Simulated Annealing Design using Dimer Likelihood Estimation (SADDLE)."
 )]
 pub struct Opts {
     // Input file

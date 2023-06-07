@@ -130,3 +130,5 @@ dmypy.json
 
 # Ignore Snakemake files
 .snakemake/
+
+helper_scripts/*

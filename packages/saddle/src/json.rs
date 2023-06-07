@@ -7,6 +7,7 @@ pub struct Primer {
     pub gc_percent: f32,
     pub hairpin_th: f32,
     pub primer_length: usize,
+    pub badness: f32,
 }
 #[derive(Deserialize, Serialize, Clone)]
 pub struct Amplicon {
