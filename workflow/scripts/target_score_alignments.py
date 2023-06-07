@@ -6,6 +6,7 @@ MISMATCH_WEIGHT = 0.5
 ALIGNMENT_WEIGHT = 0.5
 BASE_PENALTY = 100
 
+
 def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Score alignments from bowtie")
     parser.add_argument(
@@ -26,7 +27,7 @@ def get_args() -> argparse.Namespace:
         required=True,
         help="Pool number to evaluate",
     )
-    
+
     # Optional Args
     parser.add_argument(
         "--mismatch_weight",
@@ -48,6 +49,7 @@ def get_args() -> argparse.Namespace:
     )
     return parser.parse_args()
 
+
 def get_alignments(db: DBHandler, args: argparse.Namespace) -> pd.DataFrame:
     # Extract all alignments along with the sequence of the primer
     alignments, column_names = db.select(
@@ -62,7 +64,8 @@ def get_alignments(db: DBHandler, args: argparse.Namespace) -> pd.DataFrame:
             proto_primers.strand <> alignments.aligned_to
         )
         ORDER BY alignments.id ASC
-        """, (args.pool,)
+        """,
+        (args.pool,),
     )
     df = pd.DataFrame(
         alignments,
@@ -70,8 +73,13 @@ def get_alignments(db: DBHandler, args: argparse.Namespace) -> pd.DataFrame:
     )
     return df
 
-def score_alignments(alignments: pd.DataFrame, args: argparse.Namespace) -> pd.DataFrame:
-    def calc_score(row: pd.Series, base_penalty: int, alignment_weight: int, mismatch_weight: float) -> float:
+
+def score_alignments(
+    alignments: pd.DataFrame, args: argparse.Namespace
+) -> pd.DataFrame:
+    def calc_score(
+        row: pd.Series, base_penalty: int, alignment_weight: int, mismatch_weight: float
+    ) -> float:
         # Calculate the score for each alignment
         # The alignments calculated here should all be mismatched alignments
         mismatch_descriptor = row["mismatches_descriptor"]
@@ -92,22 +100,37 @@ def score_alignments(alignments: pd.DataFrame, args: argparse.Namespace) -> pd.D
             distance_from_3_prime = sequence_len - (mismatch_pos + 1)
             distance_sum += distance_from_3_prime
         # Calculate the final formula
-        badness -= 1/distance_sum * len(mismatches) * mismatch_weight
+        badness -= 1 / distance_sum * len(mismatches) * mismatch_weight
         badness = max(badness, 0)
         return badness
 
-    alignments["score"] = alignments.apply(calc_score, axis=1, args=(args.base_penalty, args.alignment_weight, args.mismatch_weight,))
+    alignments["score"] = alignments.apply(
+        calc_score,
+        axis=1,
+        args=(
+            args.base_penalty,
+            args.alignment_weight,
+            args.mismatch_weight,
+        ),
+    )
 
     return alignments
 
-def write_to_db(alignments: pd.DataFrame, db: DBHandler, args: argparse.Namespace) -> None:
+
+def write_to_db(
+    alignments: pd.DataFrame, db: DBHandler, args: argparse.Namespace
+) -> None:
     # Write the scores to the database and to a file
     alignments.to_csv(args.output, sep="\t", index=False)
-    db.executemany("""
+    db.executemany(
+        """
         UPDATE alignments
         SET score = ?
         WHERE id = ?
-    """, alignments[["score", "id"]].values.tolist())
+    """,
+        alignments[["score", "id"]].values.tolist(),
+    )
+
 
 def main():
     print("Running score_alignments.py")
@@ -116,6 +139,7 @@ def main():
     alignments = get_alignments(db, args)
     scored_alignments = score_alignments(alignments, args)
     write_to_db(scored_alignments, db, args)
+
 
 if __name__ == "__main__":
     main()

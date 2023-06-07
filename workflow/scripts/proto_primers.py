@@ -12,6 +12,7 @@ from handler import PrimerGenerator, AmpliconGenerator
 from configs import PrimerGenConfig
 from db import DBHandler
 
+
 def __load_regions(path: str) -> pd.DataFrame:
     df = pd.read_csv(
         path,
@@ -22,6 +23,7 @@ def __load_regions(path: str) -> pd.DataFrame:
     )
 
     return df
+
 
 def __extract_sequence_record_from_fasta(path: str) -> SeqRecord:
     with open(path, "r") as file:
@@ -157,7 +159,7 @@ async def __generate_primers_for_pool(
     """Function to generate primers and extract final amplicons for a given pool and 'optimal' coordinates set."""
 
     # generate the amplicons and primers for each pool
-    # keep track of those in pd.Dataframe object to later export to sqlite database   
+    # keep track of those in pd.Dataframe object to later export to sqlite database
     for idx, coords in enumerate(pool_cords):
         amplicon_forward_primers, amplicon_reverse_primers = await __generate_primers(
             start=coords["start"],
@@ -178,7 +180,7 @@ async def __generate_primers_for_pool(
         amplicon_forward_primers = __remove_duplicate_primers(amplicon_forward_primers)
         amplicon_reverse_primers = __remove_duplicate_primers(amplicon_reverse_primers)
 
-        for primer in amplicon_forward_primers:    
+        for primer in amplicon_forward_primers:
             list_of_primers.append(
                 {
                     "pool": pool_id,
@@ -193,7 +195,7 @@ async def __generate_primers_for_pool(
                     "badness": 0.0,
                 }
             )
-        
+
         for primer in amplicon_reverse_primers:
             list_of_primers.append(
                 {
@@ -211,6 +213,7 @@ async def __generate_primers_for_pool(
             )
 
     return list_of_primers
+
 
 async def main():
     config = PrimerGenConfig()
@@ -260,9 +263,10 @@ async def main():
     df = pd.DataFrame(list_of_primers)
     df.to_sql("proto_primers", db.con, if_exists="append", index=False)
 
+
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(main()) #TODO change me
+    loop.run_until_complete(main())  # TODO change me
     try:
         pass
     except Exception as e:

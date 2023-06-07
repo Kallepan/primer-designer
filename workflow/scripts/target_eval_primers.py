@@ -14,8 +14,11 @@ from db import DBHandler
 
 DEFAULT_ADJACENCY_LIMIT = 500
 
+
 def get_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Evaluate the badness of the primers against target species")
+    parser = argparse.ArgumentParser(
+        description="Evaluate the badness of the primers against target species"
+    )
     parser.add_argument(
         "--output",
         type=str,
@@ -41,7 +44,7 @@ def get_args() -> argparse.Namespace:
         help=f"Limit within which primers of opposite strand are considered adjancent enough to be problematic. Default: {DEFAULT_ADJACENCY_LIMIT}",
     )
     parser.add_argument(
-    # TODO: implement hard filter
+        # TODO: implement hard filter
         "--hard_filter",
         action="store_true",
         help="If set, primers with a badness score above a certain threshold are marked as discarded in the database",
@@ -49,12 +52,16 @@ def get_args() -> argparse.Namespace:
 
     return parser.parse_args()
 
-def get_alignments_with_adjacent_primers(db: DBHandler, args: argparse.Namespace) -> pd.DataFrame:
-    """ 
-    Returns all misaligned alignments with adjacent aligning primers 
+
+def get_alignments_with_adjacent_primers(
+    db: DBHandler, args: argparse.Namespace
+) -> pd.DataFrame:
+    """
+    Returns all misaligned alignments with adjacent aligning primers
     I do a simple inner join with conditions to find adjacent alignments
     """
-    data, columns = db.select("""
+    data, columns = db.select(
+        """
         WITH formatted_alignments AS (
             -- Select all alignments from the pool and add information from proto_primers
             SELECT 
@@ -112,55 +119,78 @@ def get_alignments_with_adjacent_primers(db: DBHandler, args: argparse.Namespace
             alignments.mismatches_descriptor IS NOT NULL OR
             alignments.primer_strand <> alignments.aligned_to
         ORDER BY alignments.id ASC
-    """, (args.pool, args.adjacency_limit, args.adjacency_limit))
-    return pd.DataFrame(
-        data,
-        columns=columns
+    """,
+        (args.pool, args.adjacency_limit, args.adjacency_limit),
+    )
+    return pd.DataFrame(data, columns=columns)
+
+
+def calculate_badness_for_proto_primers(
+    args: argparse.Namespace,
+    proto_primers: pd.DataFrame,
+    alignments: pd.DataFrame,
+    adjacent_alignments: pd.DataFrame,
+) -> pd.DataFrame:
+    """Calculate the badness score for each primer taking into account the alignments"""
+    # sum all alignment scores for each primer
+    primers_alignment_scores = (
+        alignments.groupby("primer_id")["score"]
+        .sum()
+        .reset_index(name="alignment_score")
     )
 
-def calculate_badness_for_proto_primers(args: argparse.Namespace, proto_primers: pd.DataFrame, alignments: pd.DataFrame, adjacent_alignments: pd.DataFrame) -> pd.DataFrame:
-    """ Calculate the badness score for each primer taking into account the alignments """
-    # sum all alignment scores for each primer
-    primers_alignment_scores = alignments.groupby("primer_id")["score"].sum().reset_index(name="alignment_score")
-    
     # sum all alignment scores for each primer with adjacent primers
-    res = adjacent_alignments.groupby("primer_id").agg({
-        "primer_id": "first", # keep primer_id
-        "score": "sum",
-        "adjacent_alignment_score": "sum"
-    }).sum(axis=1).reset_index(name="adjacency_score")
-    
+    res = (
+        adjacent_alignments.groupby("primer_id")
+        .agg(
+            {
+                "primer_id": "first",  # keep primer_id
+                "score": "sum",
+                "adjacent_alignment_score": "sum",
+            }
+        )
+        .sum(axis=1)
+        .reset_index(name="adjacency_score")
+    )
+
     # merge the two dataframes
     primers_scores = pd.merge(
-        primers_alignment_scores,
-        res,
-        on="primer_id",
-        how="outer"
-    ) 
+        primers_alignment_scores, res, on="primer_id", how="outer"
+    )
 
     # TODO Implement calculation logic
-    primers_scores["badness"] = primers_scores["alignment_score"].fillna(0.0) + primers_scores["adjacency_score"].fillna(0.0)
+    primers_scores["badness"] = primers_scores["alignment_score"].fillna(
+        0.0
+    ) + primers_scores["adjacency_score"].fillna(0.0)
     primers_scores.to_csv("temp.tsv", sep="\t", index=False)
     return primers_scores
-    
+
+
 def filter_primers_with_multiple_alignments(alignments: pd.DataFrame) -> pd.DataFrame:
     pass
 
+
 def update_db_table(db: DBHandler, df: pd.DataFrame, column: str) -> None:
-    """ Updates the specified table with the provided dataframe """
-    db.executemany(f"""
+    """Updates the specified table with the provided dataframe"""
+    db.executemany(
+        f"""
         UPDATE proto_primers
         SET {column} = ?
         WHERE id = ?
-    """, df[["badness", "primer_id"]].values.tolist())
-
-def get_db_table(db: DBHandler, table_name: str, args: argparse.Namespace) -> pd.DataFrame:
-    """ Returns the specified table as a pandas dataframe """
-    data, columns = db.select(f"SELECT * FROM {table_name} WHERE pool = ?", (args.pool,))
-    return pd.DataFrame(
-        data,
-        columns=columns
+    """,
+        df[["badness", "primer_id"]].values.tolist(),
     )
+
+
+def get_db_table(
+    db: DBHandler, table_name: str, args: argparse.Namespace
+) -> pd.DataFrame:
+    """Returns the specified table as a pandas dataframe"""
+    data, columns = db.select(
+        f"SELECT * FROM {table_name} WHERE pool = ?", (args.pool,)
+    )
+    return pd.DataFrame(data, columns=columns)
+
 
 def main():
     print("Evaluating primers against target species")
@@ -169,13 +199,16 @@ def main():
     proto_primers = get_db_table(db, "proto_primers", args)
     alignments = get_db_table(db, "alignments", args)
     alignments_with_adjacent_alignments = get_alignments_with_adjacent_primers(db, args)
-    scores = calculate_badness_for_proto_primers(args, proto_primers, alignments, alignments_with_adjacent_alignments)
+    scores = calculate_badness_for_proto_primers(
+        args, proto_primers, alignments, alignments_with_adjacent_alignments
+    )
 
     update_db_table(db, scores, "badness")
 
     # generate output file
     with open(args.output, "w") as f:
         scores.to_csv(f, sep="\t", index=False)
+
 
 if __name__ == "__main__":
     main()

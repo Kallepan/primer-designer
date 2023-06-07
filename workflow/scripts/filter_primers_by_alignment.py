@@ -11,6 +11,7 @@ import sys
 
 DEFAULT_ADJACENCY_LIMIT = 500
 
+
 def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Filter primers by alignment")
     parser.add_argument(
@@ -63,6 +64,7 @@ def __calculate_badness(alignment: pd.DataFrame, args: argparse.Namespace) -> li
             - the amount of adjacent primers (inverse the distance)
         4. Append the score in the filtered_proto_primers.json file and output
     """
+
     def calculate_badness(primer: pd.Series) -> float:
         """
         Calculates the badness score for a primer based on the amount of mismatches, misalignments and adjacent primers
@@ -72,47 +74,63 @@ def __calculate_badness(alignment: pd.DataFrame, args: argparse.Namespace) -> li
             adjacency_limit = args.adjacency_limit
             opposite_strand = "reverse"
             adjacent_primers = alignment.loc[
-                (alignment["primer_amplicon"] != primer["primer_amplicon"]) &
-                (alignment["strand"] == opposite_strand) &
-                (alignment["position"] <= primer["position"] + adjacency_limit) &
-                (alignment["position"] >= primer["position"])
+                (alignment["primer_amplicon"] != primer["primer_amplicon"])
+                & (alignment["strand"] == opposite_strand)
+                & (alignment["position"] <= primer["position"] + adjacency_limit)
+                & (alignment["position"] >= primer["position"])
             ]
         if primer["primer_strand"] == "reverse":
-            adjacency_limit = -1*args.adjacency_limit
+            adjacency_limit = -1 * args.adjacency_limit
             opposite_strand = "forward"
             adjacent_primers = alignment.loc[
-                (alignment["primer_amplicon"] != primer["primer_amplicon"]) &
-                (alignment["strand"] == opposite_strand) &
-                (alignment["position"] >= primer["position"] + adjacency_limit) &
-                (alignment["position"] <= primer["position"])
+                (alignment["primer_amplicon"] != primer["primer_amplicon"])
+                & (alignment["strand"] == opposite_strand)
+                & (alignment["position"] >= primer["position"] + adjacency_limit)
+                & (alignment["position"] <= primer["position"])
             ]
 
-        print(f"Found {len(adjacent_primers)} adjacent primers for primer {primer['primer']}")
+        print(
+            f"Found {len(adjacent_primers)} adjacent primers for primer {primer['primer']}"
+        )
         badness += len(adjacent_primers)
         return badness
-    
+
     problematic_primers = alignment.loc[
-        (alignment["matches"] > 1) |
-        (alignment["strand"] != alignment["primer_strand"]) |
-        (alignment["mismatches_descriptor"].isna() == False)
+        (alignment["matches"] > 1)
+        | (alignment["strand"] != alignment["primer_strand"])
+        | (alignment["mismatches_descriptor"].isna() == False)
     ].copy()
     problematic_primers.reset_index(inplace=True)
 
-     # check each misaligned_primer for adjacent primers -> opposite strand, within adjacency_limit
+    # check each misaligned_primer for adjacent primers -> opposite strand, within adjacency_limit
     print(f"Found {len(problematic_primers)} misalignments")
-    problematic_primers.loc[:,"badness"] = problematic_primers.apply(calculate_badness, axis=1)
-    
+    problematic_primers.loc[:, "badness"] = problematic_primers.apply(
+        calculate_badness, axis=1
+    )
+
     # join both tables
-    alignment = alignment.merge(problematic_primers[["primer", "badness"]], on="primer", how="left", indicator=False)
+    alignment = alignment.merge(
+        problematic_primers[["primer", "badness"]],
+        on="primer",
+        how="left",
+        indicator=False,
+    )
 
     alignment.fillna(0, inplace=True)
-    alignment = alignment.groupby(["primer_region", "primer_amplicon", "primer_strand", "id"]).agg(
-        badness=("badness", "sum"),
-    ).reset_index()
+    alignment = (
+        alignment.groupby(["primer_region", "primer_amplicon", "primer_strand", "id"])
+        .agg(
+            badness=("badness", "sum"),
+        )
+        .reset_index()
+    )
 
     return alignment
 
-def __add_values_to_json(original_primers: dict, alignment: pd.DataFrame, args: argparse.Namespace) -> dict:
+
+def __add_values_to_json(
+    original_primers: dict, alignment: pd.DataFrame, args: argparse.Namespace
+) -> dict:
     """
     Takes in a dataframe containing the parsed output from bowtie
     and a dictionary with the original primers and adds the badness score
@@ -129,26 +147,27 @@ def __add_values_to_json(original_primers: dict, alignment: pd.DataFrame, args: 
             for k, primer in enumerate(amplicon["forward_primers"]):
                 print(region_name, amplicon_name, "forward", k)
                 primer["badness"] = alignment.loc[
-                    (alignment["primer_region"] == region_name) &
-                    (alignment["primer_amplicon"] == amplicon_name) &
-                    (alignment["primer_strand"] == "forward") &
-                    (alignment["id"] == k)
+                    (alignment["primer_region"] == region_name)
+                    & (alignment["primer_amplicon"] == amplicon_name)
+                    & (alignment["primer_strand"] == "forward")
+                    & (alignment["id"] == k)
                 ]["badness"].values[0]
                 amplicon["forward_primers"][k] = primer
 
             for k, primer in enumerate(amplicon["reverse_primers"]):
                 primer["badness"] = alignment.loc[
-                    (alignment["primer_region"] == region_name) &
-                    (alignment["primer_amplicon"] == amplicon_name) &
-                    (alignment["primer_strand"] == "reverse") &
-                    (alignment["id"] == k)
+                    (alignment["primer_region"] == region_name)
+                    & (alignment["primer_amplicon"] == amplicon_name)
+                    & (alignment["primer_strand"] == "reverse")
+                    & (alignment["id"] == k)
                 ]["badness"].values[0]
                 amplicon["reverse_primers"][k] = primer
 
             region["amplicons"][j] = amplicon
         modified_primers["regions"][i] = region
-    
+
     return modified_primers
+
 
 def main():
     args = get_args()
@@ -178,7 +197,9 @@ def main():
 
     # Write output
     alignment_with_badness = __calculate_badness(alignment, args)
-    modified_primers = __add_values_to_json(original_primers, alignment_with_badness, args)
+    modified_primers = __add_values_to_json(
+        original_primers, alignment_with_badness, args
+    )
     __write_output(modified_primers, args.output)
 
 

@@ -8,6 +8,7 @@ import pandas as pd
 
 DEFAULT_NUMBER_OF_MISMATCHES = 3
 
+
 def get_parser() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Align primers to reference genome and filter primers with multiple matches"
@@ -16,18 +17,12 @@ def get_parser() -> argparse.Namespace:
     parser.add_argument(
         "--primers", type=str, required=True, help="Fasta file containing primers"
     )
-    parser.add_argument(
-        "--index", type=str, required=True, help="Path to index files"
-    )
-    parser.add_argument(
-        "--db", type=str, required=False, help="Path to database file"
-    )
+    parser.add_argument("--index", type=str, required=True, help="Path to index files")
+    parser.add_argument("--db", type=str, required=False, help="Path to database file")
     parser.add_argument(
         "--output", type=str, required=False, help="Path to output file"
     )
-    parser.add_argument(
-        "--pool", type=str, required=False, help="Pool number"
-    )
+    parser.add_argument("--pool", type=str, required=False, help="Pool number")
     parser.add_argument(
         "--mismatches",
         type=int,
@@ -47,6 +42,7 @@ def __run_bowtie(args: argparse.Namespace):
         raise Exception(sp.stderr.decode("utf-8"))
 
     return sp.stdout.decode("utf-8")
+
 
 def __parse_alignment(raw_alignment: str, args: argparse.Namespace) -> pd.DataFrame:
     def decode_aligned_to(symbol: str) -> str:
@@ -82,6 +78,7 @@ def __parse_alignment(raw_alignment: str, args: argparse.Namespace) -> pd.DataFr
     alignment["pool"] = args.pool
     return alignment
 
+
 def main():
     print("Aligning primers to reference genome")
 
@@ -94,8 +91,9 @@ def main():
     # write output to csv and database
     alignment.to_sql("alignments", db.con, if_exists="append", index=False)
     alignment.to_csv(args.output, index=False)
-    
+
     print("Wrote primer alignments to database")
+
 
 if __name__ == "__main__":
     main()
