@@ -100,16 +100,14 @@ def score_alignments(alignments: pd.DataFrame, args: argparse.Namespace) -> pd.D
 
     return alignments
 
-def to_db(alignments: pd.DataFrame, db: DBHandler, args: argparse.Namespace) -> None:
+def write_to_db(alignments: pd.DataFrame, db: DBHandler, args: argparse.Namespace) -> None:
     # Write the scores to the database and to a file
     alignments.to_csv(args.output, sep="\t", index=False)
-    db.executemany(
-        """
+    db.executemany("""
         UPDATE alignments
         SET score = ?
         WHERE id = ?
-        """, alignments[["score", "id"]].values.tolist()
-    )
+    """, alignments[["score", "id"]].values.tolist())
 
 def main():
     print("Running score_alignments.py")
@@ -117,7 +115,7 @@ def main():
     db = DBHandler(args.db)
     alignments = get_alignments(db, args)
     scored_alignments = score_alignments(alignments, args)
-    to_db(scored_alignments, db, args)
+    write_to_db(scored_alignments, db, args)
 
 if __name__ == "__main__":
     main()

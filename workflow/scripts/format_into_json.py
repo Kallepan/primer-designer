@@ -46,9 +46,7 @@ def __write_json(db: str, output: str, pool: str) -> None:
     # Afterwards write to json
     json_dict = {
         "pool_id": pool,
-        "regions": [
-
-        ]
+        "regions": [ ]
     }
 
     if df.empty:
