@@ -80,16 +80,29 @@ rule eval_primers_with_target:
     output: "results/{species}.{pool}.proto_primers.scores.csv"
     log: "logs/{species}.{pool}.evaluation.log"
     params:
-        adjacency_limit = config["max_adjacency_limit"]
+        adjacency_limit = config["max_adjacency_limit"],
+        hard_filter = config["hard_filter"]
     conda:
         "../envs/primers.yaml"
     shell:
-        """python3 workflow/scripts/target_eval_primers.py \
-        --db {input.db} \
-        --output {output} \
-        --adjacency_limit {params.adjacency_limit} \
-        --pool {wildcards.pool} &>> {log}"""
-
+        # Check if we are using hard or soft filtering
+        """
+        if [ "{params.hard_filter}" == "True" ]; then
+            python3 workflow/scripts/target_eval_hard_primers.py \
+            --db {input.db} \
+            --output {output} \
+            --pool {wildcards.pool} \
+            --adjacency_limit {params.adjacency_limit} \
+            &>> {log}
+        else
+            python3 workflow/scripts/target_eval_soft_primers.py \
+            --db {input.db} \
+            --output {output} \
+            --pool {wildcards.pool} \
+            --adjacency_limit {params.adjacency_limit} \
+            &>> {log}
+        fi
+        """
 rule export_to_json:
     input:
         scores = "results/{species}.{pool}.proto_primers.scores.csv",

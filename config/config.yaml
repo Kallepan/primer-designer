@@ -11,3 +11,4 @@ base_penalty: 100
 
 # The following primers limit the number of problematic primers
 max_adjacency_limit: 500
+hard_filter: false
