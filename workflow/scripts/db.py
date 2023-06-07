@@ -58,8 +58,8 @@ class DBHandler:
                     tm REAL NOT NULL,
                     gc_percent REAL NOT NULL,
                     hairpin_th REAL NOT NULL,
-                    badness REAL DEFAULT 0.0,
-                    discarded BOOLEAN DEFAULT FALSE,
+                    discarded BOOLEAN NOT NULL DEFAULT FALSE,
+                    badness REAL NOT NULL DEFAULT 0.0,
                     UNIQUE(pool, region_name, amplicon_name, strand, sequence)
                 )
             """
