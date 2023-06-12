@@ -1,4 +1,0 @@
-usage: target_eval_soft_primers.py [-h] --output OUTPUT --db DB --pool POOL
-                                   [--adjacency_limit ADJACENCY_LIMIT]
-target_eval_soft_primers.py: error: argument --adjacency_limit: invalid int value: '{params.adjacency_limit}'
-Evaluating primers against target species

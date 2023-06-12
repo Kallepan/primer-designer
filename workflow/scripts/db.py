@@ -16,8 +16,9 @@ class DBHandler:
                     sequence TEXT NOT NULL,
                     matches INT NOT NULL,
                     score REAL DEFAULT 0.0,
-                    read_quality TEXT NO NULL,
+                    read_quality TEXT NOT NULL,
                     mismatches_descriptor TEXT,
+                    species TEXT NOT NULL,
 
                     FOREIGN KEY (primer_id) REFERENCES proto_primers (id)
                 );

@@ -27,6 +27,12 @@ def get_args() -> argparse.Namespace:
         required=True,
         help="Pool number to evaluate",
     )
+    parser.add_argument(
+        "--species",
+        type=str,
+        required=True,
+        help="Species to evaluate",
+    )
 
     # Optional Args
     parser.add_argument(
@@ -57,7 +63,7 @@ def get_alignments(db: DBHandler, args: argparse.Namespace) -> pd.DataFrame:
         SELECT alignments.id, alignments.primer_id, alignments.aligned_to, alignments.matches, alignments.sequence, alignments.mismatches_descriptor, proto_primers.sequence AS primer_sequence, proto_primers.strand AS primer_strand
         FROM alignments
         LEFT JOIN proto_primers ON alignments.primer_id = proto_primers.id
-        WHERE alignments.pool = ? AND (
+        WHERE alignments.pool = ? AND alignments.species = ? AND (
             -- Filter out correct alignments so they don't get scored, default: 0.0
             alignments.matches <> 1 OR
             alignments.mismatches_descriptor IS NOT NULL OR
@@ -65,7 +71,7 @@ def get_alignments(db: DBHandler, args: argparse.Namespace) -> pd.DataFrame:
         )
         ORDER BY alignments.id ASC
         """,
-        (args.pool,),
+        (args.pool, args.species),
     )
     df = pd.DataFrame(
         alignments,

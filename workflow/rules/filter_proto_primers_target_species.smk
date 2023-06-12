@@ -48,6 +48,7 @@ rule align_primers_to_species:
             --index {params.index} \
             --db {input.db} \
             --pool {wildcards.pool} \
+            --species {wildcards.species} \
             --mismatches {params.mismatches} \
             --output {output} &>> {log}
         """
@@ -64,10 +65,11 @@ rule score_alignments:
         alignment_weight = config["alignment_weight"],
         mismatch_weight = config["mismatch_weight"],
     shell:
-        """python3 workflow/scripts/target_score_alignments.py \
+        """python3 workflow/scripts/score_alignments.py \
         --db {input.db} \
         --output {output} \
         --pool {wildcards.pool} \
+        --species {wildcards.species} \
         --alignment_weight {params.alignment_weight} \
         --mismatch_weight {params.mismatch_weight} \
         --base_penalty {params.base_penalty} \
@@ -88,17 +90,19 @@ rule eval_primers_with_target:
         # Check if we are using hard or soft filtering
         """
         if [ "{params.hard_filter}" == "True" ]; then
-            python3 workflow/scripts/target_eval_hard_primers.py \
+            python3 workflow/scripts/eval_primers_hard.py \
             --db {input.db} \
             --output {output} \
             --pool {wildcards.pool} \
+            --species {wildcards.species} \
             --adjacency_limit {params.adjacency_limit} \
             &>> {log}
         else
-            python3 workflow/scripts/target_eval_soft_primers.py \
+            python3 workflow/scripts/eval_primers_soft.py \
             --db {input.db} \
             --output {output} \
             --pool {wildcards.pool} \
+            --species {wildcards.species} \
             --adjacency_limit {params.adjacency_limit} \
             &>> {log}
         fi

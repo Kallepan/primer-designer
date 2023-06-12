@@ -38,6 +38,12 @@ def get_args() -> argparse.Namespace:
         help="Pool number to evaluate",
     )
     parser.add_argument(
+        "--species",
+        type=str,
+        required=True,
+        help="Species to evaluate",
+    )
+    parser.add_argument(
         "--adjacency_limit",
         type=int,
         default=DEFAULT_ADJACENCY_LIMIT,
@@ -67,14 +73,15 @@ def get_alignments_with_adjacent_primers(
                 alignments.score, 
                 alignments.aligned_to,
                 alignments.pool,
+                alignments.species,
                 proto_primers.amplicon_name,
                 proto_primers.strand AS primer_strand
             FROM alignments
             LEFT JOIN proto_primers
-            ON 
-                proto_primers.id = alignments.primer_id AND
-                proto_primers.pool = alignments.pool
-            WHERE alignments.pool = ?
+            ON proto_primers.id = alignments.primer_id
+            WHERE 
+                alignments.pool = ? AND 
+                alignments.species = ?
         )
         SELECT
             alignments.id AS id,
@@ -85,13 +92,14 @@ def get_alignments_with_adjacent_primers(
             alignments.score AS score,
             alignments.aligned_to AS aligned_to,
             alignments.amplicon_name AS amplicon_name,
+            alignments.pool AS pool,
+            alignments.species AS species,
             adjacent_alignments.id AS adjacent_alignment_id,
             adjacent_alignments.primer_id AS adjacent_alignment_primer_id,
             adjacent_alignments.position AS adjacent_alignment_position,
             adjacent_alignments.score AS adjacent_alignment_score,
             adjacent_alignments.aligned_to AS adjacent_alignment_aligned_to,
-            adjacent_alignments.amplicon_name AS adjacent_alignment_amplicon_name,
-            alignments.pool AS pool
+            adjacent_alignments.amplicon_name AS adjacent_alignment_amplicon_name
         FROM formatted_alignments AS alignments
         INNER JOIN formatted_alignments AS adjacent_alignments
         ON 
@@ -107,20 +115,16 @@ def get_alignments_with_adjacent_primers(
                     adjacent_alignments.position <= alignments.position AND
                     adjacent_alignments.position >= alignments.position - ?
             END
-        -- select only misaligned alignments
-        WHERE
-            alignments.matches <> 0 OR
-            alignments.mismatches_descriptor IS NOT NULL OR
-            alignments.primer_strand <> alignments.aligned_to
-        ORDER BY alignments.id ASC
+        ORDER BY 
+            alignments.primer_id ASC, 
+            alignments.id ASC
     """,
-        (args.pool, args.adjacency_limit, args.adjacency_limit),
+        (args.pool, args.species, args.adjacency_limit, args.adjacency_limit),
     )
     return pd.DataFrame(data, columns=columns)
 
 
 def calculate_badness_for_proto_primers(
-    args: argparse.Namespace,
     alignments: pd.DataFrame,
     adjacent_alignments: pd.DataFrame,
 ) -> pd.DataFrame:
@@ -132,8 +136,8 @@ def calculate_badness_for_proto_primers(
         .reset_index(name="alignment_score")
     )
 
-    # sum all alignment scores for each primer with adjacent primers
-    adjacent_alignments = (
+    # sum all alignment scores for each adjacent primer for a primer
+    adjacent_alignments_sum = (
         adjacent_alignments.groupby("primer_id")
         .agg(
             {
@@ -146,19 +150,21 @@ def calculate_badness_for_proto_primers(
         .reset_index(name="adjacency_score")
     )
 
-    # merge the two dataframes
-    primers_scores = pd.merge(
-        primers_alignment_scores, adjacent_alignments, on="primer_id", how="outer"
+    # merge dataframes on primer_id to prepare calculation of final badness score
+    scores = pd.merge(
+        primers_alignment_scores, adjacent_alignments_sum, on="primer_id", how="outer"
     )
 
+    # Calculate badness score
     # TODO Implement calculation logic
-    primers_scores["badness"] = primers_scores["alignment_score"] + primers_scores["adjacency_score"]
-    # This is needed to avoid NaNs
-    primers_scores["badness"] = primers_scores["badness"].fillna(0.0).astype(float)
+    scores["badness"] = scores["alignment_score"] + scores["adjacency_score"]
+    scores["badness"] = scores["badness"].fillna(0.0).astype(float)
 
-    # DEBUG
-    primers_scores.to_csv("temp.tsv", sep="\t", index=False)
-    return primers_scores
+    # TODO: DEBUG
+    scores.to_csv("tmp/scores.tsv", sep="\t", index=False)
+    adjacent_alignments.to_csv("tmp/adjacent_alignments.tsv", sep="\t", index=False)
+    return scores
+
 
 def update_db_table(db: DBHandler, df: pd.DataFrame) -> None:
     """Updates the specified table with the provided dataframe"""
@@ -171,24 +177,27 @@ def update_db_table(db: DBHandler, df: pd.DataFrame) -> None:
         df[["badness", "primer_id"]].values.tolist(),
     )
 
-def get_alignments(
-    db: DBHandler, args: argparse.Namespace
-) -> pd.DataFrame:
+
+def get_alignments(db: DBHandler, args: argparse.Namespace) -> pd.DataFrame:
     """Returns the specified table as a pandas dataframe"""
-    data, columns = db.select("""
-        SELECT * FROM alignments WHERE pool = ?
-    """, (args.pool,))
+    data, columns = db.select(
+        """
+        SELECT * FROM alignments WHERE pool = ? AND species = ?
+    """,
+        (args.pool, args.species),
+    )
 
     return pd.DataFrame(data, columns=columns)
 
+
 def main():
-    print("Evaluating primers against target species")
+    print("Scoring primers...")
     args = get_args()
     db = DBHandler(args.db)
     alignments = get_alignments(db, args)
     alignments_with_adjacent_alignments = get_alignments_with_adjacent_primers(db, args)
     scores = calculate_badness_for_proto_primers(
-        args, alignments, alignments_with_adjacent_alignments
+        alignments, alignments_with_adjacent_alignments
     )
 
     update_db_table(db, scores)
