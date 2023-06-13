@@ -1,12 +1,3 @@
-"""
-Take each problematic primer (primer not aligning to the original site) and calculate a badness score for it.
-This score consists of the following components:
-    - Sum of 'Score' of each alignment (mismatches, mismatches_descriptor, matches) is precalculated in the database
-    - If other complementary primers are found within a certain distance, the score is increased further
-    - Optional hard filter to remove problematic primers with a score above a certain threshold
-    - Soft filter (default) to calculate the score and store it in the database, but not remove the primers from the database
-"""
-
 import argparse
 import logging
 import pandas as pd
@@ -14,12 +5,14 @@ import pandas as pd
 from db import DBHandler
 
 DEFAULT_ADJACENCY_LIMIT = 500
+DEFAULT_ALIGNMENTS_LIMIT = 3
 
 
 def __get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Evaluate the badness of the primers against target species"
+        description="Evaluate the badness of the primers against target species. Hard Filter version"
     )
+
     parser.add_argument(
         "--output",
         type=str,
@@ -58,7 +51,7 @@ def __get_alignments_with_adjacent_primers(
     db: DBHandler, args: argparse.Namespace
 ) -> pd.DataFrame:
     """
-    Returns all misaligned alignments with adjacent aligning primers
+    Returns all misaligned alignments with adjacent aligning primers for the target species (e.g.: missing correct alignments)
     I do a simple inner join with conditions to find adjacent alignments
     """
     data, columns = db.select(
@@ -102,7 +95,7 @@ def __get_alignments_with_adjacent_primers(
             adjacent_alignments.aligned_to AS adjacent_alignment_aligned_to,
             adjacent_alignments.amplicon_name AS adjacent_alignment_amplicon_name
         FROM formatted_alignments AS alignments
-        -- inner join to only get alignments that have adjacent alignments
+        -- Inner join with itself to get all adjacent alignments
         INNER JOIN formatted_alignments AS adjacent_alignments
         ON 
             -- Select all alignments from the pool that are adjacent to the current alignment. Ignore the same amplicon and the same strand
@@ -120,93 +113,56 @@ def __get_alignments_with_adjacent_primers(
         ORDER BY 
             alignments.primer_id ASC, 
             alignments.id ASC
-    """,
+        """,
         (args.pool, args.species, args.adjacency_limit, args.adjacency_limit),
     )
     return pd.DataFrame(data, columns=columns)
 
 
-def __calculate_badness_for_proto_primers(
-    alignments: pd.DataFrame,
-    adjacent_alignments: pd.DataFrame,
-) -> pd.DataFrame:
-    """Calculate the badness score for each primer taking into account the alignments"""
-    # sum all alignment scores for each primer
-    primers_alignment_scores = (
-        alignments.groupby("primer_id")["score"]
-        .sum()
-        .reset_index(name="alignment_score")
-    )
+def __get_primers_to_discard(
+    args: argparse.Namespace, adjacent_alignments: pd.DataFrame
+) -> tuple[list[str], pd.Series]:
+    """
+    marks the primers depending on their adjacent misaligned primers:
+    Input: dataframe where each alignment is associated with its adjacent alignments
+    Output: list of primers that should be marked as discarded
 
-    # sum all alignment scores for each adjacent primer for a primer
-    adjacent_alignments_sum = (
-        adjacent_alignments.groupby("primer_id")
-        .agg(
-            {
-                "primer_id": "first",  # keep primer_id
-                "score": "sum",
-                "adjacent_alignment_score": "sum",
-            }
-        )
-        .sum(axis=1)
-        .reset_index(name="adjacency_score")
-    )
-
-    # merge dataframes on primer_id to prepare calculation of final badness score
-    scores = pd.merge(
-        primers_alignment_scores, adjacent_alignments_sum, on="primer_id", how="outer"
-    )
-
-    # Calculate badness score
-    # TODO Implement calculation logic
-    scores["badness"] = scores["alignment_score"] + scores["adjacency_score"]
-    scores["badness"] = scores["badness"].fillna(0.0).astype(float)
-
-    return scores
+    Process:
+        - Filter out the primers whose alignments do not meet the hard filter criteria
+        - count the primers who still have mismatched alignments
+        - Gather the ones above a threshold X
+        - Mark them as discarded in the database
+    """
+    primer_adjacency_counts = adjacent_alignments["primer_id"].value_counts()
+    primers_to_discard = primer_adjacency_counts[
+        primer_adjacency_counts > DEFAULT_ALIGNMENTS_LIMIT
+    ].index.tolist()  # TODO: add parameters
+    return primers_to_discard, primer_adjacency_counts
 
 
-def __update_db_table(db: DBHandler, df: pd.DataFrame) -> None:
-    """Updates the specified table with the provided dataframe"""
+def __update_db_tabke(db: DBHandler, primers_to_discard: list[str]) -> None:
+    """Takes a list of primer_ids and marks them as discarded in the database"""
     db.executemany(
         f"""
         UPDATE proto_primers
-        SET badness = ?
+        SET discarded = ?
         WHERE id = ?
     """,
-        df[["badness", "primer_id"]].values.tolist(),
+        [(1, primer_id) for primer_id in primers_to_discard],
     )
-
-
-def __get_alignments(db: DBHandler, args: argparse.Namespace) -> pd.DataFrame:
-    """Returns the specified table as a pandas dataframe"""
-    data, columns = db.select(
-        """
-        SELECT * FROM alignments WHERE pool = ? AND species = ?
-    """,
-        (args.pool, args.species),
-    )
-
-    return pd.DataFrame(data, columns=columns)
 
 
 def main():
-    logging.info("Scoring primers...")
+    logging.info("Removing misaligned primers...")
     args = __get_args()
     db = DBHandler(args.db)
-    alignments = __get_alignments(db, args)
-    alignments_with_adjacent_alignments = __get_alignments_with_adjacent_primers(
-        db, args
-    )
-    scores = __calculate_badness_for_proto_primers(
-        alignments, alignments_with_adjacent_alignments
-    )
-
-    __update_db_table(db, scores)
+    adjacent_alignments = __get_alignments_with_adjacent_primers(db, args)
+    primers_to_discard, counts = __get_primers_to_discard(args, adjacent_alignments)
+    __update_db_tabke(db, primers_to_discard)
 
     # generate output file
     with open(args.output, "w") as f:
-        scores.to_csv(f, sep="\t", index=False)
-
+        counts.to_csv(f, sep="\t", index=True, header=True)
 
 if __name__ == "__main__":
     main()

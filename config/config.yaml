@@ -13,7 +13,7 @@ alignment_settings:
 # The following primers limit the number of problematic primers
 evaluation_settings:
   max_adjacency_limit: 300
-  hard_filter: false
+  hard_filter: true
   soft_filter_params:
     null # TODO: Placeholder
   hard_filter_params:
