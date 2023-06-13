@@ -1,6 +1,7 @@
-amplicon_size: 200
-amplicon_buffer_size: 50
-pool_count: 2 # This value does not affect the results and changing it just breaks snakemake. So don't change it.
+primer_gen_config:
+  amplicon_size: 200
+  amplicon_buffer_size: 50
+  pool_count: 2 # This value does not affect the results and changing it just breaks snakemake. So don't change it.
 
 # Alignment params
 max_mismatches: 3 # must be between 0 and 3
@@ -10,5 +11,10 @@ mismatch_weight: 0.5
 base_penalty: 100
 
 # The following primers limit the number of problematic primers
-max_adjacency_limit: 500
+max_adjacency_limit: 300
 hard_filter: false
+hard_filter_params:
+  max_mismatches: 3
+  alignment_weight: 0.5
+  mismatch_weight: 0.5
+  base_penalty: 100

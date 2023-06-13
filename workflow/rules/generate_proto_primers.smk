@@ -6,6 +6,9 @@ rule create_tmp_dir:
     shell:
         "mkdir -p {output}"
 
+pool_count = config["primer_gen_config"]["pool_count"]
+amplicon_size = config["primer_gen_config"]["amplicon_size"]
+amplicon_buffer = config["primer_gen_config"]["amplicon_buffer_size"]
 rule generate_proto_primers:
     input:
         fasta = "data/{species}.fasta",
@@ -14,9 +17,9 @@ rule generate_proto_primers:
         regions = "data/loci_formatted.csv",
         output_dir = "results/"
     params:
-        amplicon_size = config["amplicon_size"],
-        amplicon_buffer = config["amplicon_buffer_size"],
-        pool_count = config["pool_count"]
+        amplicon_size = amplicon_size,
+        amplicon_buffer = amplicon_buffer,
+        pool_count = pool_count
     conda:
         "../envs/primers.yaml"
     output:
