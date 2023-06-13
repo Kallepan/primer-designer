@@ -30,7 +30,9 @@ def __write_json(db: str, output: str, pool: str) -> None:
         """
             SELECT id, pool, region_name, amplicon_name, strand, sequence, length, tm, gc_percent, hairpin_th, badness
             FROM proto_primers
-            WHERE pool = ?
+            WHERE 
+                pool = ? AND 
+                NOT (discarded)
             ORDER BY id ASC
         """,
         (pool,),
@@ -63,8 +65,17 @@ def __write_json(db: str, output: str, pool: str) -> None:
                     "reverse_primers": [],
                 }
             )
+
+            # Extract forward and reverse primers
             forward_primers = amplicon_df[amplicon_df["strand"] == "forward"]
             reverse_primers = amplicon_df[amplicon_df["strand"] == "reverse"]
+
+            # Check if either forward or reverse primers are empty
+            # If so, remove the amplicon
+            if forward_primers.empty or reverse_primers.empty:
+                json_dict["regions"][-1]["amplicons"].pop()
+                continue
+
             for forward_primer in forward_primers.values:
                 json_dict["regions"][-1]["amplicons"][-1]["forward_primers"].append(
                     {

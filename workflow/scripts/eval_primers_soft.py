@@ -101,6 +101,7 @@ def get_alignments_with_adjacent_primers(
             adjacent_alignments.aligned_to AS adjacent_alignment_aligned_to,
             adjacent_alignments.amplicon_name AS adjacent_alignment_amplicon_name
         FROM formatted_alignments AS alignments
+        -- inner join to only get alignments that have adjacent alignments
         INNER JOIN formatted_alignments AS adjacent_alignments
         ON 
             -- Select all alignments from the pool that are adjacent to the current alignment. Ignore the same amplicon and the same strand
