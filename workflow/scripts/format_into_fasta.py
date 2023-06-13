@@ -1,5 +1,6 @@
 import argparse
 import sys
+import logging
 
 from db import DBHandler
 
@@ -35,7 +36,7 @@ def __write_fasta(db: DBHandler, args: argparse.Namespace) -> None:
 
 
 def main():
-    print("Formatting primers into fasta")
+    logging.info("Formatting primers into fasta")
     args = __parse_args()
     db = DBHandler(args.db)
     __write_fasta(db, args)
@@ -45,5 +46,5 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        print(f"ERROR: {e}")
+        logging.error(f"ERROR: {e}")
         sys.exit(1)

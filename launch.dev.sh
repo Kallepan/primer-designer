@@ -1,7 +1,8 @@
 #!/bin/bash
-
-# python3 workflow/scripts/filter_primers_by_alignment.py --alignment results/myc_tuberculosis_h37Rv.1.alignment.csv --primers results/myc_tuberculosis_h37Rv.1.proto_primers.json --output results/myc_tuberculosis_h37Rv.1.filtered_primers.json
-# exit 0
+#
+# This script is used to debug various parts of the pipeline.
+# Its content should not be considered as part of the pipeline
+# and should not be used as a reference for how to run the pipeline!
 
 rm results/* -rf
 rm logs/*

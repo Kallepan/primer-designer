@@ -1,13 +1,17 @@
 import argparse
-from db import DBHandler
+import logging
+import sys
+
 import pandas as pd
+
+from db import DBHandler
 
 MISMATCH_WEIGHT = 0.5
 ALIGNMENT_WEIGHT = 0.5
 BASE_PENALTY = 100
 
 
-def get_args() -> argparse.Namespace:
+def __get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Score alignments from bowtie")
     parser.add_argument(
         "--output",
@@ -56,7 +60,7 @@ def get_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def get_alignments(db: DBHandler, args: argparse.Namespace) -> pd.DataFrame:
+def __get_alignments(db: DBHandler, args: argparse.Namespace) -> pd.DataFrame:
     # Extract all alignments along with the sequence of the primer
     alignments, column_names = db.select(
         """
@@ -80,7 +84,7 @@ def get_alignments(db: DBHandler, args: argparse.Namespace) -> pd.DataFrame:
     return df
 
 
-def score_alignments(
+def __score_alignments(
     alignments: pd.DataFrame, args: argparse.Namespace
 ) -> pd.DataFrame:
     def calc_score(
@@ -123,7 +127,7 @@ def score_alignments(
     return alignments
 
 
-def write_to_db(
+def __write_to_db(
     alignments: pd.DataFrame, db: DBHandler, args: argparse.Namespace
 ) -> None:
     # Write the scores to the database and to a file
@@ -139,13 +143,17 @@ def write_to_db(
 
 
 def main():
-    print("Running score_alignments.py")
-    args = get_args()
+    logging.info("Running score_alignments.py")
+    args = __get_args()
     db = DBHandler(args.db)
-    alignments = get_alignments(db, args)
-    scored_alignments = score_alignments(alignments, args)
-    write_to_db(scored_alignments, db, args)
+    alignments = __get_alignments(db, args)
+    scored_alignments = __score_alignments(alignments, args)
+    __write_to_db(scored_alignments, db, args)
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        logging.error(f"ERROR: {e}")
+        sys.exit(1)

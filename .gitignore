@@ -135,4 +135,6 @@ dmypy.json
 *.csv
 *.tsv
 
+# Ignore files used for testing
 helper_scripts/
+debug.sh

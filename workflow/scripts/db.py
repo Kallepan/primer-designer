@@ -99,6 +99,7 @@ class DBHandler:
             raise e
 
     def execute(self, *args, **kwargs) -> sqlite3.Cursor:
+        """Executes a query"""
         try:
             with self.con:
                 return self.con.execute(*args, **kwargs)
@@ -106,13 +107,15 @@ class DBHandler:
             raise e
 
     def executemany(self, *args, **kwargs) -> sqlite3.Cursor:
+        """Executes a query with many values"""
         try:
             with self.con:
                 return self.con.executemany(*args, **kwargs)
         except Exception as e:
             raise e
 
-    def get_columns(self, table_name: str) -> list:
+    def get_columns(self, table_name: str) -> list[str]:
+        """Returns a list of column names for a given table"""
         try:
             with self.con:
                 return [

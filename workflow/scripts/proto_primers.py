@@ -1,6 +1,7 @@
 import os
 import sys
 import asyncio
+import logging
 
 from Bio import SeqIO
 from Bio.SeqIO import SeqRecord
@@ -172,7 +173,7 @@ async def __generate_primers_for_pool(
         )
 
         if not amplicon_forward_primers or not amplicon_reverse_primers:
-            print(
+            logging.warn(
                 f"Failed to find primers for {region_name}-{idx} in region {coords['start']}-{coords['end']} in {pool_id}."
             )
             continue

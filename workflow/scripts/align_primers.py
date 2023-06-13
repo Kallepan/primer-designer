@@ -1,6 +1,7 @@
 import argparse
 import subprocess
 import sys
+import logging
 
 from io import StringIO
 from db import DBHandler
@@ -9,7 +10,7 @@ import pandas as pd
 DEFAULT_NUMBER_OF_MISMATCHES = 3
 
 
-def get_parser() -> argparse.Namespace:
+def __get_parser() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Align primers to reference genome and filter primers with multiple matches"
     )
@@ -82,9 +83,9 @@ def __parse_alignment(raw_alignment: str, args: argparse.Namespace) -> pd.DataFr
 
 
 def main():
-    print("Aligning primers to reference genome")
+    logging.info("Aligning primers to reference genome")
 
-    args = get_parser()
+    args = __get_parser()
     db = DBHandler(args.db)
     db.setup_alignments_table()
     raw_alignment = __run_bowtie(args)
@@ -94,7 +95,7 @@ def main():
     alignment.to_sql("alignments", db.con, if_exists="append", index=False)
     alignment.to_csv(args.output, index=False)
 
-    print("Wrote primer alignments to database")
+    logging.info("Wrote primer alignments to database")
 
 
 if __name__ == "__main__":
@@ -102,5 +103,5 @@ if __name__ == "__main__":
     try:
         pass
     except Exception as e:
-        print(e, file=sys.stderr)
+        logging.error(e, file=sys.stderr)
         sys.exit(1)

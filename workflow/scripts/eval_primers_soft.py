@@ -8,6 +8,7 @@ This score consists of the following components:
 """
 
 import argparse
+import logging
 import pandas as pd
 
 from db import DBHandler
@@ -15,7 +16,7 @@ from db import DBHandler
 DEFAULT_ADJACENCY_LIMIT = 500
 
 
-def get_args() -> argparse.Namespace:
+def __get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Evaluate the badness of the primers against target species"
     )
@@ -53,7 +54,7 @@ def get_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def get_alignments_with_adjacent_primers(
+def __get_alignments_with_adjacent_primers(
     db: DBHandler, args: argparse.Namespace
 ) -> pd.DataFrame:
     """
@@ -125,7 +126,7 @@ def get_alignments_with_adjacent_primers(
     return pd.DataFrame(data, columns=columns)
 
 
-def calculate_badness_for_proto_primers(
+def __calculate_badness_for_proto_primers(
     alignments: pd.DataFrame,
     adjacent_alignments: pd.DataFrame,
 ) -> pd.DataFrame:
@@ -167,7 +168,7 @@ def calculate_badness_for_proto_primers(
     return scores
 
 
-def update_db_table(db: DBHandler, df: pd.DataFrame) -> None:
+def __update_db_table(db: DBHandler, df: pd.DataFrame) -> None:
     """Updates the specified table with the provided dataframe"""
     db.executemany(
         f"""
@@ -179,7 +180,7 @@ def update_db_table(db: DBHandler, df: pd.DataFrame) -> None:
     )
 
 
-def get_alignments(db: DBHandler, args: argparse.Namespace) -> pd.DataFrame:
+def __get_alignments(db: DBHandler, args: argparse.Namespace) -> pd.DataFrame:
     """Returns the specified table as a pandas dataframe"""
     data, columns = db.select(
         """
@@ -192,16 +193,18 @@ def get_alignments(db: DBHandler, args: argparse.Namespace) -> pd.DataFrame:
 
 
 def main():
-    print("Scoring primers...")
-    args = get_args()
+    logging.info("Scoring primers...")
+    args = __get_args()
     db = DBHandler(args.db)
-    alignments = get_alignments(db, args)
-    alignments_with_adjacent_alignments = get_alignments_with_adjacent_primers(db, args)
-    scores = calculate_badness_for_proto_primers(
+    alignments = __get_alignments(db, args)
+    alignments_with_adjacent_alignments = __get_alignments_with_adjacent_primers(
+        db, args
+    )
+    scores = __calculate_badness_for_proto_primers(
         alignments, alignments_with_adjacent_alignments
     )
 
-    update_db_table(db, scores)
+    __update_db_table(db, scores)
 
     # generate output file
     with open(args.output, "w") as f:

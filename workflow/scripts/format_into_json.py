@@ -3,11 +3,14 @@ Format the database to json to be used by the SADDLE SCRIPT
 """
 import argparse
 import pandas as pd
+import logging
 import json
+import sys
+
 from db import DBHandler
 
 
-def get_args() -> argparse.Namespace:
+def __get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Format the database to json to be used by the SADDLE SCRIPT"
     )
@@ -106,11 +109,15 @@ def __write_json(db: str, output: str, pool: str) -> None:
 
 
 def main() -> None:
-    print("Formatting proto_primers table into json")
-    args = get_args()
+    logging.info("Formatting proto_primers table into json")
+    args = __get_args()
     db = DBHandler(args.db)
     __write_json(db, args.output, args.pool)
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        logging.error(f"ERROR: {e}")
+        sys.exit(1)

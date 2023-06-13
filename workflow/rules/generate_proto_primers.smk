@@ -27,9 +27,9 @@ rule generate_proto_primers:
     log:
         out = "logs/{species}.proto_primers.log"
     shell:
-        """ python3 workflow/scripts/proto_primers.py \
+        """python3 workflow/scripts/proto_primers.py \
         -f {input.fasta} \
         -p {input.primer3_config} \
         -o {input.output_dir} \
         -r {input.regions} \
-        -t {input.tmp_dir} >> {log.out} 2>&1 """
+        -t {input.tmp_dir} >> {log.out} 2>&1"""

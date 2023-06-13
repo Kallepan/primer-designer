@@ -1,6 +1,7 @@
 import re
 import subprocess
 import os
+import logging
 import asyncio
 
 from Bio.Seq import Seq
@@ -100,7 +101,7 @@ class PrimerGenerator:
         n_left_primers = int(pattern_search_result[0][1])
         n_right_primers = int(pattern_search_result[1][1])
 
-        print(
+        logging.info(
             f"Found {n_left_primers} left primers and {n_right_primers} right primers for sequence {self.amplicon_id} for pool {self.pool_id}."
         )
 

@@ -13,8 +13,9 @@ rule create_index_for_target:
     shell:
         "bowtie-build {input.fasta} {params.outdir} >> {log} 2>&1"
 
+pool_count = config["primer_gen_config"]["pool_count"]
 rule all:
-    input: expand("results/{{species}}.{pool}.evaluated_primers.json", pool=range(0, config["pool_count"]))
+    input: expand("results/{{species}}.{pool}.evaluated_primers.json", pool=range(0, pool_count))
     output: "results/{species}.summary.csv"
     shell:
         "touch {output}"
@@ -29,6 +30,7 @@ rule format_pool_into_fasta:
     shell:
         "python3 workflow/scripts/format_into_fasta.py --db {input} --output {output.file} --pool {wildcards.pool} &>> {log.file}"
 
+max_mismatches = config["alignment_settings"]["max_mismatches"]
 rule align_primers_to_species:
     input:
         expand("tmp/indexes/{{species}}.{version}.ebwt", version=range(1, 5)),
@@ -39,7 +41,7 @@ rule align_primers_to_species:
     log: "logs/{species}.{pool}.alignment.log"
     params:
         index = lambda w, input: os.path.join("tmp", "indexes", os.path.basename(input.primers_fasta).split(".")[0]),
-        mismatches = config["max_mismatches"]
+        mismatches = max_mismatches
     conda: "../envs/bowtie.yaml"
     shell:
         """
@@ -53,6 +55,9 @@ rule align_primers_to_species:
             --output {output} &>> {log}
         """
 
+base_penalty = config["alignment_settings"]["base_penalty"]
+alignment_weight = config["alignment_settings"]["alignment_weight"]
+mismatch_weight = config["alignment_settings"]["mismatch_weight"]
 rule score_alignments:
     input:
         alignment = "results/{species}.{pool}.alignment.csv",
@@ -61,9 +66,9 @@ rule score_alignments:
     log: "logs/{species}.{pool}.alignment.scores.log"
     conda: "../envs/primers.yaml"
     params:
-        base_penalty = config["base_penalty"],
-        alignment_weight = config["alignment_weight"],
-        mismatch_weight = config["mismatch_weight"],
+        base_penalty = base_penalty,
+        alignment_weight = alignment_weight,
+        mismatch_weight = mismatch_weight,
     shell:
         """python3 workflow/scripts/score_alignments.py \
         --db {input.db} \
@@ -75,6 +80,8 @@ rule score_alignments:
         --base_penalty {params.base_penalty} \
         &>> {log}"""
 
+adjacency_limit = config["evaluation_settings"]["max_adjacency_limit"]
+hard_filter = config["evaluation_settings"]["hard_filter"]
 rule eval_primers_with_target:
     input:
         scores = "results/{species}.{pool}.alignment.scores.csv",
@@ -82,8 +89,8 @@ rule eval_primers_with_target:
     output: "results/{species}.{pool}.proto_primers.scores.csv"
     log: "logs/{species}.{pool}.evaluation.log"
     params:
-        adjacency_limit = config["max_adjacency_limit"],
-        hard_filter = config["hard_filter"]
+        adjacency_limit = adjacency_limit,
+        hard_filter = hard_filter,
     conda:
         "../envs/primers.yaml"
     shell:
@@ -107,6 +114,7 @@ rule eval_primers_with_target:
             &>> {log}
         fi
         """
+
 rule export_to_json:
     input:
         scores = "results/{species}.{pool}.proto_primers.scores.csv",
