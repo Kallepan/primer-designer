@@ -37,7 +37,7 @@ rule align_primers_to_species:
         expand("tmp/indexes/{{species}}.rev.{version}.ebwt", version=range(1, 3)),
         primers_fasta = "results/{species}.{pool}.proto_primers.fasta",
         db = "results/{species}.db"
-    output: "results/{species}.{pool}.alignment.csv"
+    output: temp("results/{species}.{pool}.alignment.raw")
     log: "logs/{species}.{pool}.alignment.log"
     params:
         index = lambda w, input: os.path.join("tmp", "indexes", os.path.basename(input.primers_fasta).split(".")[0]),
@@ -48,11 +48,26 @@ rule align_primers_to_species:
         python3 workflow/scripts/align_primers.py \
             --primers {input.primers_fasta} \
             --index {params.index} \
+            --mismatches {params.mismatches} \
+            --output {output} &>> {log}
+        """
+
+rule format_align_primers_to_species:
+    input: 
+        raw_alignment = "results/{species}.{pool}.alignment.raw",
+        db = "results/{species}.db"
+    output: "results/{species}.{pool}.alignment.csv"
+    log: "logs/{species}.{pool}.alignment.format.log"
+    conda: "../envs/format.yaml"
+    shell: 
+        """
+        python3 workflow/scripts/align_primers_format.py \
+            --input {input.raw_alignment} \
+            --output {output} \
             --db {input.db} \
             --pool {wildcards.pool} \
             --species {wildcards.species} \
-            --mismatches {params.mismatches} \
-            --output {output} &>> {log}
+            &>> {log}
         """
 
 base_penalty = config["alignment_settings"]["base_penalty"]
