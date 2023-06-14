@@ -10,6 +10,7 @@ MISMATCH_WEIGHT = 0.5
 ALIGNMENT_WEIGHT = 0.5
 BASE_PENALTY = 100
 
+logging.basicConfig(level=logging.INFO)
 
 def __get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Score alignments from bowtie")

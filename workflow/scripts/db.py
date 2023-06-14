@@ -1,6 +1,5 @@
 import sqlite3
 
-
 class DBHandler:
     def setup_alignments_table(self):
         with self.con:
@@ -87,6 +86,19 @@ class DBHandler:
         con.execute("PRAGMA journal_mode=WAL")
         con.execute("PRAGMA busy_timeout = 60000")
         self.con = con
+
+    def get_tables(self) -> list[str]:
+        """Returns a list of tables in the database"""
+        try:
+            with self.con:
+                return [
+                    x[0]
+                    for x in self.con.execute(
+                        "SELECT name FROM sqlite_master WHERE type='table'"
+                    ).fetchall()
+                ]
+        except Exception as e:
+            raise e
 
     def select(self, *args, **kwargs) -> tuple[list, list]:
         """Returns a tuple of (rows, column_names)"""

@@ -1,12 +1,12 @@
 import re
 import subprocess
 import os
-import logging
 import asyncio
-
+import logging
 from Bio.Seq import Seq
 from configs import PrimerGenConfig
 
+logging.basicConfig(level=logging.INFO)
 
 class PrimerGenerator:
     """

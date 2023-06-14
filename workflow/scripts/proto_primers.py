@@ -13,6 +13,7 @@ from handler import PrimerGenerator, AmpliconGenerator
 from configs import PrimerGenConfig
 from db import DBHandler
 
+logging.basicConfig(level=logging.INFO)
 
 def __load_regions(path: str) -> pd.DataFrame:
     df = pd.read_csv(

@@ -1,0 +1,5 @@
+channels:
+  - conda-forge
+dependencies:
+  - pip:
+      - pandas==2.0.0

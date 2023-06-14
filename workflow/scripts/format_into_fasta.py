@@ -4,6 +4,7 @@ import logging
 
 from db import DBHandler
 
+logging.basicConfig(level=logging.INFO)
 
 def __parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()

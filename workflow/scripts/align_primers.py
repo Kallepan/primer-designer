@@ -5,6 +5,7 @@ import logging
 
 DEFAULT_NUMBER_OF_MISMATCHES = 3
 
+logging.basicConfig(level=logging.INFO)
 
 def __get_parser() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -49,9 +50,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
     try:
-        pass
+        main()
     except Exception as e:
         logging.error(e, file=sys.stderr)
         sys.exit(1)

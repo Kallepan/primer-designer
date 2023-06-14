@@ -13,13 +13,6 @@ rule create_index_for_target:
     shell:
         "bowtie-build {input.fasta} {params.outdir} >> {log} 2>&1"
 
-pool_count = config["primer_gen_config"]["pool_count"]
-rule all:
-    input: expand("results/{{species}}.{pool}.evaluated_primers.json", pool=range(0, pool_count))
-    output: "results/{species}.summary.csv"
-    shell:
-        "touch {output}"
-        
 rule format_pool_into_fasta:
     input: "results/{species}.db"
     output:

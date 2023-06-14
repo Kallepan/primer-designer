@@ -4,6 +4,8 @@ import pandas as pd
 
 from db import DBHandler
 
+logging.basicConfig(level=logging.INFO)
+
 def __get_parser() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Formatting primer alignments"
@@ -72,9 +74,8 @@ def main():
     logging.info("Wrote primer alignments to database")
 
 if __name__ == "__main__":
-    main()
     try:
-        pass
+        main()
     except Exception as e:
         logging.error(e)
         raise e

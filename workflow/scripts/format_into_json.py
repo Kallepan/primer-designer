@@ -9,6 +9,7 @@ import sys
 
 from db import DBHandler
 
+logging.basicConfig(level=logging.INFO)
 
 def __get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(

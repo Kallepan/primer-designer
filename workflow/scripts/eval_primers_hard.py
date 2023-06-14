@@ -7,6 +7,7 @@ from db import DBHandler
 DEFAULT_ADJACENCY_LIMIT = 500
 DEFAULT_ALIGNMENTS_LIMIT = 3
 
+logging.basicConfig(level=logging.INFO)
 
 def __get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
