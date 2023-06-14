@@ -4,4 +4,3 @@ dependencies:
   - pip:
       - biopython==1.81
       - pandas==2.0.0
-prefix: /homes/kkandeepan/mambaforge/envs/snakemake

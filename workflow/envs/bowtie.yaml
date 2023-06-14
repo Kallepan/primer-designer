@@ -7,4 +7,3 @@ dependencies:
   - libxml2==2.10.4
   - pip:
       - pandas==2.0.0
-prefix: /homes/kkandeepan/mambaforge/envs/snakemake
