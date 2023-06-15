@@ -25,7 +25,6 @@ fn main() {
 
     init(args.debug);
 
-    let max_iterations = args.max_iterations.unwrap_or(100);
     let min_subsequence_size = args.min_subsequence_size.unwrap_or(4);
     let max_subsequence_size = args.max_subsequence_size.unwrap_or(8);
 
@@ -33,9 +32,8 @@ fn main() {
     saddle::run(
         &args.input_file, 
         &args.output_folder,
-        max_iterations,
         min_subsequence_size,
         max_subsequence_size,
     );
-    println!("Script used: {:?}", start.elapsed()); 
+    println!("Script used {:?}", start.elapsed()); 
 }

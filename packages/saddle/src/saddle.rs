@@ -6,8 +6,6 @@ use rand::random;
 use std::collections::HashMap;
 use std::path::Path;
 
-use std::time::Instant; // TODO for benchmarking
-
 fn calculate_loss(hash_map: &HashMap<String, f64>, amplicon_primer_pairs: &Vec<AmpliconPrimerPair>, subsequence_min_size: usize, subsequence_max_size: usize) -> f64 {
     /*
         - For every sequence in the hash table
@@ -20,8 +18,6 @@ fn calculate_loss(hash_map: &HashMap<String, f64>, amplicon_primer_pairs: &Vec<A
     }
 
     let mut loss = 0.0;
-
-    let time = Instant::now();
 
     for primer_pair in amplicon_primer_pairs {
         let left_primer = &primer_pair.forward_primer.sequence;
@@ -55,9 +51,6 @@ fn calculate_loss(hash_map: &HashMap<String, f64>, amplicon_primer_pairs: &Vec<A
                 2.0_f64.powi(subsequence_info.seq.len() as i32) * 2.0_f64.powi(subsequence_info.seq.num_gc() as i32);
        }
     }
-    // TODO Debug
-    println!("Loss: {}", loss);
-    println!("Time for one loss: {:?}", time.elapsed());
 
     loss
 }
@@ -192,7 +185,6 @@ fn calculate_reverse_complement(primer: &str) -> String {
 pub fn run(
     input_file_path: &String,
     output_folder_path: &String,
-    max_iterations: usize, 
     subsequence_min_size: usize,
     subsequence_max_size: usize)
 {
@@ -201,36 +193,34 @@ pub fn run(
         Ok(data) => data,
         Err(e) => panic!("Failed to parse JSON file. Error: {}", e)
     };
-    let mut final_sets = Vec::new();
     let output_folder = Path::new(output_folder_path);
 
     let mut hash_map: HashMap<String, f64> = HashMap::new();
-    let mut past_sets = Vec::new();
 
     // Simulated Annealing Parameters
     let number_of_primers_in_pool = pool.regions.iter().fold(0, |acc, region| acc + region.amplicons.iter().fold(0, |amp_acc: usize, amplicon| amp_acc + amplicon.forward_primers.len() + amplicon.reverse_primers.len()));
     let sa_temp_initial = (1000 + 10*number_of_primers_in_pool) as f64;
     let numsteps = 10.0 + number_of_primers_in_pool as f64/10.0;
 
-    println!("Primers in Pool: {}", number_of_primers_in_pool);
     println!("Initial Temperature: {}", sa_temp_initial);
     println!("Number of Steps: {}", numsteps);
 
-    // TODO Multi Threading
     let mut iteration = 1;
     let mut sa_temp = sa_temp_initial;
+    let mut losses = Vec::new();
 
     let amplicon_primer_pairs = pick_random_primer_set(&pool.regions);
     initialize_hash_map(&mut hash_map, &amplicon_primer_pairs, subsequence_min_size, subsequence_max_size);
 
     let loss = calculate_loss(&hash_map, &amplicon_primer_pairs, subsequence_min_size, subsequence_max_size);
-
+    let pool_id = pool.pool_id.clone();
+    
     let mut current_set = Set {
         amplicon_primer_pairs,
+        pool_id,
         loss,
     };
-    while iteration <= max_iterations {
-        println!("Pool: {}, Iteration: {}", pool.pool_id, iteration);
+    while iteration <= numsteps as usize {
         /*
             Generate a temp set and calculate the loss by recalculating the hash map. Store the old hash map in case the temp set is not accepted.
             If the temp set is accepted, store the temp set and continue.
@@ -251,6 +241,7 @@ pub fn run(
             // Worse set -> Calculate acceptance
             let acceptance_prob = ((current_set.loss - temp_set.loss) / sa_temp as f64 ).exp();
             let random_number: f64 = random::<f64>();
+            // TODO: calculate acceptance probability correctly, this is a stump and does not work correctly
             println!("Acceptance Probability: {}, Random Number: {}", acceptance_prob, random_number);
             if random_number < acceptance_prob {
                 accept = true;
@@ -258,34 +249,31 @@ pub fn run(
                 accept = false;
             }
         }
-        
+        log::info!("Iteration: {}, Current Loss: {}, Temp Loss: {}, Accept: {}", iteration, current_set.loss, temp_set.loss, accept);
+
         // Implementation of (non)-acceptment of current set
         if accept {
-            past_sets.push(current_set);
             current_set = temp_set;
         } else {
-            past_sets.push(temp_set);
             hash_map = old_hash_map;
         }
 
+        // Store loss
+        losses.push(current_set.loss);
         // Update SA Temp and iteration index
         sa_temp -= f64::max(0.0, sa_temp - (sa_temp_initial / numsteps));
         iteration += 1;
     }
-    
-    final_sets.push(current_set);
 
-    // Write set history to file
-    let file_name = output_folder.join(format!("pool_{}_history.json", pool.pool_id));
-    match json::write_set_to_file(file_name.to_str().unwrap(), past_sets) {
-        Ok(_) => println!("Successfully wrote set history to file {}_history.json", pool.pool_id),
-        Err(e) => println!("Failed to write to set history. Error: {}", e)
-    }
-    
-
-    let file_name = output_folder.join("final_set.json");
-    match json::write_set_to_file(file_name.to_str().unwrap(), final_sets) {
+    let pool_id = pool.pool_id.clone();
+    let file_name = output_folder.join(format!("pool_{pool_id}_final_set.json"));
+    match json::write_set_to_file(file_name.to_str().unwrap(), current_set) {
         Ok(_) => println!("Successfully wrote output to file {}.", file_name.to_str().unwrap()),
+        Err(e) => println!("Failed to write to file. Error: {}", e)
+    }
+    let file_name = output_folder.join(format!("pool_{pool_id}_losses.json"));
+    match json::write_losses_to_file(file_name.to_str().unwrap(), losses) {
+        Ok(_) => println!("Successfully wrote losses to file {}.", output_folder.join(format!("pool_{pool_id}_losses.json")).to_str().unwrap()),
         Err(e) => println!("Failed to write to file. Error: {}", e)
     }
 }

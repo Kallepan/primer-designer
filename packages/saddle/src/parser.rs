@@ -22,8 +22,6 @@ pub struct Opts {
 
     // SADDLE PARAMS
     #[clap(long)]
-    pub max_iterations: Option<usize>,
-    #[clap(long)]
     pub min_subsequence_size: Option<usize>,
     #[clap(long)]
     pub max_subsequence_size: Option<usize>,
