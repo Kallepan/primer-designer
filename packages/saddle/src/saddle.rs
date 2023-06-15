@@ -15,8 +15,8 @@ fn calculate_loss(hash_map: &HashMap<String, f64>, amplicon_primer_pairs: &Vec<A
         - calculate the loss for every subsequence SUM(1 / (distance_of_revcomp + 1)) * 2^length_of_subsequence * 2^num_gc_of_subsequence * Hashvalue
             - if none are found -> loss = 0
     */
-    fn calculate_distance(primer_length: usize, subsequence_start_index: usize, subsequence_length: usize) -> f64 {
-        1.0 / (primer_length - (subsequence_start_index + subsequence_length) + 1) as f64
+    fn calculate_distance(length: usize, subsequence_start_index: usize, subsequence_length: usize) -> f64 {
+        1.0 / (length - (subsequence_start_index + subsequence_length) + 1) as f64
     }
 
     let mut loss = 0.0;
@@ -24,8 +24,8 @@ fn calculate_loss(hash_map: &HashMap<String, f64>, amplicon_primer_pairs: &Vec<A
     let time = Instant::now();
 
     for primer_pair in amplicon_primer_pairs {
-        let left_primer = &primer_pair.forward_primer.primer_sequence;
-        let right_primer = &primer_pair.reverse_primer.primer_sequence;
+        let left_primer = &primer_pair.forward_primer.sequence;
+        let right_primer = &primer_pair.reverse_primer.sequence;
 
         // Add self badness from each primer
         loss += &primer_pair.forward_primer.badness;
@@ -73,17 +73,17 @@ fn replace_primer_in_set(primer_pool: &Pool, primer_set: &mut Vec<AmpliconPrimer
         distance_score
     }
 
-    fn remove_primer_from_hash_map(hash_map: &mut HashMap<String, f64>, primer_sequence: &String, primer_length: usize, subsequence_min_size: usize, subsequence_max_size: usize) {
-        for subsequence_info in primer_sequence.get_all_substrings_between(subsequence_min_size, subsequence_max_size) {
-            let distance_score = calculate_distance_score(primer_length, subsequence_info.end_index);
+    fn remove_primer_from_hash_map(hash_map: &mut HashMap<String, f64>, sequence: &String, length: usize, subsequence_min_size: usize, subsequence_max_size: usize) {
+        for subsequence_info in sequence.get_all_substrings_between(subsequence_min_size, subsequence_max_size) {
+            let distance_score = calculate_distance_score(length, subsequence_info.end_index);
             
             let entry = hash_map.entry(subsequence_info.seq).or_insert(0.0);
             *entry -= distance_score;
         }
     }
-    fn add_primer_to_hash_map(hash_map: &mut HashMap<String, f64>, primer_sequence: &String, primer_length: usize, subsequence_min_size: usize, subsequence_max_size: usize) {
-        for subsequence_info in primer_sequence.get_all_substrings_between(subsequence_min_size, subsequence_max_size) {
-            let distance_score = calculate_distance_score(primer_length, subsequence_info.end_index);
+    fn add_primer_to_hash_map(hash_map: &mut HashMap<String, f64>, sequence: &String, length: usize, subsequence_min_size: usize, subsequence_max_size: usize) {
+        for subsequence_info in sequence.get_all_substrings_between(subsequence_min_size, subsequence_max_size) {
+            let distance_score = calculate_distance_score(length, subsequence_info.end_index);
             
             let entry = hash_map.entry(subsequence_info.seq).or_insert(0.0);
             *entry += distance_score;
@@ -95,8 +95,8 @@ fn replace_primer_in_set(primer_pool: &Pool, primer_set: &mut Vec<AmpliconPrimer
     let reverse_primer = &primer_set[random_primer_pair_index].reverse_primer;
     let region_name = &primer_set[random_primer_pair_index].region_name;
     let amplicon_name = &primer_set[random_primer_pair_index].amplicon_name;
-    remove_primer_from_hash_map(hash_map, &forward_primer.primer_sequence, forward_primer.primer_length, subsequence_min_size, subsequence_max_size);
-    remove_primer_from_hash_map(hash_map, &reverse_primer.primer_sequence, reverse_primer.primer_length, subsequence_min_size, subsequence_max_size);
+    remove_primer_from_hash_map(hash_map, &forward_primer.sequence, forward_primer.length, subsequence_min_size, subsequence_max_size);
+    remove_primer_from_hash_map(hash_map, &reverse_primer.sequence, reverse_primer.length, subsequence_min_size, subsequence_max_size);
 
     // get random new primer from proto-primers
     let potential_primers = primer_pool.regions.iter().find(|region| region.region_name == *region_name).unwrap().amplicons.iter().find(|amplicon| amplicon.amplicon_name == *amplicon_name).unwrap();
@@ -107,8 +107,8 @@ fn replace_primer_in_set(primer_pool: &Pool, primer_set: &mut Vec<AmpliconPrimer
     primer_set[random_primer_pair_index].reverse_primer = potential_primers.reverse_primers[random_int_reverse].clone();
 
     // Populate HashMap with new values
-    add_primer_to_hash_map(hash_map, &primer_set[random_primer_pair_index].forward_primer.primer_sequence, primer_set[random_primer_pair_index].forward_primer.primer_length, subsequence_min_size, subsequence_max_size);
-    add_primer_to_hash_map(hash_map, &primer_set[random_primer_pair_index].reverse_primer.primer_sequence, primer_set[random_primer_pair_index].reverse_primer.primer_length, subsequence_min_size, subsequence_max_size);
+    add_primer_to_hash_map(hash_map, &primer_set[random_primer_pair_index].forward_primer.sequence, primer_set[random_primer_pair_index].forward_primer.length, subsequence_min_size, subsequence_max_size);
+    add_primer_to_hash_map(hash_map, &primer_set[random_primer_pair_index].reverse_primer.sequence, primer_set[random_primer_pair_index].reverse_primer.length, subsequence_min_size, subsequence_max_size);
 }
 
 fn pick_random_primer_set(pool: &Vec<Region>) -> Vec<AmpliconPrimerPair> {
@@ -149,15 +149,15 @@ fn initialize_hash_map(hash_map: &mut HashMap<String, f64>, primer_set: &Vec<Amp
     Since all left and right primer are given 5' -> 3', the distance score for the primer can be calculated as is.
     */
 
-    fn calculate_distance_score(primer_length: usize, end_index: usize) -> f64 {
-        let distance = primer_length - end_index;
+    fn calculate_distance_score(length: usize, end_index: usize) -> f64 {
+        let distance = length - end_index;
         let distance_score = 1.0 / (distance + 1) as f64;
         distance_score
     }
 
-    fn add_primer_to_hash_map(hash_map: &mut HashMap<String, f64>, primer_sequence: &String, primer_length: usize, subsequence_min_size: usize, subsequence_max_size: usize) {
-        for subsequence_info in primer_sequence.get_all_substrings_between(subsequence_min_size, subsequence_max_size) {
-            let distance_score = calculate_distance_score(primer_length, subsequence_info.end_index);
+    fn add_primer_to_hash_map(hash_map: &mut HashMap<String, f64>, sequence: &String, length: usize, subsequence_min_size: usize, subsequence_max_size: usize) {
+        for subsequence_info in sequence.get_all_substrings_between(subsequence_min_size, subsequence_max_size) {
+            let distance_score = calculate_distance_score(length, subsequence_info.end_index);
             
             let entry = hash_map.entry(subsequence_info.seq).or_insert(0.0);
             *entry += distance_score;
@@ -168,8 +168,8 @@ fn initialize_hash_map(hash_map: &mut HashMap<String, f64>, primer_set: &Vec<Amp
         let forward_primer = &primer_pair.forward_primer;
         let reverse_primer = &primer_pair.reverse_primer;
 
-        add_primer_to_hash_map(hash_map, &forward_primer.primer_sequence, forward_primer.primer_length, subsequence_min_size, subsequence_max_size);
-        add_primer_to_hash_map(hash_map, &reverse_primer.primer_sequence, reverse_primer.primer_length, subsequence_min_size, subsequence_max_size);
+        add_primer_to_hash_map(hash_map, &forward_primer.sequence, forward_primer.length, subsequence_min_size, subsequence_max_size);
+        add_primer_to_hash_map(hash_map, &reverse_primer.sequence, reverse_primer.length, subsequence_min_size, subsequence_max_size);
     }
 }
 
@@ -277,14 +277,14 @@ pub fn run(
 
     // Write set history to file
     let file_name = output_folder.join(format!("pool_{}_history.json", pool.pool_id));
-    match json::write_sets_to_file(file_name.to_str().unwrap(), past_sets) {
+    match json::write_set_to_file(file_name.to_str().unwrap(), past_sets) {
         Ok(_) => println!("Successfully wrote set history to file {}_history.json", pool.pool_id),
         Err(e) => println!("Failed to write to set history. Error: {}", e)
     }
     
 
-    let file_name = output_folder.join("final_sets.json");
-    match json::write_sets_to_file(file_name.to_str().unwrap(), final_sets) {
+    let file_name = output_folder.join("final_set.json");
+    match json::write_set_to_file(file_name.to_str().unwrap(), final_sets) {
         Ok(_) => println!("Successfully wrote output to file {}.", file_name.to_str().unwrap()),
         Err(e) => println!("Failed to write to file. Error: {}", e)
     }

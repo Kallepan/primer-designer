@@ -28,6 +28,30 @@ def __get_args() -> argparse.Namespace:
     )
     return parser.parse_args()
 
+def __get_primer_object(primer: list) -> dict:
+    """Returns a dictionary from the primer list taken from the database"""
+    try:
+        data = {
+            "id": primer[0],
+            "sequence": primer[5],
+            "length": int(primer[6]),
+            "tm": float(primer[7]),
+            "gc_percent": float(primer[8]),
+            "hairpin_th": float(primer[9]),
+            "badness": float(primer[10]),
+        }
+    except ValueError:
+        # rescue if any of the values are null
+        data = {
+            "id": primer[0],
+            "sequence": primer[5],
+            "length": primer[6],
+            "tm": primer[7],
+            "gc_percent": primer[8],
+            "hairpin_th": primer[9],
+            "badness": primer[10],
+        }
+    return data
 
 def __write_json(db: str, output: str, pool: str) -> None:
     primers, column_names = db.select(
@@ -82,27 +106,11 @@ def __write_json(db: str, output: str, pool: str) -> None:
 
             for forward_primer in forward_primers.values:
                 json_dict["regions"][-1]["amplicons"][-1]["forward_primers"].append(
-                    {
-                        "id": forward_primer[0],
-                        "sequence": forward_primer[5],
-                        "length": forward_primer[6],
-                        "tm": forward_primer[7],
-                        "gc_percent": forward_primer[8],
-                        "hairpin_th": forward_primer[9],
-                        "badness": forward_primer[10],
-                    }
+                    __get_primer_object(forward_primer)
                 )
             for reverse_primer in reverse_primers.values:
                 json_dict["regions"][-1]["amplicons"][-1]["reverse_primers"].append(
-                    {
-                        "id": reverse_primer[0],
-                        "sequence": reverse_primer[5],
-                        "length": reverse_primer[6],
-                        "tm": reverse_primer[7],
-                        "gc_percent": reverse_primer[8],
-                        "hairpin_th": reverse_primer[9],
-                        "badness": reverse_primer[10],
-                    }
+                    __get_primer_object(reverse_primer)
                 )
 
     with open(output, "w") as f:

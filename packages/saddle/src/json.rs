@@ -2,11 +2,12 @@ use serde::{Deserialize, Serialize};
 // JSON object structs
 #[derive(Deserialize, Serialize, Clone)]
 pub struct Primer {
-    pub primer_sequence: String,
+    pub id: String,
+    pub sequence: String,
     pub tm: f64,
     pub gc_percent: f64,
     pub hairpin_th: f64,
-    pub primer_length: usize,
+    pub length: usize,
     pub badness: f64,
 }
 #[derive(Deserialize, Serialize, Clone)]
@@ -23,7 +24,7 @@ pub struct Region {
 #[derive(Deserialize, Serialize)]
 pub struct Pool {
     pub regions: Vec<Region>,
-    pub pool_id: usize,
+    pub pool_id: String,
 }
 
 // SADDLE structs
@@ -49,7 +50,7 @@ pub fn load_json_from_file(input_file_path: &str) -> Result<Pool, Box<dyn Error>
     Ok(pools)
 }
 
-pub fn write_sets_to_file(file_path: &str, set: Vec<Set>) -> Result<(), Box<dyn Error>>{
+pub fn write_set_to_file(file_path: &str, set: Vec<Set>) -> Result<(), Box<dyn Error>>{
     let json = serde_json::to_string_pretty(&set).unwrap();
     std::fs::write(file_path, json)?;
 
