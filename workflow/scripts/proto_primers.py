@@ -2,6 +2,7 @@ import os
 import sys
 import asyncio
 import logging
+import json
 
 from Bio import SeqIO
 from Bio.SeqIO import SeqRecord
@@ -15,17 +16,16 @@ from db import DBHandler
 
 logging.basicConfig(level=logging.INFO)
 
-def __load_regions(path: str) -> pd.DataFrame:
-    df = pd.read_csv(
-        path,
-        sep=",",
-        header=0,
-        names=["loci", "start", "end"],
-        dtype={"loci": str, "start": int, "end": int},
+def __load_regions(path_to_file: str) -> pd.DataFrame:
+    df = pd.read_json(
+        path_to_file,
+        dtype={
+            "name": "string",
+            "start": "int64",
+            "end": "int64",
+        },
     )
-
     return df
-
 
 def __extract_sequence_record_from_fasta(path: str) -> SeqRecord:
     with open(path, "r") as file:
@@ -226,7 +226,6 @@ async def main():
     seq_record = __extract_sequence_record_from_fasta(config.fasta)
     species = config.fasta.split("/")[-1].split(".")[0]
     db = DBHandler(path_to_db=os.path.join(config.output_dir, f"{species}.db"))
-    db.setup_proto_primers_table()
 
     # Generate pools for each region containing amplicons and primers
     list_of_primers = []
@@ -244,7 +243,7 @@ async def main():
         )
 
         await __generate_primers_for_pool(
-            region_name=row["loci"],
+            region_name=row["name"],
             pool_cords=pool_one_coords,
             pool_id=0,
             sequence=seq_record.seq,
@@ -253,7 +252,7 @@ async def main():
         )
 
         await __generate_primers_for_pool(
-            region_name=row["loci"],
+            region_name=row["name"],
             pool_cords=pool_two_coords,
             pool_id=1,
             sequence=seq_record.seq,
@@ -268,8 +267,9 @@ async def main():
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
     try:
-        loop.run_until_complete(main())
+        pass
     except Exception as e:
         sys.stderr.write(f"ERROR: {e}\n")
         sys.exit(1)

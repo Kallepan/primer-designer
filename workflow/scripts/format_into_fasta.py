@@ -15,14 +15,8 @@ def __parse_args() -> argparse.Namespace:
 
 
 def __write_fasta(db: DBHandler, args: argparse.Namespace) -> None:
-    pools = db.execute(
-        """
-            SELECT DISTINCT pool FROM proto_primers ORDER BY pool ASC;
-        """
-    )
-
     with open(args.output, "w") as file:
-        primers, column_names = db.select(
+        primers, _ = db.select(
             """
                 SELECT id, sequence FROM proto_primers WHERE pool = ? ORDER BY id ASC;
             """,
@@ -35,17 +29,12 @@ def __write_fasta(db: DBHandler, args: argparse.Namespace) -> None:
             file.write(sequence)
             file.write("\n")
 
-
 def main():
     logging.info("Formatting primers into fasta")
     args = __parse_args()
     db = DBHandler(args.db)
     __write_fasta(db, args)
 
-
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        logging.error(f"ERROR: {e}")
-        sys.exit(1)
+    main()
+    

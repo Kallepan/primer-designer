@@ -44,3 +44,6 @@ Thumbs.db
 
 # Gulp
 single-dist
+
+# results.json
+src/assets/results.json

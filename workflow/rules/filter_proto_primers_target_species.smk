@@ -14,14 +14,16 @@ rule create_index_for_target:
         "bowtie-build {input.fasta} {params.outdir} >> {log} 2>&1"
 
 rule format_pool_into_fasta:
-    input: "results/{species}.db"
+    input: 
+        log = "logs/{species}.proto_primers.log",
+        db = "results/{species}.db"
     output:
         file = "results/{species}.{pool}.proto_primers.fasta"
     log:
         file = "logs/{species}.{pool}.format.log"
     conda: "../envs/primers.yaml"
     shell:
-        "python3 workflow/scripts/format_into_fasta.py --db {input} --output {output.file} --pool {wildcards.pool} &>> {log.file}"
+        "python3 workflow/scripts/format_into_fasta.py --db {input.db} --output {output.file} --pool {wildcards.pool} &>> {log.file}"
 
 max_mismatches = config["alignment_settings"]["max_mismatches"]
 rule align_primers_to_species:

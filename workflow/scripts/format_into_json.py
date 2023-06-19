@@ -53,7 +53,7 @@ def __get_primer_object(primer: list) -> dict:
         }
     return data
 
-def __write_json(db: str, output: str, pool: str) -> None:
+def __get_primer_df(db: DBHandler, pool: str) -> pd.DataFrame:
     primers, column_names = db.select(
         """
             SELECT id, pool, region_name, amplicon_name, strand, sequence, length, tm, gc_percent, hairpin_th, badness
@@ -62,37 +62,40 @@ def __write_json(db: str, output: str, pool: str) -> None:
                 pool = ? AND 
                 NOT (discarded)
             ORDER BY id ASC
-        """,
-        (pool,),
+        """, (pool,),
     )
+    primer_df = pd.DataFrame(primers, columns=column_names, dtype="string")
+    return primer_df
 
-    df = pd.DataFrame(primers, columns=column_names, dtype="string")
+def __write_json(db: str, output: str, pool: str) -> None:
+    primer_df = __get_primer_df(db, pool)
 
     # group dataframe by region then amplicon and finally then strand
     # Afterwards write to json
     json_dict = {"pool_id": pool, "regions": []}
 
-    if df.empty:
+    if primer_df.empty:
         with open(output, "w") as f:
             json.dump(json_dict, f, indent=4)
         return
 
-    regions = df.groupby("region_name")
+    regions = primer_df.groupby("region_name")
     for region in regions:
         region_name = region[0]
         region_df = region[1]
-        json_dict["regions"].append({"region_name": region_name, "amplicons": []})
+        json_dict["regions"].append({
+            "region_name": region_name, 
+            "amplicons": []
+        })
         amplicons = region_df.groupby("amplicon_name")
         for amplicon in amplicons:
             amplicon_name = amplicon[0]
             amplicon_df = amplicon[1]
-            json_dict["regions"][-1]["amplicons"].append(
-                {
-                    "amplicon_name": amplicon_name,
-                    "forward_primers": [],
-                    "reverse_primers": [],
-                }
-            )
+            json_dict["regions"][-1]["amplicons"].append({
+                "amplicon_name": amplicon_name,
+                "forward_primers": [],
+                "reverse_primers": [],
+            })
 
             # Extract forward and reverse primers
             forward_primers = amplicon_df[amplicon_df["strand"] == "forward"]
@@ -122,7 +125,6 @@ def main() -> None:
     args = __get_args()
     db = DBHandler(args.db)
     __write_json(db, args.output, args.pool)
-
 
 if __name__ == "__main__":
     try:

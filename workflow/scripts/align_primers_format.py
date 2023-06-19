@@ -61,7 +61,6 @@ def main():
     logging.info("Formatting primer alignments")
     args = __get_parser()
     db = DBHandler(args.db)
-    db.setup_alignments_table()
 
     # read in alignment
     alignment = __parse_alignment(args)

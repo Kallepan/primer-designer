@@ -153,8 +153,9 @@ def main():
 
 
 if __name__ == "__main__":
+    main()
     try:
-        main()
+        pass
     except Exception as e:
         logging.error(f"ERROR: {e}")
         sys.exit(1)

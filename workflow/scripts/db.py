@@ -1,6 +1,22 @@
 import sqlite3
+import pandas as pd
 
 class DBHandler:
+    def setup_regions_table(self):
+        with self.con:
+            self.con.execute(
+                """
+                CREATE TABLE IF NOT EXISTS regions (
+                    name TEXT PRIMARY KEY NOT NULL,
+                    start INT NOT NULL,
+                    end INT NOT NULL
+                );
+                """
+            )
+            self.con.execute(
+                """CREATE INDEX IF NOT EXISTS idx_regions_name ON regions(name);"""
+            )
+
     def setup_alignments_table(self):
         with self.con:
             self.con.execute(
@@ -60,7 +76,9 @@ class DBHandler:
                     hairpin_th REAL NOT NULL,
                     discarded BOOLEAN NOT NULL DEFAULT FALSE,
                     badness REAL NOT NULL DEFAULT 0.0,
-                    UNIQUE(pool, region_name, amplicon_name, strand, sequence)
+
+                    UNIQUE(pool, region_name, amplicon_name, strand, sequence),
+                    FOREIGN KEY (region_name) REFERENCES regions (name)
                 )
             """
             )
