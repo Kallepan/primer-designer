@@ -7,10 +7,9 @@ DEFAULT_NUMBER_OF_MISMATCHES = 3
 
 logging.basicConfig(level=logging.INFO)
 
+
 def __get_parser() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Align primers to reference genome"
-    )
+    parser = argparse.ArgumentParser(description="Align primers to reference genome")
 
     parser.add_argument(
         "--primers", type=str, required=True, help="Fasta file containing primers"
@@ -38,6 +37,7 @@ def __run_bowtie(args: argparse.Namespace):
         raise Exception(sp.stderr.decode("utf-8"))
 
     return sp.stdout.decode("utf-8")
+
 
 def main():
     logging.info("Aligning primers to reference genome")

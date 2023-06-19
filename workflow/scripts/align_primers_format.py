@@ -6,22 +6,18 @@ from db import DBHandler
 
 logging.basicConfig(level=logging.INFO)
 
-def __get_parser() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Formatting primer alignments"
-    )
 
-    parser.add_argument(
-        "--input", type=str, required=True, help="Path to input file"
-    )
-    parser.add_argument(
-        "--output", type=str, required=True, help="Path to output file"
-    )
+def __get_parser() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Formatting primer alignments")
+
+    parser.add_argument("--input", type=str, required=True, help="Path to input file")
+    parser.add_argument("--output", type=str, required=True, help="Path to output file")
     parser.add_argument("--pool", type=str, required=True, help="Pool number")
     parser.add_argument("--species", type=str, required=True, help="Species name")
     parser.add_argument("--db", type=str, required=True, help="Path to database file")
 
     return parser.parse_args()
+
 
 def __parse_alignment(args: argparse.Namespace) -> pd.DataFrame:
     def decode_aligned_to(symbol: str) -> str:
@@ -57,6 +53,7 @@ def __parse_alignment(args: argparse.Namespace) -> pd.DataFrame:
     alignment["species"] = args.species
     return alignment
 
+
 def main():
     logging.info("Formatting primer alignments")
     args = __get_parser()
@@ -67,10 +64,11 @@ def main():
 
     # write output to csv and database
     alignment.to_sql("alignments", db.con, if_exists="append", index=False)
-    
+
     alignment.to_csv(args.output, index=False)
 
     logging.info("Wrote primer alignments to database")
+
 
 if __name__ == "__main__":
     try:

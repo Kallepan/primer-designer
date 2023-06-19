@@ -6,6 +6,7 @@ from db import DBHandler
 
 logging.basicConfig(level=logging.INFO)
 
+
 def __parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--db", type=str, required=True)
@@ -29,12 +30,13 @@ def __write_fasta(db: DBHandler, args: argparse.Namespace) -> None:
             file.write(sequence)
             file.write("\n")
 
+
 def main():
     logging.info("Formatting primers into fasta")
     args = __parse_args()
     db = DBHandler(args.db)
     __write_fasta(db, args)
 
+
 if __name__ == "__main__":
     main()
-    

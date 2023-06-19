@@ -16,6 +16,7 @@ from db import DBHandler
 
 logging.basicConfig(level=logging.INFO)
 
+
 def __load_regions(path_to_file: str) -> pd.DataFrame:
     df = pd.read_json(
         path_to_file,
@@ -26,6 +27,7 @@ def __load_regions(path_to_file: str) -> pd.DataFrame:
         },
     )
     return df
+
 
 def __extract_sequence_record_from_fasta(path: str) -> SeqRecord:
     with open(path, "r") as file:

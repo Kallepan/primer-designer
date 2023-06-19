@@ -9,6 +9,7 @@ DEFAULT_ALIGNMENTS_LIMIT = 3
 
 logging.basicConfig(level=logging.INFO)
 
+
 def __get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Evaluate the badness of the primers against target species. Hard Filter version"
@@ -164,6 +165,7 @@ def main():
     # generate output file
     with open(args.output, "w") as f:
         counts.to_csv(f, sep="\t", index=True, header=True)
+
 
 if __name__ == "__main__":
     main()

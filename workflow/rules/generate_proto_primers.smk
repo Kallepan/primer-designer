@@ -8,7 +8,7 @@ rule create_tmp_dir:
 rule create_db:
     output: "results/{species}.db"
     log: "logs/{species}.db.log"
-    conda: "../envs/primers.yaml"
+    conda: "../envs/dump.yaml"
     shell:
         """
         python3 workflow/scripts/create_db.py \
@@ -21,7 +21,7 @@ rule regions_to_json:
         regions = "data/regions.csv"
     output: "results/{species}.regions.json"
     log: "logs/{species}.regions.log"
-    conda: "../envs/primers.yaml"
+    conda: "../envs/dump.yaml"
     shell:
         """
         python3 workflow/scripts/regions_to_json.py \

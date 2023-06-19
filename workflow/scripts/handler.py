@@ -8,6 +8,7 @@ from configs import PrimerGenConfig
 
 logging.basicConfig(level=logging.INFO)
 
+
 class PrimerGenerator:
     """
     Generates the Primers for a given amplicon using Primer3

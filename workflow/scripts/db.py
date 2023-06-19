@@ -1,5 +1,5 @@
 import sqlite3
-import pandas as pd
+
 
 class DBHandler:
     def setup_regions_table(self):

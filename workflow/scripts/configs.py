@@ -137,7 +137,7 @@ class PrimerGenConfig:
             )
         if not os.path.exists(args.temp_dir):
             os.mkdir(args.temp_dir)
-            
+
         return vars(args)
 
     def __map_dict(self, args: dict) -> None:

@@ -11,6 +11,7 @@ from db import DBHandler
 
 logging.basicConfig(level=logging.INFO)
 
+
 def __get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Format the database to json to be used by the SADDLE SCRIPT"
@@ -27,6 +28,7 @@ def __get_args() -> argparse.Namespace:
         required=True,
     )
     return parser.parse_args()
+
 
 def __get_primer_object(primer: list) -> dict:
     """Returns a dictionary from the primer list taken from the database"""
@@ -53,6 +55,7 @@ def __get_primer_object(primer: list) -> dict:
         }
     return data
 
+
 def __get_primer_df(db: DBHandler, pool: str) -> pd.DataFrame:
     primers, column_names = db.select(
         """
@@ -62,10 +65,12 @@ def __get_primer_df(db: DBHandler, pool: str) -> pd.DataFrame:
                 pool = ? AND 
                 NOT (discarded)
             ORDER BY id ASC
-        """, (pool,),
+        """,
+        (pool,),
     )
     primer_df = pd.DataFrame(primers, columns=column_names, dtype="string")
     return primer_df
+
 
 def __write_json(db: str, output: str, pool: str) -> None:
     primer_df = __get_primer_df(db, pool)
@@ -83,19 +88,18 @@ def __write_json(db: str, output: str, pool: str) -> None:
     for region in regions:
         region_name = region[0]
         region_df = region[1]
-        json_dict["regions"].append({
-            "region_name": region_name, 
-            "amplicons": []
-        })
+        json_dict["regions"].append({"region_name": region_name, "amplicons": []})
         amplicons = region_df.groupby("amplicon_name")
         for amplicon in amplicons:
             amplicon_name = amplicon[0]
             amplicon_df = amplicon[1]
-            json_dict["regions"][-1]["amplicons"].append({
-                "amplicon_name": amplicon_name,
-                "forward_primers": [],
-                "reverse_primers": [],
-            })
+            json_dict["regions"][-1]["amplicons"].append(
+                {
+                    "amplicon_name": amplicon_name,
+                    "forward_primers": [],
+                    "reverse_primers": [],
+                }
+            )
 
             # Extract forward and reverse primers
             forward_primers = amplicon_df[amplicon_df["strand"] == "forward"]
@@ -125,6 +129,7 @@ def main() -> None:
     args = __get_args()
     db = DBHandler(args.db)
     __write_json(db, args.output, args.pool)
+
 
 if __name__ == "__main__":
     try:
