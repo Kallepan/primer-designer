@@ -19,7 +19,7 @@ pub struct Amplicon {
 #[derive(Deserialize, Serialize)]
 pub struct Region {
     pub amplicons: Vec<Amplicon>,
-    pub region_name: String, 
+    pub region_name: String,
 }
 #[derive(Deserialize, Serialize)]
 pub struct Pool {
@@ -29,7 +29,7 @@ pub struct Pool {
 
 // SADDLE structs
 #[derive(Clone, Serialize)]
-pub struct AmpliconPrimerPair {
+pub struct PrimerPair {
     pub region_name: String,
     pub amplicon_name: String,
     pub forward_primer: Primer,
@@ -37,7 +37,7 @@ pub struct AmpliconPrimerPair {
 }
 #[derive(Clone, Serialize)]
 pub struct Set {
-    pub amplicon_primer_pairs: Vec<AmpliconPrimerPair>,
+    pub primer_pairs: Vec<PrimerPair>,
     pub pool_id: String,
     pub loss: f64,
 }

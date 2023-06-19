@@ -1,12 +1,12 @@
 use crate::{json};
-use crate::json::{Set, Pool, AmpliconPrimerPair, Region};
+use crate::json::{Set, Pool, PrimerPair, Region};
 use crate::utils::PrimerUtils;
 
 use rand::random;
 use std::collections::HashMap;
 use std::path::Path;
 
-fn calculate_loss(hash_map: &HashMap<String, f64>, amplicon_primer_pairs: &Vec<AmpliconPrimerPair>, subsequence_min_size: usize, subsequence_max_size: usize) -> f64 {
+fn calculate_loss(hash_map: &HashMap<String, f64>, amplicon_primer_pairs: &Vec<PrimerPair>, subsequence_min_size: usize, subsequence_max_size: usize) -> f64 {
     /*
         - For every sequence in the hash table
         - find the reverse complement in all primers with the distance to 3' End
@@ -55,7 +55,7 @@ fn calculate_loss(hash_map: &HashMap<String, f64>, amplicon_primer_pairs: &Vec<A
     loss
 }
 
-fn replace_primer_in_set(primer_pool: &Pool, primer_set: &mut Vec<AmpliconPrimerPair>, hash_map: &mut HashMap<String, f64>, subsequence_min_size: usize, subsequence_max_size: usize) {
+fn replace_primer_in_set(primer_pool: &Pool, primer_set: &mut Vec<PrimerPair>, hash_map: &mut HashMap<String, f64>, subsequence_min_size: usize, subsequence_max_size: usize) {
     /* 
         Replace one primer pair from the given set, by another pair from the list of proto-primers and update the hash map.
     */
@@ -104,7 +104,7 @@ fn replace_primer_in_set(primer_pool: &Pool, primer_set: &mut Vec<AmpliconPrimer
     add_primer_to_hash_map(hash_map, &primer_set[random_primer_pair_index].reverse_primer.sequence, primer_set[random_primer_pair_index].reverse_primer.length, subsequence_min_size, subsequence_max_size);
 }
 
-fn pick_random_primer_set(pool: &Vec<Region>) -> Vec<AmpliconPrimerPair> {
+fn pick_random_primer_set(pool: &Vec<Region>) -> Vec<PrimerPair> {
     /*
     Pick a Set of primers from the given proto primers
     Here: each amplicon should always have a forward and reverse primer.
@@ -120,7 +120,7 @@ fn pick_random_primer_set(pool: &Vec<Region>) -> Vec<AmpliconPrimerPair> {
             let random_forward_selector = random::<usize>() % amplicon.forward_primers.len();
             let random_reverse_selector = random::<usize>() % amplicon.reverse_primers.len();
 
-            let primer_set_entry =  AmpliconPrimerPair {
+            let primer_set_entry =  PrimerPair {
                 region_name: region.region_name.clone(),
                 amplicon_name: amplicon.amplicon_name.clone(),
                 forward_primer: amplicon.forward_primers[random_forward_selector].clone(),
@@ -134,7 +134,7 @@ fn pick_random_primer_set(pool: &Vec<Region>) -> Vec<AmpliconPrimerPair> {
    picked_primer_pairs
 }
     
-fn initialize_hash_map(hash_map: &mut HashMap<String, f64>, primer_set: &Vec<AmpliconPrimerPair>, subsequence_min_size: usize, subsequence_max_size: usize) {
+fn initialize_hash_map(hash_map: &mut HashMap<String, f64>, primer_set: &Vec<PrimerPair>, subsequence_min_size: usize, subsequence_max_size: usize) {
     /*
     Populate the hash table with all distance values for every subsequence in every in the primer set.
 
@@ -209,14 +209,14 @@ pub fn run(
     let mut sa_temp = sa_temp_initial;
     let mut losses = Vec::new();
 
-    let amplicon_primer_pairs = pick_random_primer_set(&pool.regions);
-    initialize_hash_map(&mut hash_map, &amplicon_primer_pairs, subsequence_min_size, subsequence_max_size);
+    let primer_pairs = pick_random_primer_set(&pool.regions);
+    initialize_hash_map(&mut hash_map, &primer_pairs, subsequence_min_size, subsequence_max_size);
 
-    let loss = calculate_loss(&hash_map, &amplicon_primer_pairs, subsequence_min_size, subsequence_max_size);
+    let loss = calculate_loss(&hash_map, &primer_pairs, subsequence_min_size, subsequence_max_size);
     let pool_id = pool.pool_id.clone();
     
     let mut current_set = Set {
-        amplicon_primer_pairs,
+        primer_pairs,
         pool_id,
         loss,
     };
@@ -229,8 +229,8 @@ pub fn run(
         let mut temp_set = current_set.clone();
         let old_hash_map = hash_map.clone();
 
-        replace_primer_in_set(&pool, &mut temp_set.amplicon_primer_pairs, &mut hash_map, subsequence_min_size, subsequence_max_size);
-        temp_set.loss = calculate_loss(&hash_map, &temp_set.amplicon_primer_pairs, subsequence_min_size, subsequence_max_size);
+        replace_primer_in_set(&pool, &mut temp_set.primer_pairs, &mut hash_map, subsequence_min_size, subsequence_max_size);
+        temp_set.loss = calculate_loss(&hash_map, &temp_set.primer_pairs, subsequence_min_size, subsequence_max_size);
         
         // Simulated Annealing
         let accept;
