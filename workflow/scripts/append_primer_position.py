@@ -10,6 +10,7 @@ from db import DBHandler
 
 logging.basicConfig(level=logging.INFO)
 
+
 def __get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Determine the position of the primers in the region"
@@ -46,8 +47,11 @@ def __get_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def __get_correct_alignments_with_primers(args: argparse.Namespace, db: DBHandler) -> pd.DataFrame:
-    alignments, columns = db.select("""
+def __get_correct_alignments_with_primers(
+    args: argparse.Namespace, db: DBHandler
+) -> pd.DataFrame:
+    alignments, columns = db.select(
+        """
         SELECT proto_primers.id, alignments.position
         FROM proto_primers
         LEFT JOIN alignments
@@ -62,27 +66,37 @@ def __get_correct_alignments_with_primers(args: argparse.Namespace, db: DBHandle
             )
         ORDER BY alignments.id ASC
         
-    """, (args.pool, args.species))
-    
+    """,
+        (args.pool, args.species),
+    )
+
     return pd.DataFrame(alignments, columns=columns)
 
-def __update_db_with_positions(args: argparse.Namespace, primer_df: pd.DataFrame, db: DBHandler) -> None:
+
+def __update_db_with_positions(
+    args: argparse.Namespace, primer_df: pd.DataFrame, db: DBHandler
+) -> None:
     # First check if each primer has only one alignment
     if primer_df["id"].nunique() != primer_df.shape[0]:
         primer_df.to_csv(args.output, sep="\t", index=False)
-        logging.error("Something went wrong: Some primers have more than one alignment. Check the output file.")
+        logging.error(
+            "Something went wrong: Some primers have more than one alignment. Check the output file."
+        )
         sys.exit(1)
 
     # Update the database with the position of the primers
-    db.executemany("""
+    db.executemany(
+        """
         UPDATE proto_primers
         SET position = ?
         WHERE id = ?
-    """, primer_df[["position", "id"]].values.tolist(),
+    """,
+        primer_df[["position", "id"]].values.tolist(),
     )
 
     # Write positions to file
     primer_df.to_csv(args.output, sep="\t", index=False)
+
 
 def main():
     logging.info("Calculating primer positions")
@@ -91,6 +105,7 @@ def main():
     db = DBHandler(args.db)
     primer_df = __get_correct_alignments_with_primers(args, db)
     __update_db_with_positions(args, primer_df, db)
+
 
 if __name__ == "__main__":
     try:

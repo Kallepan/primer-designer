@@ -2,8 +2,9 @@ pool_count = config["primer_gen_config"]["pool_count"]
 rule all:
     input: "logs/{species}.dump.log"
     output: temp("results/{species}.dummy")
+    log: "results/{species}.dummy"
     shell:
-        "touch {output}"
+        "echo 'dummy' > {output}"
 
 rule dump_database:
     input: expand("results/{{species}}.{pool}.evaluated_primers.json", pool=range(0, pool_count))
