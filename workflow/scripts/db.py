@@ -76,6 +76,7 @@ class DBHandler:
                     hairpin_th REAL NOT NULL,
                     discarded BOOLEAN NOT NULL DEFAULT FALSE,
                     badness REAL NOT NULL DEFAULT 0.0,
+                    position INT NULL, -- Position in the region
 
                     UNIQUE(pool, region_name, amplicon_name, strand, sequence),
                     FOREIGN KEY (region_name) REFERENCES regions (name)

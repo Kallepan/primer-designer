@@ -46,4 +46,4 @@ Thumbs.db
 single-dist
 
 # results.json
-src/assets/results.json
+src/assets/*.json

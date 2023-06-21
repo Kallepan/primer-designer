@@ -1,5 +1,7 @@
 import argparse
 import logging
+import sys
+
 import pandas as pd
 
 from db import DBHandler
@@ -142,7 +144,7 @@ def __get_primers_to_discard(
     return primers_to_discard, primer_adjacency_counts
 
 
-def __update_db_tabke(db: DBHandler, primers_to_discard: list[str]) -> None:
+def __update_db_table(db: DBHandler, primers_to_discard: list[str]) -> None:
     """Takes a list of primer_ids and marks them as discarded in the database"""
     db.executemany(
         f"""
@@ -160,7 +162,7 @@ def main():
     db = DBHandler(args.db)
     adjacent_alignments = __get_alignments_with_adjacent_primers(db, args)
     primers_to_discard, counts = __get_primers_to_discard(args, adjacent_alignments)
-    __update_db_tabke(db, primers_to_discard)
+    __update_db_table(db, primers_to_discard)
 
     # generate output file
     with open(args.output, "w") as f:
@@ -168,4 +170,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        logging.exception(e)
+        sys.exit(1)

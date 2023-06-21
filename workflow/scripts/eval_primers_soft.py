@@ -9,6 +9,8 @@ This score consists of the following components:
 
 import argparse
 import logging
+import sys
+
 import pandas as pd
 
 from db import DBHandler
@@ -211,4 +213,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        logging.exception(e)
+        sys.exit(1)

@@ -1,3 +1,6 @@
+"""
+Script to format primer alignments. It takes the raw output from bowtie and formats it into a TSV file via a pandas dataframe.
+"""
 import logging
 import argparse
 import pandas as pd
@@ -65,7 +68,7 @@ def main():
     # write output to csv and database
     alignment.to_sql("alignments", db.con, if_exists="append", index=False)
 
-    alignment.to_csv(args.output, index=False)
+    alignment.to_csv(args.output, sep="\t", index=False)
 
     logging.info("Wrote primer alignments to database")
 
@@ -74,5 +77,5 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        logging.error(e)
+        logging.exception(e)
         raise e

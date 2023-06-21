@@ -53,5 +53,5 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        logging.error(e, file=sys.stderr)
+        logging.exception(e, file=sys.stderr)
         sys.exit(1)

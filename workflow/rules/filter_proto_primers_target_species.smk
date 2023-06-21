@@ -51,7 +51,7 @@ rule format_align_primers_to_species:
     input: 
         raw_alignment = "results/{species}.{pool}.alignment.raw",
         db = "results/{species}.db"
-    output: "results/{species}.{pool}.alignment.csv"
+    output: "results/{species}.{pool}.alignment.tsv"
     log: "logs/{species}.{pool}.alignment.format.log"
     conda: "../envs/format.yaml"
     shell: 
@@ -70,9 +70,9 @@ alignment_weight = config["alignment_settings"]["alignment_weight"]
 mismatch_weight = config["alignment_settings"]["mismatch_weight"]
 rule score_alignments:
     input:
-        alignment = "results/{species}.{pool}.alignment.csv",
+        alignment = "results/{species}.{pool}.alignment.tsv",
         db = "results/{species}.db",
-    output: "results/{species}.{pool}.alignment.scores.csv"
+    output: "results/{species}.{pool}.alignment.scores.tsv"
     log: "logs/{species}.{pool}.alignment.scores.log"
     conda: "../envs/primers.yaml"
     params:
@@ -94,9 +94,9 @@ adjacency_limit = config["evaluation_settings"]["max_adjacency_limit"]
 hard_filter = config["evaluation_settings"]["hard_filter"]
 rule eval_primers_with_target:
     input:
-        scores = "results/{species}.{pool}.alignment.scores.csv",
+        scores = "results/{species}.{pool}.alignment.scores.tsv",
         db = "results/{species}.db",
-    output: "results/{species}.{pool}.proto_primers.scores.csv"
+    output: "results/{species}.{pool}.proto_primers.scores.tsv"
     log: "logs/{species}.{pool}.evaluation.log"
     params:
         adjacency_limit = adjacency_limit,
@@ -125,9 +125,26 @@ rule eval_primers_with_target:
         fi
         """
 
+rule append_primer_position:
+    input:
+        scores = "results/{species}.{pool}.proto_primers.scores.tsv",
+        db = "results/{species}.db"
+    output: "results/{species}.{pool}.proto_primers.positions.tsv"
+    log: "logs/{species}.{pool}.position.log"
+    conda:
+        "../envs/dump.yaml"
+    shell: """
+        python3 workflow/scripts/append_primer_position.py \
+        --db {input.db} \
+        --output {output} \
+        --pool {wildcards.pool} \
+        --species {wildcards.species} \
+        &>> {log}
+    """
+
 rule export_to_json:
     input:
-        scores = "results/{species}.{pool}.proto_primers.scores.csv",
+        positions = "results/{species}.{pool}.proto_primers.positions.tsv",
         db = "results/{species}.db",
     output: "results/{species}.{pool}.evaluated_primers.json"
     log: "logs/{species}.{pool}.export.log"

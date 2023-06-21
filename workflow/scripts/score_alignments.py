@@ -158,5 +158,5 @@ if __name__ == "__main__":
     try:
         pass
     except Exception as e:
-        logging.error(f"ERROR: {e}")
+        logging.exception(e)
         sys.exit(1)
