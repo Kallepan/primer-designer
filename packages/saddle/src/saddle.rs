@@ -1,10 +1,8 @@
 use crate::{json};
 use crate::json::{Set, Pool, PrimerPair, Region};
 use crate::utils::PrimerUtils;
-
 use rand::random;
 use std::collections::HashMap;
-use std::path::Path;
 
 fn calculate_loss(hash_map: &HashMap<String, f64>, amplicon_primer_pairs: &Vec<PrimerPair>, subsequence_min_size: usize, subsequence_max_size: usize) -> f64 {
     /*
@@ -184,7 +182,8 @@ fn calculate_reverse_complement(primer: &str) -> String {
 
 pub fn run(
     input_file_path: &String,
-    output_folder_path: &String,
+    output_file_set: &String,
+    output_file_loss: &String,
     subsequence_min_size: usize,
     subsequence_max_size: usize)
 {
@@ -193,7 +192,6 @@ pub fn run(
         Ok(data) => data,
         Err(e) => panic!("Failed to parse JSON file. Error: {}", e)
     };
-    let output_folder = Path::new(output_folder_path);
 
     let mut hash_map: HashMap<String, f64> = HashMap::new();
 
@@ -238,11 +236,11 @@ pub fn run(
             // Better set -> accept
             accept = true;
         } else {
-            // Worse set -> Calculate acceptance
+            // Worse set -> Calculate acceptance and determine wether to discard or accept
             let acceptance_prob = ((current_set.loss - temp_set.loss) / sa_temp as f64 ).exp();
             let random_number: f64 = random::<f64>();
-            // TODO: calculate acceptance probability correctly, this is a stump and does not work correctly
-            println!("Acceptance Probability: {}, Random Number: {}", acceptance_prob, random_number);
+
+            log::info!("Acceptance Probability: {}, Random Number: {}", acceptance_prob, random_number);
             if random_number < acceptance_prob {
                 accept = true;
             } else {
@@ -265,15 +263,13 @@ pub fn run(
         iteration += 1;
     }
 
-    let pool_id = pool.pool_id.clone();
-    let file_name = output_folder.join(format!("pool_{pool_id}_final_set.json"));
-    match json::write_set_to_file(file_name.to_str().unwrap(), current_set) {
-        Ok(_) => println!("Successfully wrote output to file {}.", file_name.to_str().unwrap()),
+    match json::write_set_to_file(output_file_set, current_set) {
+        Ok(_) => println!("Successfully wrote output to file {}.", output_file_set),
         Err(e) => println!("Failed to write to file. Error: {}", e)
     }
-    let file_name = output_folder.join(format!("pool_{pool_id}_losses.json"));
-    match json::write_losses_to_file(file_name.to_str().unwrap(), losses) {
-        Ok(_) => println!("Successfully wrote losses to file {}.", output_folder.join(format!("pool_{pool_id}_losses.json")).to_str().unwrap()),
+
+    match json::write_losses_to_file(output_file_loss, losses) {
+        Ok(_) => println!("Successfully wrote losses to file {}.", output_file_loss),
         Err(e) => println!("Failed to write to file. Error: {}", e)
     }
 }

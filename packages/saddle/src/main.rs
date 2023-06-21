@@ -30,8 +30,9 @@ fn main() {
 
     let start = time::Instant::now();
     saddle::run(
-        &args.input_file, 
-        &args.output_folder,
+        &args.input_file,
+        &args.output_file_set,
+        &args.output_file_loss,
         min_subsequence_size,
         max_subsequence_size,
     );

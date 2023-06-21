@@ -12,10 +12,12 @@ pub struct Opts {
     #[clap(short, long)]
     pub input_file: String,
 
-    // Output folder
-    #[clap(short, long)]
-    pub output_folder: String,
-
+    // Output files
+    #[clap(long)]
+    pub output_file_set: String,
+    #[clap(long)]
+    pub output_file_loss: String,
+    
     // Debug
     #[clap(short, long)]
     pub debug: bool,
