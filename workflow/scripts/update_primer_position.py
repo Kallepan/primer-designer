@@ -70,7 +70,7 @@ def __get_correct_alignments_with_primers(
         (args.pool, args.species),
     )
 
-    return pd.DataFrame(alignments, columns=columns)
+    return pd.DataFrame(alignments, columns=columns, dtype="Int64")
 
 
 def __update_db_with_positions(
@@ -79,10 +79,9 @@ def __update_db_with_positions(
     # First check if each primer has only one alignment
     if primer_df["id"].nunique() != primer_df.shape[0]:
         primer_df.to_csv(args.output, sep="\t", index=False)
-        logging.error(
-            "Something went wrong: Some primers have more than one alignment. Check the output file."
-        )
-        sys.exit(1)
+        exception = Exception("Something went wrong: Some primers have more than one alignment. Check the output file.")
+        logging.exception(exception)
+        raise exception
 
     # Update the database with the position of the primers
     db.executemany(

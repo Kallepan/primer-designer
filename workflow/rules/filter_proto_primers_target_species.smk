@@ -65,7 +65,7 @@ rule format_align_primers_to_species:
             &>> {log}
         """
 
-rule append_primer_position:
+rule update_primer_position:
     input:
         alignment = "results/{species}.{pool}.alignment.tsv",
         db = "results/{species}.db"
@@ -74,7 +74,7 @@ rule append_primer_position:
     conda:
         "../envs/dump.yaml"
     shell: """
-        python3 workflow/scripts/append_primer_position.py \
+        python3 workflow/scripts/update_primer_position.py \
         --db {input.db} \
         --output {output} \
         --pool {wildcards.pool} \
