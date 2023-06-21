@@ -79,7 +79,9 @@ def __update_db_with_positions(
     # First check if each primer has only one alignment
     if primer_df["id"].nunique() != primer_df.shape[0]:
         primer_df.to_csv(args.output, sep="\t", index=False)
-        exception = Exception("Something went wrong: Some primers have more than one alignment. Check the output file.")
+        exception = Exception(
+            "Something went wrong: Some primers have more than one alignment. Check the output file."
+        )
         logging.exception(exception)
         raise exception
 

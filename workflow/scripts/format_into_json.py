@@ -41,6 +41,19 @@ def __get_primer_object(primer: list) -> dict:
             "gc_percent": float(primer[8]),
             "hairpin_th": float(primer[9]),
             "badness": float(primer[10]),
+            "position": int(primer[11]),
+        }
+    except TypeError:
+        # rescue if any of the values are null
+        data = {
+            "id": primer[0],
+            "sequence": primer[5],
+            "length": primer[6],
+            "tm": primer[7],
+            "gc_percent": primer[8],
+            "hairpin_th": primer[9],
+            "badness": primer[10],
+            "position": primer[11],
         }
     except ValueError:
         # rescue if any of the values are null
@@ -52,6 +65,7 @@ def __get_primer_object(primer: list) -> dict:
             "gc_percent": primer[8],
             "hairpin_th": primer[9],
             "badness": primer[10],
+            "position": primer[11],
         }
     return data
 
@@ -59,7 +73,7 @@ def __get_primer_object(primer: list) -> dict:
 def __get_primer_df(db: DBHandler, pool: str) -> pd.DataFrame:
     primers, column_names = db.select(
         """
-            SELECT id, pool, region_name, amplicon_name, strand, sequence, length, tm, gc_percent, hairpin_th, badness
+            SELECT id, pool, region_name, amplicon_name, strand, sequence, length, tm, gc_percent, hairpin_th, badness, position
             FROM proto_primers
             WHERE 
                 pool = ? AND 
