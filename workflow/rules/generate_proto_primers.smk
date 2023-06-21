@@ -1,20 +1,3 @@
-rule create_tmp_dir:
-    input: "data/{species}.fasta"
-    conda: "../envs/primers.yaml"
-    output: temp(directory("tmp/{species}/"))
-    shell:
-        "mkdir -p {output}"
-
-rule create_db:
-    output: "results/{species}.db"
-    log: "logs/{species}.db.log"
-    conda: "../envs/dump.yaml"
-    shell:
-        """
-        python3 workflow/scripts/create_db.py \
-            --db {output} &>> {log}
-        """
-
 rule regions_to_json:
     input: 
         db = "results/{species}.db",

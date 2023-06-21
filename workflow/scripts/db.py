@@ -1,104 +1,13 @@
+"""Handles database connections and queries"""
 import sqlite3
 
 
 class DBHandler:
-    def setup_regions_table(self):
+    def setup_table(self, path_to_sql_file: str):
+        with open(path_to_sql_file, "r") as f:
+            sql = f.read()
         with self.con:
-            self.con.execute(
-                """
-                CREATE TABLE IF NOT EXISTS regions (
-                    name TEXT PRIMARY KEY NOT NULL,
-                    start INT NOT NULL,
-                    end INT NOT NULL
-                );
-                """
-            )
-            self.con.execute(
-                """CREATE INDEX IF NOT EXISTS idx_regions_name ON regions(name);"""
-            )
-
-    def setup_alignments_table(self):
-        with self.con:
-            self.con.execute(
-                """
-                CREATE TABLE IF NOT EXISTS alignments (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    pool TEXT NOT NULL,
-                    primer_id INT NOT NULL,
-                    aligned_to TEXT NOT NULL,
-                    chromosome TEXT NOT NULL,
-                    position INT NOT NULL,
-                    sequence TEXT NOT NULL,
-                    matches INT NOT NULL,
-                    score REAL DEFAULT 0.0,
-                    read_quality TEXT NOT NULL,
-                    mismatches_descriptor TEXT,
-                    species TEXT NOT NULL,
-
-                    FOREIGN KEY (primer_id) REFERENCES proto_primers (id)
-                );
-                """
-            )
-
-            self.con.execute(
-                """CREATE INDEX IF NOT EXISTS idx_alignments_id ON alignments(id)"""
-            )
-            self.con.execute(
-                """CREATE INDEX IF NOT EXISTS idx_alignments_pool ON alignments(pool)"""
-            )
-            self.con.execute(
-                """CREATE INDEX IF NOT EXISTS idx_alignments_primer_id ON alignments(primer_id)"""
-            )
-            self.con.execute(
-                """CREATE INDEX IF NOT EXISTS idx_alignments_aligned_to ON alignments(aligned_to)"""
-            )
-            self.con.execute(
-                """CREATE INDEX IF NOT EXISTS idx_alignments_position ON alignments(position)"""
-            )
-            self.con.execute(
-                """CREATE INDEX IF NOT EXISTS idx_alignments_multi ON alignments(pool, id, position, matches)"""
-            )
-
-    def setup_proto_primers_table(self):
-        with self.con:
-            self.con.execute(
-                """
-                CREATE TABLE IF NOT EXISTS proto_primers(
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    pool INT NOT NULL,
-                    region_name TEXT NOT NULL,
-                    amplicon_name TEXT NOT NULL,
-                    strand TEXT NOT NULL,
-                    sequence TEXT NOT NULL,
-                    length INT NOT NULL,
-                    tm REAL NOT NULL,
-                    gc_percent REAL NOT NULL,
-                    hairpin_th REAL NOT NULL,
-                    discarded BOOLEAN NOT NULL DEFAULT FALSE,
-                    badness REAL NOT NULL DEFAULT 0.0,
-                    position INT NOT NULL DEFAULT -1, -- Position in the region
-
-                    UNIQUE(pool, region_name, amplicon_name, strand, sequence),
-                    FOREIGN KEY (region_name) REFERENCES regions (name)
-                )
-            """
-            )
-
-            self.con.execute(
-                "CREATE INDEX IF NOT EXISTS idx_primers_id ON proto_primers(id)"
-            )
-            self.con.execute(
-                "CREATE INDEX IF NOT EXISTS idx_primers_sequence ON proto_primers(sequence)"
-            )
-            self.con.execute(
-                "CREATE INDEX IF NOT EXISTS idx_primers_pool ON proto_primers(pool)"
-            )
-            self.con.execute(
-                "CREATE INDEX IF NOT EXISTS idx_primers_amplicon_name ON proto_primers(amplicon_name)"
-            )
-            self.con.execute(
-                "CREATE INDEX IF NOT EXISTS idx_primers_multi ON proto_primers(pool, region_name, amplicon_name, strand)"
-            )
+            self.con.executescript(sql)
 
     def __init__(self, path_to_db: str) -> None:
         con = sqlite3.connect(path_to_db, timeout=60)
