@@ -4,7 +4,7 @@ rule regions_to_json:
         regions = "data/regions.csv"
     output: "results/{species}.regions.json"
     log: "logs/{species}.regions.log"
-    conda: "../envs/dump.yaml"
+    conda: "../envs/converter.yaml"
     shell:
         """
         python3 workflow/scripts/regions_to_json.py \

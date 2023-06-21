@@ -2,7 +2,6 @@ import os
 import sys
 import asyncio
 import logging
-import json
 
 from Bio import SeqIO
 from Bio.SeqIO import SeqRecord
