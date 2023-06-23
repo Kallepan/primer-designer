@@ -1,7 +1,8 @@
 rule regions_to_json:
     input: 
         db = "results/{species}.db",
-        regions = "data/regions.csv"
+        regions = "data/regions.csv",
+        fasta = "data/{species}.fasta"
     output: "results/{species}.regions.json"
     log: "logs/{species}.regions.log"
     conda: "../envs/converter.yaml"
@@ -10,6 +11,7 @@ rule regions_to_json:
         python3 workflow/scripts/regions_to_json.py \
             --db {input.db} \
             --regions {input.regions} \
+            --fasta {input.fasta} \
             --output {output}  &>> {log}
         """
         

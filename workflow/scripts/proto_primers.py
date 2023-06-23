@@ -272,5 +272,5 @@ if __name__ == "__main__":
     try:
         pass
     except Exception as e:
-        sys.stderr.write(f"ERROR: {e}\n")
+        logging.exception(e)
         sys.exit(1)

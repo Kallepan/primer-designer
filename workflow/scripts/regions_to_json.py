@@ -5,6 +5,8 @@ import sys
 from db import DBHandler
 import pandas as pd
 
+from Bio import SeqIO
+
 logging.basicConfig(level=logging.INFO)
 
 
@@ -14,6 +16,9 @@ def __get_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--regions", type=str, required=True, help="Path to the regions file"
+    )
+    parser.add_argument(
+        "--fasta", type=str, required=True, help="Path to the fasta file"
     )
     parser.add_argument(
         "--db", type=str, required=True, help="Path to the sqlite database"
@@ -39,6 +44,22 @@ def __get_regions(path_to_file: str) -> pd.DataFrame:
 
     return df
 
+def __extract_amplicons_from_fasta(args: argparse.Namespace, region_df: pd.DataFrame) -> pd.DataFrame:
+    """Extract the amplicons from the fasta file and add them to the region dataframe"""
+    def __extract_region_from_seqrecord(start: int, end: int, seqrecord: SeqIO.SeqRecord) -> str:
+        return str(seqrecord.seq[start:end])
+    
+    # Load in the fasta file as seqrecord
+    with open(args.fasta, "r") as file:
+        seqrecord = SeqIO.read(file, "fasta")
+
+    # Extract the regions from the fasta file
+    region_df["sequence"] = region_df.apply(
+        lambda row: __extract_region_from_seqrecord(row["start"], row["end"], seqrecord),
+        axis=1,
+    )
+
+    return region_df
 
 def __to_db(regions: pd.DataFrame, db: DBHandler) -> None:
     regions.to_sql("regions", db.con, if_exists="append", index=False)
@@ -54,6 +75,7 @@ def main():
     db = DBHandler(args.db)
     region_df = __get_regions(args.regions)
     __to_db(region_df, db)
+    region_df = __extract_amplicons_from_fasta(args, region_df)
     __to_json(region_df, args)
 
 
