@@ -1,3 +1,10 @@
+"""
+Creates the sqlite database with the tables:
+    - regions
+    - alignments
+    - proto_primers
+See the sql files in the sql directory for more information.
+"""
 import argparse
 import logging
 import sys

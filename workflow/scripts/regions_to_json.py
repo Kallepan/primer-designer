@@ -74,8 +74,8 @@ def main():
     args = __get_args()
     db = DBHandler(args.db)
     region_df = __get_regions(args.regions)
-    __to_db(region_df, db)
     region_df = __extract_amplicons_from_fasta(args, region_df)
+    __to_db(region_df, db)
     __to_json(region_df, args)
 
 
