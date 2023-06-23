@@ -96,8 +96,8 @@ rule score_alignments:
         base_penalty = base_penalty,
         alignment_weight = alignment_weight,
         mismatch_weight = mismatch_weight,
-    shell:
-        """python3 workflow/scripts/score_alignments.py \
+    shell: """
+        python3 workflow/scripts/score_alignments.py \
         --db {input.db} \
         --output {output} \
         --pool {wildcards.pool} \
@@ -105,10 +105,12 @@ rule score_alignments:
         --alignment_weight {params.alignment_weight} \
         --mismatch_weight {params.mismatch_weight} \
         --base_penalty {params.base_penalty} \
-        &>> {log}"""
+        &>> {log}
+    """
 
 adjacency_limit = config["evaluation_settings"]["max_adjacency_limit"]
 hard_filter = config["evaluation_settings"]["hard_filter"]
+alignments_limit = config["evaluation_settings"]["hard_filter_params"]["alignments_limit"]
 rule eval_primers_with_target:
     input:
         scores = "results/{species}.{pool}.alignment.scores.tsv",
@@ -117,6 +119,7 @@ rule eval_primers_with_target:
     log: "logs/{species}.{pool}.evaluation.log"
     params:
         adjacency_limit = adjacency_limit,
+        alignments_limit = alignments_limit,
         hard_filter = hard_filter,
     conda:
         "../envs/primers.yaml"
@@ -130,6 +133,7 @@ rule eval_primers_with_target:
             --pool {wildcards.pool} \
             --species {wildcards.species} \
             --adjacency_limit {params.adjacency_limit} \
+            --alignments_limit {params.alignments_limit} \
             &>> {log}
         else
             python3 workflow/scripts/eval_primers_soft.py \

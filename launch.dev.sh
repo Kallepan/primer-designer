@@ -9,4 +9,3 @@ rm logs/*
 rm tmp/* -rf
 
 snakemake --use-conda --use-singularity -p results/myc_tuberculosis_h37Rv.dummy -j 4
-snakemake --report results/report.html

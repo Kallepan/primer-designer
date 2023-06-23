@@ -66,7 +66,7 @@ def main():
     alignment = __parse_alignment(args)
 
     # write output to csv and database
-    alignment.to_sql("alignments", db.con, if_exists="append", index=False)
+    alignment.to_sql("alignments", db.conn, if_exists="append", index=False)
 
     alignment.to_csv(args.output, sep="\t", index=False)
 

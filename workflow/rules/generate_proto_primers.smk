@@ -20,10 +20,11 @@ amplicon_size = config["primer_gen_config"]["amplicon_size"]
 amplicon_buffer = config["primer_gen_config"]["amplicon_buffer_size"]
 rule generate_proto_primers:
     input:
+        "results/{species}.regions.json",
         fasta = "data/{species}.fasta",
         primer3_config = "config/primer3_settings.yaml",
         tmp_dir = "tmp/{species}/",
-        regions = "results/{species}.regions.json",
+        db = "results/{species}.db",
         output_dir = "results/"
     params:
         amplicon_size = amplicon_size,
@@ -37,5 +38,5 @@ rule generate_proto_primers:
         -f {input.fasta} \
         -p {input.primer3_config} \
         -o {input.output_dir} \
-        -r {input.regions} \
+        -d {input.db} \
         -t {input.tmp_dir} &>> {log}"""

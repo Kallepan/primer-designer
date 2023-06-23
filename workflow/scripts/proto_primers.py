@@ -8,12 +8,27 @@ from Bio.SeqIO import SeqRecord
 from Bio.Seq import Seq
 
 import pandas as pd
+import numpy as np
 
 from handler import PrimerGenerator, AmpliconGenerator
 from configs import PrimerGenConfig
 from db import DBHandler
 
 logging.basicConfig(level=logging.INFO)
+
+
+def __load_regions_from_db(db: DBHandler) -> pd.DataFrame:
+    df = pd.read_sql_query(
+        "SELECT * FROM regions",
+        db.conn,
+        dtype={
+            "name": "string",
+            "start": "int64",
+            "end": "int64",
+            "sequence": "string",
+        },
+    )
+    return df
 
 
 def __load_regions(path_to_file: str) -> pd.DataFrame:
@@ -24,6 +39,11 @@ def __load_regions(path_to_file: str) -> pd.DataFrame:
             "start": "int64",
             "end": "int64",
         },
+    )
+
+    # switch up the start and end columns if the start is greater than the end
+    df["start"], df["end"] = np.where(
+        df["start"] > df["end"], (df["end"], df["start"]), (df["start"], df["end"])
     )
     return df
 
@@ -221,22 +241,26 @@ async def __generate_primers_for_pool(
 async def main():
     config = PrimerGenConfig()
     # Load the regions
-    regions = __load_regions(config.regions)
+    db = DBHandler(config.db)
+    regions = __load_regions_from_db(db=db)
 
     # Load the sequence
     seq_record = __extract_sequence_record_from_fasta(config.fasta)
-    species = config.fasta.split("/")[-1].split(".")[0]
-    db = DBHandler(path_to_db=os.path.join(config.output_dir, f"{species}.db"))
 
     # Generate pools for each region containing amplicons and primers
     list_of_primers = []
     async for i, row in AmpliconGenerator(regions=regions):
-        if row["start"] > row["end"]:
-            start = row["end"]
-            end = row["start"]
-        else:
-            start = row["start"]
-            end = row["end"]
+        start = row["start"]
+        end = row["end"]
+
+        if start > end:
+            raise ValueError(f"Start {start} is greater than end {end}.")
+        if start < 0:
+            raise ValueError(f"Start {start} is less than 0.")
+        if end > len(seq_record.seq):
+            raise ValueError(
+                f"End {end} is greater than sequence length {len(seq_record.seq)}."
+            )
 
         # Generate the optimal pool coordinates
         pool_one_coords, pool_two_coords = __split_region_into_pools(
@@ -263,7 +287,7 @@ async def main():
 
     # Export the primers to a sqlite database
     df = pd.DataFrame(list_of_primers)
-    df.to_sql("proto_primers", db.con, if_exists="append", index=False)
+    df.to_sql("proto_primers", db.conn, if_exists="append", index=False)
 
 
 if __name__ == "__main__":

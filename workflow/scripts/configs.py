@@ -58,18 +58,18 @@ class PrimerGenConfig:
             help="Path to the fasta file containing the sequence to be used to generate the amplicons.",
         )
         parser.add_argument(
+            "-d",
+            "--db",
+            type=str,
+            required=True,
+            help="Path to the sqlite database",
+        )
+        parser.add_argument(
             "-p",
             "--primer_3_settings_path",
             type=str,
             required=True,
             help="Path to the primer3 config file.",
-        )
-        parser.add_argument(
-            "-r",
-            "--regions",
-            type=str,
-            required=True,
-            help="Path to the csv file containing the regions to be used to generate the amplicons.",
         )
         parser.add_argument(
             "-o",
@@ -129,8 +129,6 @@ class PrimerGenConfig:
         # Error Handling
         if not os.path.exists(args.fasta):
             raise Exception(f"The fasta file {args.fasta} does not exist.")
-        if not os.path.exists(args.regions):
-            raise Exception(f"The regions file {args.regions} does not exist.")
         if not os.path.exists(args.primer_3_settings_path):
             raise Exception(
                 f"The primer3 config file {args.primer_3_settings_path} does not exist."

@@ -1,3 +1,7 @@
+"""
+Script to dump the database to a set of TSV files for each table in the database.
+This is useful for debugging and for exporting the database to a different format.
+"""
 import argparse
 import logging
 import pandas as pd

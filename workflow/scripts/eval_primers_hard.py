@@ -1,3 +1,7 @@
+"""
+Similar to eval_primers_soft.py, but with a hard filter. Here the amount of adjacent alignments is limited to a certain number.
+If the number of adjacent alignments is greater than the limit, the primer is considered bad and marked as such in the database.
+"""
 import argparse
 import logging
 import sys
@@ -40,6 +44,12 @@ def __get_args() -> argparse.Namespace:
         type=str,
         required=True,
         help="Species to evaluate",
+    )
+    parser.add_argument(
+        "--alignments_limit",
+        type=int,
+        default=DEFAULT_ALIGNMENTS_LIMIT,
+        help=f"Limit of nearby alignments, above which the primer is considered as bad and marked in the database. Default: {DEFAULT_ALIGNMENTS_LIMIT}",
     )
     parser.add_argument(
         "--adjacency_limit",
@@ -139,7 +149,7 @@ def __get_primers_to_discard(
     """
     primer_adjacency_counts = adjacent_alignments["primer_id"].value_counts()
     primers_to_discard = primer_adjacency_counts[
-        primer_adjacency_counts > DEFAULT_ALIGNMENTS_LIMIT
+        primer_adjacency_counts > args.alignments_limit
     ].index.tolist()  # TODO: add parameters
     return primers_to_discard, primer_adjacency_counts
 
