@@ -4,15 +4,39 @@ use crate::utils::PrimerUtils;
 use rand::random;
 use std::collections::HashMap;
 
+fn calculate_distance_score(length: usize, end_index: usize) -> f64 {
+    /*
+    Calculates the distance score for a given subsequence.
+    The distance score is 1 / (distance + 1) where distance is the distance to the 3' end of the primer.
+    */
+    let distance = length - end_index;
+    let distance_score = 1.0 / (distance + 1) as f64;
+    distance_score
+}
+
 fn calculate_loss(hash_map: &HashMap<String, f64>, amplicon_primer_pairs: &Vec<PrimerPair>, subsequence_min_size: usize, subsequence_max_size: usize) -> f64 {
     /*
-        - For every sequence in the hash table
-        - find the reverse complement in all primers with the distance to 3' End
-        - calculate the loss for every subsequence SUM(1 / (distance_of_revcomp + 1)) * 2^length_of_subsequence * 2^num_gc_of_subsequence * Hashvalue
-            - if none are found -> loss = 0
+    For every sequence in the hash table find the reverse complement in all primers with the distance to 3' End
+    Calculate the loss for every subsequence SUM(1 / (distance_of_revcomp + 1)) * 2^length_of_subsequence * 2^num_gc_of_subsequence * Hashvalue
+    if none are found -> loss is just the badness of the primer
     */
     fn calculate_distance(length: usize, subsequence_start_index: usize, subsequence_length: usize) -> f64 {
-        1.0 / (length - (subsequence_start_index + subsequence_length) + 1) as f64
+        /*
+        Calculates the distance to the 3' end of the primer.
+        Depending on the distance, the result is weighted differently.
+        */
+        let distance = (length - (subsequence_start_index + subsequence_length)) as f64;
+
+        if distance as usize <= 1 {
+            return 1.5/(distance + 1.0);
+        } else if distance as usize <= 3 {
+            return 1.25/(distance + 1.0);
+        } else if distance as usize <= 6 {
+            return 1.0/(distance + 1.0);
+        }
+        
+        // distance > 6
+        1.0 / distance
     }
 
     let mut loss = 0.0;
@@ -55,14 +79,8 @@ fn calculate_loss(hash_map: &HashMap<String, f64>, amplicon_primer_pairs: &Vec<P
 
 fn replace_primer_in_set(primer_pool: &Pool, primer_set: &mut Vec<PrimerPair>, hash_map: &mut HashMap<String, f64>, subsequence_min_size: usize, subsequence_max_size: usize) {
     /* 
-        Replace one primer pair from the given set, by another pair from the list of proto-primers and update the hash map.
+    Replace one primer pair from the given set, by another pair from the list of proto-primers and update the hash map.
     */
-
-    fn calculate_distance_score(primer_len: usize, end_index: usize) -> f64 {
-        let distance = primer_len - end_index;
-        let distance_score = 1.0 / (distance + 1) as f64;
-        distance_score
-    }
 
     fn remove_primer_from_hash_map(hash_map: &mut HashMap<String, f64>, sequence: &String, length: usize, subsequence_min_size: usize, subsequence_max_size: usize) {
         for subsequence_info in sequence.get_all_substrings_between(subsequence_min_size, subsequence_max_size) {
@@ -140,12 +158,6 @@ fn initialize_hash_map(hash_map: &mut HashMap<String, f64>, primer_set: &Vec<Pri
     Since all left and right primer are given 5' -> 3', the distance score for the primer can be calculated as is.
     */
 
-    fn calculate_distance_score(length: usize, end_index: usize) -> f64 {
-        let distance = length - end_index;
-        let distance_score = 1.0 / (distance + 1) as f64;
-        distance_score
-    }
-
     fn add_primer_to_hash_map(hash_map: &mut HashMap<String, f64>, sequence: &String, length: usize, subsequence_min_size: usize, subsequence_max_size: usize) {
         for subsequence_info in sequence.get_all_substrings_between(subsequence_min_size, subsequence_max_size) {
             let distance_score = calculate_distance_score(length, subsequence_info.end_index);
@@ -165,6 +177,9 @@ fn initialize_hash_map(hash_map: &mut HashMap<String, f64>, primer_set: &Vec<Pri
 }
 
 fn calculate_reverse_complement(primer: &str) -> String {
+    /*
+    Calculate the reverse complement of a given primer
+    */
     let mut reverse_complement = String::new();
     
     for nucleotide in primer.chars().rev() {
@@ -226,9 +241,9 @@ pub fn run(
     };
     while iteration <= numsteps as usize {
         /*
-            Generate a temp set and calculate the loss by recalculating the hash map. Store the old hash map in case the temp set is not accepted.
-            If the temp set is accepted, store the temp set and continue.
-            If the temp set is not accepted, restore the old hash map, store the temp set, and continue.
+        Generate a temp set and calculate the loss by recalculating the hash map. Store the old hash map in case the temp set is not accepted.
+        If the temp set is accepted, store the temp set and continue.
+        If the temp set is not accepted, restore the old hash map, store the temp set, and continue.
         */
         let mut temp_set = current_set.clone();
         let old_hash_map = hash_map.clone();
@@ -243,10 +258,10 @@ pub fn run(
             accept = true;
         } else {
             // Worse set -> Calculate acceptance and determine wether to discard or accept
-            let acceptance_prob = ((current_set.loss - temp_set.loss) / sa_temp as f64 ).exp();
+            let acceptance_prob = ((current_set.loss - temp_set.loss) / sa_temp as f64).exp();
             let random_number: f64 = random::<f64>();
 
-            log::info!("Acceptance Probability: {}, Random Number: {}", acceptance_prob, random_number);
+            log::info!("Acceptance Probability: {}, Random Number: {}, SA Temp: {}", acceptance_prob, random_number, sa_temp);
             if random_number < acceptance_prob {
                 accept = true;
             } else {
@@ -265,7 +280,7 @@ pub fn run(
         // Store loss
         losses.push(current_set.loss);
         // Update SA Temp and iteration index
-        sa_temp -= f64::max(0.0, sa_temp - (sa_temp_initial / numsteps as f64));
+        sa_temp = f64::max(1.0, sa_temp - (sa_temp_initial / numsteps as f64));
         iteration += 1;
     }
 
