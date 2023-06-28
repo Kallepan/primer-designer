@@ -75,6 +75,13 @@ def __extract_amplicons_from_fasta(
 
 
 def __to_db(regions: pd.DataFrame, db: DBHandler) -> None:
+    # check if regions table has entries
+    rows, _ = db.select("SELECT * FROM regions")
+    if len(rows) > 0:
+        logging.warn("Regions table already has entries, skipping")
+        return
+
+    # Append to regions table
     regions.to_sql("regions", db.conn, if_exists="append", index=False)
 
 

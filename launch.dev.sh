@@ -5,7 +5,7 @@
 # and should not be used as a reference for how to run the pipeline!
 
 rm results/* -rf
-rm logs/*
-rm tmp/* -rf
+ rm logs/* -rf
+ rm mp/* -rf
 
-snakemake --use-conda --use-singularity -p results/myc_tuberculosis_h37Rv.dummy -j 4
+snakemake --use-conda --use-singularity -j 4 -p results/myc_tuberculosis_h37Rv.dummy

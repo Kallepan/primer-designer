@@ -16,8 +16,11 @@ rule create_db:
     shell:
         """
         python3 workflow/scripts/create_db.py \
-            --db {output} &>> {log} \
+            --db {output} &> {log} \
             --regions_sql_file {input.regions_sql_file} \
             --proto_primers_sql_file {input.proto_primers_sql_file} \
-            --alignments_sql_file {input.alignments_sql_file}
+            --alignments_sql_file {input.alignments_sql_file} \
+            &> {log}
         """
+    
+# TODO: export data to BED FILE

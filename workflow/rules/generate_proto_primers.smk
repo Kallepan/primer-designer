@@ -4,7 +4,7 @@ rule regions_to_json:
         regions = "data/regions.csv",
         fasta = "data/{species}.fasta"
     output: "results/{species}.regions.json"
-    log: "logs/{species}.regions.log"
+    log: "logs/primer_gen/{species}.regions.log"
     conda: "../envs/converter.yaml"
     shell:
         """
@@ -12,7 +12,7 @@ rule regions_to_json:
             --db {input.db} \
             --regions {input.regions} \
             --fasta {input.fasta} \
-            --output {output}  &>> {log}
+            --output {output}  &> {log}
         """
         
 pool_count = config["primer_gen_config"]["pool_count"]
@@ -24,19 +24,19 @@ rule generate_proto_primers:
         fasta = "data/{species}.fasta",
         primer3_config = "config/primer3_settings.yaml",
         tmp_dir = "tmp/{species}/",
-        db = "results/{species}.db",
-        output_dir = "results/"
+        db = "results/{species}.db"
     params:
         amplicon_size = amplicon_size,
         amplicon_buffer = amplicon_buffer,
         pool_count = pool_count
     conda: "../envs/primers.yaml"
-    output: "logs/{species}.proto_primers.log"
-    log: "logs/{species}.proto_primers.log"
+    output: "logs/primer_gen/{species}.proto_primers.log"
+    log: "logs/primer_gen/{species}.proto_primers.log"
     shell:
-        """python3 workflow/scripts/proto_primers.py \
-        -f {input.fasta} \
-        -p {input.primer3_config} \
-        -o {input.output_dir} \
-        -d {input.db} \
-        -t {input.tmp_dir} &>> {log}"""
+        """
+        python3 workflow/scripts/proto_primers.py \
+            -f {input.fasta} \
+            -p {input.primer3_config} \
+            -d {input.db} \
+            -t {input.tmp_dir} &> {log}
+        """

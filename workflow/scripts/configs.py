@@ -72,13 +72,6 @@ class PrimerGenConfig:
             help="Path to the primer3 config file.",
         )
         parser.add_argument(
-            "-o",
-            "--output_dir",
-            type=str,
-            required=True,
-            help="Path to the output directory to be used to save the amplicons.",
-        )
-        parser.add_argument(
             "-t",
             "--temp_dir",
             type=str,

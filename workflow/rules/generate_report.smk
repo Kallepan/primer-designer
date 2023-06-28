@@ -6,12 +6,17 @@ rule install_packages:
 
 rule build_report:
     conda: "../envs/nodejs.yml"
-    output: "results/report/summary.html"
     input: "packages/visualizer/node_modules"
+    output: "packages/visualizer/single-dist/index.html"
     shell: "cd packages/visualizer && npm run-script build && npx gulp"
 
 rule copy_to_target:
     conda: "../envs/nodejs.yml"
-    output: "results/report/summary.html"
-    input: "results/report/summary.html"
+    input: "packages/visualizer/single-dist/index.html"
+    output: "results/summary.html"
+    shell: 
+    """
+        cp {input} {output}
+    """
 
+TODO

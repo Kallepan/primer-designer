@@ -1,6 +1,6 @@
 pool_count = config["primer_gen_config"]["pool_count"]
 rule all:
-    input: "logs/{species}.dump.log"
+    input: expand("results/{{species}}.{pool}.saddle.set.json", pool=range(0, pool_count))
     output: temp("results/{species}.dummy")
     log: "results/{species}.dummy"
     shell:
@@ -16,7 +16,7 @@ rule dump_database:
     shell:
         """
         python3 workflow/scripts/dump_database.py \
-        --db results/{wildcards.species}.db \
-        --species {wildcards.species} \
-        --output_dir results/dump/ \
-        &>> {log}"""
+            --db results/{wildcards.species}.db \
+            --species {wildcards.species} \
+            --output_dir results/dump/ \
+        &> {log}"""
