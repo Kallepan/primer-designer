@@ -4,6 +4,8 @@ The Rust Primer Design Package, utilizing the SADDLE (Simulated Annealing Design
 
 ## Compilation
 
+- The necessary configurations are present in the `Cargo.toml` file.
+
 ```bash
 cargo build --release
 ```

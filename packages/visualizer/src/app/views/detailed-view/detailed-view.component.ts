@@ -104,7 +104,7 @@ export class DetailedViewComponent implements OnInit {
     // Check if the difference between the lower and upper position is too large if so set the upper position to the config value
     if (relativeUpperPosition - relativeLowerPosition > CONFIG.DETAILED_VIEW.SEQUENCE_VISIBLE_LENGTH) {
       relativeUpperPosition = relativeLowerPosition + CONFIG.DETAILED_VIEW.SEQUENCE_VISIBLE_LENGTH;
-      this._messageService.openSnackBar(`The maximum sequence length is ${CONFIG.DETAILED_VIEW.SEQUENCE_VISIBLE_LENGTH}`, 'OK')
+      this._messageService.openSnackBar(`The maximum sequence length is ${CONFIG.DETAILED_VIEW.SEQUENCE_VISIBLE_LENGTH}`, 'OK');
     }
     
     // Update the sequence
