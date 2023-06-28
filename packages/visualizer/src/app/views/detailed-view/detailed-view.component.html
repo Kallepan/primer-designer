@@ -1,0 +1,29 @@
+<div class="view-container">
+    <div class="meta-form">
+        <mat-form-field class="meta-form-item">
+            <mat-label>Select the region</mat-label>
+            <mat-select (selectionChange)="changeActiveRegion($event)">
+                <mat-option *ngFor="let region of validRegions" [value]="region">
+                    {{region}}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+        <mat-slider matTooltip="Use these sliders to navigate the visible region" class="meta-form-item" [max]="maxSequencePos" [min]="minSequencePos" [discrete]="true">
+            <input matSliderStartThumb [(ngModel)]="lowerPositionPointer" (input)="onSliderInputChange()">
+            <input matSliderEndThumb [(ngModel)]="upperPositionPointer" (input)="onSliderInputChange()">
+        </mat-slider>
+    </div>
+    <div *ngIf="(activeRegionData$ | async) as activeRegion" class="data">
+        <div class="metadata">
+            Visible Sequence <br />
+            From: {{lowerPositionPointer}} - {{currentSequence.length}} bp. - To: {{upperPositionPointer}}
+        </div>
+        <div class="sequence" *ngFor="let pool_id of presentPools">
+            <h2>Pool {{pool_id}}</h2>
+            <span class="letter" *ngFor="let letter of currentSequence; let i = index"
+            [matTooltip]="getTooltip(lowerPositionPointer+i, pool_id)" [ngStyle]="{'background-color': positionColorEncodingPerPool.get(pool_id)?.get(lowerPositionPointer + i)}">
+            {{letter}}
+            </span>
+        </div>
+    </div>
+</div>

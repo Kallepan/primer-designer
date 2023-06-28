@@ -1,0 +1,16 @@
+.header {
+    .menu {
+        display: flex;
+        gap: 20px;
+        align-items: baseline;
+        justify-content: flex-start;
+    }
+
+    .title {
+        margin-right: 20px;
+    }
+
+    .spacer {
+        flex: 1 1 auto;
+    }
+}

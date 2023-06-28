@@ -1,0 +1,37 @@
+.meta-form {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 1rem;
+
+    .meta-form-item {
+        align-self: baseline;
+    }
+}
+
+.data {
+    margin: 1rem;
+    .metadata {
+        margin: 0 auto 0 auto;
+        text-align: center;
+    }
+
+    .sequence {
+        .letter {
+            font-weight: bold;
+            color: black;
+            background-color: wheat;
+            transition: transform 1s ease-out;
+        }
+
+        .letter:hover,
+        .letter:focus {
+            transform: scale(1.5);
+            transition: transform 0.5s ease-in;
+        }
+    }
+}
+
+.large-sequence-container {
+    display: flex;
+    flex-direction: row;
+}
