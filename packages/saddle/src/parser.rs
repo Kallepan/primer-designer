@@ -27,6 +27,8 @@ pub struct Opts {
     pub min_subsequence_size: Option<usize>,
     #[clap(long)]
     pub max_subsequence_size: Option<usize>,
+    #[clap(long)]
+    pub optimal_iterations: Option<usize>,
 }
 
 pub fn get_args() -> Opts {

@@ -185,23 +185,29 @@ pub fn run(
     output_file_set: &String,
     output_file_loss: &String,
     subsequence_min_size: usize,
-    subsequence_max_size: usize)
-{
+    subsequence_max_size: usize,
+    optimal_iterations: usize,) {
     
     let pool = match json::load_json_from_file(&input_file_path) {
         Ok(data) => data,
         Err(e) => panic!("Failed to parse JSON file. Error: {}", e)
     };
 
+    // Initialize HashMap
     let mut hash_map: HashMap<String, f64> = HashMap::new();
 
-    // Simulated Annealing Parameters
-    let number_of_primers_in_pool = pool.regions.iter().fold(0, |acc, region| acc + region.amplicons.iter().fold(0, |amp_acc: usize, amplicon| amp_acc + amplicon.forward_primers.len() + amplicon.reverse_primers.len()));
-    let sa_temp_initial = (1000 + 10*number_of_primers_in_pool) as f64;
-    let numsteps = 10.0 + number_of_primers_in_pool as f64/10.0;
+    // Get number of amplicons and primers
+    let number_of_amplicons = pool.regions.iter().fold(0, |acc, region| acc + region.amplicons.len());
+    let number_of_primers = pool.regions.iter().fold(0, |acc, region| acc + region.amplicons.iter().fold(0, |amp_acc: usize, amplicon| amp_acc + amplicon.forward_primers.len() + amplicon.reverse_primers.len()));
+    log::info!("Number of Amplicons: {}", number_of_amplicons);
+    log::info!("Number of Primers: {}", number_of_primers);
 
-    println!("Initial Temperature: {}", sa_temp_initial);
-    println!("Number of Steps: {}", numsteps);
+    // Calculate Simulated Annealing Parameters
+    let sa_temp_initial = (number_of_amplicons * 10 + number_of_primers * 20) as f64;
+    let numsteps = optimal_iterations;
+
+    log::info!("Initial Temperature: {}", sa_temp_initial);
+    log::info!("Number of Steps: {}", numsteps);
 
     let mut iteration = 1;
     let mut sa_temp = sa_temp_initial;
@@ -212,7 +218,7 @@ pub fn run(
 
     let loss = calculate_loss(&hash_map, &primer_pairs, subsequence_min_size, subsequence_max_size);
     let pool_id = pool.pool_id.clone();
-    
+
     let mut current_set = Set {
         primer_pairs,
         pool_id,
@@ -259,7 +265,7 @@ pub fn run(
         // Store loss
         losses.push(current_set.loss);
         // Update SA Temp and iteration index
-        sa_temp -= f64::max(0.0, sa_temp - (sa_temp_initial / numsteps));
+        sa_temp -= f64::max(0.0, sa_temp - (sa_temp_initial / numsteps as f64));
         iteration += 1;
     }
 
