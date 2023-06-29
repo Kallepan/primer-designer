@@ -4,7 +4,7 @@
 # Its content should not be considered as part of the pipeline
 # and should not be used as a reference for how to run the pipeline!
 
-rm results/* -rf
+ rm results/* -rf
  rm logs/* -rf
  rm mp/* -rf
 

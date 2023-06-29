@@ -1,8 +1,11 @@
 pool_count = config["primer_gen_config"]["pool_count"]
 rule all:
-    input: expand("results/{{species}}.{pool}.saddle.set.json", pool=range(0, pool_count))
+    input: 
+        "logs/{species}.dump.log",
+        "results/saddle.set.json"
     output: temp("results/{species}.dummy")
     log: "results/{species}.dummy"
+    conda: "../envs/base.yaml"
     shell:
         "echo 'dummy' > {output}"
 
