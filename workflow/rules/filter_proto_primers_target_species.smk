@@ -54,7 +54,7 @@ rule format_align_primers_to_species:
     conda: "../envs/format.yaml"
     shell: 
         """
-        python3 workflow/scripts/align_primers_format.py \
+        python3 workflow/scripts/format_align_primers.py \
             --input {input.raw_alignment} \
             --output {output} \
             --db {input.db} \
@@ -69,8 +69,7 @@ rule update_primer_position:
         db = "results/{species}.db"
     output: "results/{species}.{pool}.proto_primers.positions.tsv"
     log: "logs/filter/{species}.{pool}.position.log"
-    conda:
-        "../envs/dump.yaml"
+    conda: "../envs/dump.yaml"
     shell: """
         python3 workflow/scripts/update_primer_position.py \
         --db {input.db} \

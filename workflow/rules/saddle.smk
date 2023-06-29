@@ -26,10 +26,10 @@ rule run_saddle:
 pool_count = config["primer_gen_config"]["pool_count"]
 species = config["primer_gen_config"]["species"]
 rule merge_saddle_output:
-    input: expand("results/{species}.{pool}.saddle.set.json", species=species,pool=range(0, pool_count))
+    input: expand("results/{species}.{pool}.saddle.set.json", species=species, pool=range(0, pool_count))
     conda: "../envs/base.yaml"
-    log: "logs/saddle/merge.log"
-    output: "results/saddle.set.json"
+    log: "logs/saddle/{species}.merge.log"
+    output: "results/{species}.primer_set.json"
     shell:
         """
         python workflow/scripts/merge_saddle_output.py \

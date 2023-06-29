@@ -1,10 +1,3 @@
-rule create_tmp_dir:
-    input: "data/{species}.fasta"
-    conda: "../envs/primers.yaml"
-    output: temp(directory("tmp/{species}/"))
-    shell:
-        "mkdir -p {output}"
-
 rule create_db:
     input: 
         regions_sql_file = "workflow/sql/regions.sql",
