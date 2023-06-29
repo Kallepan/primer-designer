@@ -78,7 +78,7 @@ def __to_db(regions: pd.DataFrame, db: DBHandler) -> None:
     # check if regions table has entries
     rows, _ = db.select("SELECT * FROM regions")
     if len(rows) > 0:
-        logging.warn("Regions table already has entries, skipping")
+        logging.warning("Regions table already has entries, skipping")
         return
 
     # Append to regions table

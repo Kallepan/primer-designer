@@ -195,7 +195,7 @@ async def __generate_primers_for_pool(
         )
 
         if not amplicon_forward_primers or not amplicon_reverse_primers:
-            logging.warn(
+            logging.warning(
                 f"Failed to find primers for {region_name}-{idx} in region {coords['start']}-{coords['end']} in {pool_id}."
             )
             continue
