@@ -31,21 +31,9 @@ def __load_regions_from_db(db: DBHandler) -> pd.DataFrame:
     return df
 
 
-def __load_regions(path_to_file: str) -> pd.DataFrame:
-    df = pd.read_json(
-        path_to_file,
-        dtype={
-            "name": "string",
-            "start": "int64",
-            "end": "int64",
-        },
-    )
-
-    # switch up the start and end columns if the start is greater than the end
-    df["start"], df["end"] = np.where(
-        df["start"] > df["end"], (df["end"], df["start"]), (df["start"], df["end"])
-    )
-    return df
+def __clear_db(db: DBHandler) -> None:
+    # clear the database proto_primers table
+    db.execute("DELETE FROM proto_primers")
 
 
 def __extract_sequence_record_from_fasta(path: str) -> SeqRecord:
@@ -242,10 +230,13 @@ async def main():
     config = PrimerGenConfig()
     # Load the regions
     db = DBHandler(config.db)
-    regions = __load_regions_from_db(db=db)
+    regions = __load_regions_from_db(db)
 
     # Load the sequence
     seq_record = __extract_sequence_record_from_fasta(config.fasta)
+
+    # clear the database
+    __clear_db(db)
 
     # Generate pools for each region containing amplicons and primers
     list_of_primers = []
