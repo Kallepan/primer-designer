@@ -1,9 +1,9 @@
 rule ensure_saddle_binary_is_build:
-    input: "packages/saddle/cargo.toml"
+    input: "packages/saddle/Cargo.toml"
     output: "packages/saddle/target/release/saddle"
     log: "logs/saddle/build.log"
     conda: "../envs/saddle.yaml"
-    shell: "cd packages/saddle && cargo install && cargo build --release &> {log}"
+    shell: "cd packages/saddle && cargo build --release &> {log}"
 
 rule run_saddle:
     input: 
@@ -23,8 +23,8 @@ rule run_saddle:
             &> {log}
         """
 
-pool_count = config["primer_gen_config"]["pool_count"]
-species = config["primer_gen_config"]["species"]
+pool_count = config["metadata"]["pool_count"]
+species = config["metadata"]["species"]
 rule merge_saddle_output:
     input: expand("results/{species}.{pool}.saddle.set.json", species=species, pool=range(0, pool_count))
     conda: "../envs/base.yaml"

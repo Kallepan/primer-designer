@@ -79,10 +79,12 @@ def __get_alignments(db: DBHandler, args: argparse.Namespace) -> pd.DataFrame:
         """,
         (args.pool, args.species),
     )
+
     df = pd.DataFrame(
         alignments,
         columns=column_names,
     )
+
     return df
 
 

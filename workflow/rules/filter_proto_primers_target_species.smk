@@ -30,7 +30,7 @@ rule align_primers_to_species:
         expand("tmp/indexes/{{species}}.rev.{version}.ebwt", version=range(1, 3)),
         primers_fasta = "results/{species}.{pool}.proto_primers.fasta",
         db = "results/{species}.db"
-    output: temp("results/{species}.{pool}.alignment.raw")
+    output: "results/{species}.{pool}.alignment.raw"
     log: "logs/filter/{species}.{pool}.alignment.log"
     params:
         index = lambda w, input: os.path.join("tmp", "indexes", os.path.basename(input.primers_fasta).split(".")[0]),

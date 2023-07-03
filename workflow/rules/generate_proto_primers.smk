@@ -15,7 +15,7 @@ rule regions_to_json:
             --output {output}  &> {log}
         """
         
-pool_count = config["primer_gen_config"]["pool_count"]
+pool_count = config["metadata"]["pool_count"]
 amplicon_size = config["primer_gen_config"]["amplicon_size"]
 amplicon_buffer = config["primer_gen_config"]["amplicon_buffer_size"]
 rule generate_proto_primers:
@@ -23,12 +23,12 @@ rule generate_proto_primers:
         "results/{species}.regions.json",
         fasta = "data/{species}.fasta",
         primer3_config = "config/primer3_settings.yaml",
-        tmp_dir = "tmp/{species}/",
         db = "results/{species}.db"
     params:
         amplicon_size = amplicon_size,
         amplicon_buffer = amplicon_buffer,
-        pool_count = pool_count
+        pool_count = pool_count,
+        tmp_dir = temp("tmp/{species}/")
     conda: "../envs/primers.yaml"
     # Defining the log file as output is stupid, because it will be removed upon an error
     output: temp("results/{species}.proto_primers.dummy")
@@ -39,6 +39,6 @@ rule generate_proto_primers:
             -f {input.fasta} \
             -p {input.primer3_config} \
             -d {input.db} \
-            -t {input.tmp_dir} \
+            -t {params.tmp_dir} \
              &> {log} && touch {output}
         """

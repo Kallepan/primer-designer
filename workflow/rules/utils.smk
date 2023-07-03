@@ -15,5 +15,3 @@ rule create_db:
             --alignments_sql_file {input.alignments_sql_file} \
             &> {log}
         """
-    
-# TODO: export data to BED FILE
