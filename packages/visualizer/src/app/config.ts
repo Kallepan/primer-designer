@@ -17,9 +17,8 @@ export class CONFIG {
 
     // Configurations for the detailed view
     public static DETAILED_VIEW = {
-        SEQUENCE_LENGTH_LIMIT: 30_000,
-        SEQUENCE_VISIBLE_LENGTH: 3_000,
-        BATCH_SIZE: 1000,
+        SEQUENCE_MAX_LENGTH: 100_000,
+        DEFAULT_COLOR: '#FFFFFF',
         PRIMER_COLOR: this.PRIMER_COLOR,
     };    
 

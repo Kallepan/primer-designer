@@ -1,11 +1,7 @@
 .meta-form {
     display: grid;
-    grid-template-columns: 200px 1fr;
-    gap: 1rem;
-
-    .meta-form-item {
-        align-self: baseline;
-    }
+    grid-template-columns: 1fr;
+    margin: 1rem;
 }
 
 .data {
@@ -19,7 +15,6 @@
         .letter {
             font-weight: bold;
             color: black;
-            background-color: wheat;
             transition: transform 1s ease-out;
         }
 
