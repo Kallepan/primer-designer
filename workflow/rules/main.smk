@@ -16,7 +16,7 @@ rule format_into_bed:
     input: "results/{species}.primer_set.json"
     output: "results/{species}.bed"
     log: "logs/{species}.bed.log"
-    conda: "../envs/dump.yaml"
+    conda: "../envs/biopython.yaml"
     shell:
         """
         python3 workflow/scripts/format_into_bed.py \
@@ -31,7 +31,7 @@ rule dump_database:
         "results/dump/{species}.proto_primers.tsv",
         "results/dump/{species}.alignments.tsv"
     log: "logs/{species}.dump.log"
-    conda: "../envs/dump.yaml"
+    conda: "../envs/base.yaml"
     shell:
         """
         python3 workflow/scripts/dump_database.py \

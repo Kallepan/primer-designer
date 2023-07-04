@@ -1,3 +1,4 @@
+name: nodejs
 channels:
   - conda-forge
 dependencies:

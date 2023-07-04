@@ -1,6 +1,9 @@
+name: biopython
 channels:
   - conda-forge
+  - bioconda
 dependencies:
+  - python=3.11
   - pip:
       - biopython==1.81
       - pandas==2.0.0

@@ -1,3 +1,4 @@
+name: bowtie
 channels:
   - conda-forge
   - bioconda

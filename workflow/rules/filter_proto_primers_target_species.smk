@@ -20,8 +20,7 @@ rule format_pool_into_fasta:
     output: "results/{species}.{pool}.proto_primers.fasta"
     log: "logs/filter/{species}.{pool}.format.log"
     conda: "../envs/primers.yaml"
-    shell:
-        "python3 workflow/scripts/format_into_fasta.py --db {input.db} --output {output} --pool {wildcards.pool} &> {log}"
+    shell: "python3 workflow/scripts/format_into_fasta.py --db {input.db} --output {output} --pool {wildcards.pool} &> {log}"
 
 max_mismatches = config["alignment_settings"]["max_mismatches"]
 rule align_primers_to_species:
@@ -51,7 +50,7 @@ rule format_align_primers_to_species:
         db = "results/{species}.db"
     output: "results/{species}.{pool}.alignment.tsv"
     log: "logs/filter/{species}.{pool}.alignment.format.log"
-    conda: "../envs/format.yaml"
+    conda: "../envs/biopython.yaml"
     shell: 
         """
         python3 workflow/scripts/format_align_primers.py \
@@ -68,8 +67,8 @@ rule update_primer_position:
         alignment = "results/{species}.{pool}.alignment.tsv",
         db = "results/{species}.db"
     output: "results/{species}.{pool}.proto_primers.positions.tsv"
-    log: "logs/filter/{species}.{pool}.position.log"
-    conda: "../envs/dump.yaml"
+    log: "logs/{species}.{pool}.primer_position.log"
+    conda: "../envs/biopython.yaml"
     shell: """
         python3 workflow/scripts/update_primer_position.py \
         --db {input.db} \
@@ -149,11 +148,12 @@ rule export_to_json:
         scores = "results/{species}.{pool}.proto_primers.scores.tsv",
         db = "results/{species}.db",
     output: "results/{species}.{pool}.evaluated_primers.json"
-    log: "logs/filter/{species}.{pool}.export.log"
-    conda:
-        "../envs/primers.yaml"
+    log: "logs/{species}.{pool}.export.log"
+    conda: "../envs/primers.yaml"
     shell:
-        """python3 workflow/scripts/format_into_json.py \
+        """
+        python3 workflow/scripts/format_into_json.py \
         --db {input.db} \
         --output {output} \
-        --pool {wildcards.pool} &> {log}"""
+        --pool {wildcards.pool} &> {log}
+        """

@@ -5,7 +5,7 @@ rule regions_to_json:
         fasta = "data/{species}.fasta"
     output: "results/{species}.regions.json"
     log: "logs/primer_gen/{species}.regions.log"
-    conda: "../envs/converter.yaml"
+    conda: "../envs/biopython.yaml"
     shell:
         """
         python3 workflow/scripts/regions_to_json.py \

@@ -5,7 +5,7 @@ rule create_db:
         alignments_sql_file = "workflow/sql/alignments.sql",
     output: "results/{species}.db"
     log: "logs/{species}.db.log"
-    conda: "../envs/dump.yaml"
+    conda: "../envs/biopython.yaml"
     shell:
         """
         python3 workflow/scripts/create_db.py \
