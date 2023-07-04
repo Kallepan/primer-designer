@@ -199,7 +199,6 @@ async def __generate_primers_for_pool(
                     "amplicon_name": f"{region_name}-{idx}-{pool_id}",
                     "strand": "forward",
                     "sequence": primer["sequence"],
-                    "length": primer["length"],
                     "tm": primer["tm"],
                     "gc_percent": primer["gc_percent"],
                     "hairpin_th": primer["hairpin_th"],
@@ -215,7 +214,6 @@ async def __generate_primers_for_pool(
                     "amplicon_name": f"{region_name}-{idx}-{pool_id}",
                     "strand": "reverse",
                     "sequence": primer["sequence"],
-                    "length": primer["length"],
                     "tm": primer["tm"],
                     "gc_percent": primer["gc_percent"],
                     "hairpin_th": primer["hairpin_th"],
@@ -227,6 +225,7 @@ async def __generate_primers_for_pool(
 
 
 async def main():
+    # Due to plenty of options, we use a config class to store all the options
     config = PrimerGenConfig()
     # Load the regions
     db = DBHandler(config.db)
@@ -240,7 +239,7 @@ async def main():
 
     # Generate pools for each region containing amplicons and primers
     list_of_primers = []
-    async for i, row in AmpliconGenerator(regions=regions):
+    async for _, row in AmpliconGenerator(regions=regions):
         start = row["start"]
         end = row["end"]
 

@@ -43,20 +43,9 @@ def __get_primer_object(primer: list) -> dict:
             "badness": float(primer[10]),
             "position": int(primer[11]),
         }
-    except TypeError:
-        # rescue if any of the values are null
-        data = {
-            "id": primer[0],
-            "sequence": primer[5],
-            "length": primer[6],
-            "tm": primer[7],
-            "gc_percent": primer[8],
-            "hairpin_th": primer[9],
-            "badness": primer[10],
-            "position": primer[11],
-        }
-    except ValueError:
-        # rescue if any of the values are null
+    except (TypeError, ValueError) as e:
+        logging.error(f"Failed to parse primer {primer[0]}: {e}")
+        # rescue if any of the values are null, should not happen
         data = {
             "id": primer[0],
             "sequence": primer[5],
@@ -73,7 +62,7 @@ def __get_primer_object(primer: list) -> dict:
 def __get_primer_df(db: DBHandler, pool: str) -> pd.DataFrame:
     primers, column_names = db.select(
         """
-            SELECT id, pool, region_name, amplicon_name, strand, sequence, length, tm, gc_percent, hairpin_th, badness, position
+            SELECT id, pool, region_name, amplicon_name, strand, sequence, length(sequence), tm, gc_percent, hairpin_th, badness, position
             FROM proto_primers
             WHERE 
                 pool = ? AND 

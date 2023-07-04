@@ -82,7 +82,6 @@ class PrimerGenerator:
                 if key == "sequence":
                     key = "sequence"
                 primer_entry[key] = value
-            primer_entry["length"] = len(primer_entry["sequence"])
             primers.append(primer_entry)
         return primers
 

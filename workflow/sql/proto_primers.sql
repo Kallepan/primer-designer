@@ -5,13 +5,12 @@ CREATE TABLE IF NOT EXISTS proto_primers(
     amplicon_name TEXT NOT NULL,
     strand TEXT NOT NULL,
     sequence TEXT NOT NULL,
-    length INT NOT NULL,
     tm REAL NOT NULL,
     gc_percent REAL NOT NULL,
     hairpin_th REAL NOT NULL,
     discarded BOOLEAN NOT NULL DEFAULT FALSE,
     badness REAL NOT NULL DEFAULT 0.0,
-    position INT NOT NULL DEFAULT -1, -- Position in the region
+    position INT NOT NULL DEFAULT -1, --If a primer is not aligned correctly, this will be -1
 
     UNIQUE(pool, region_name, amplicon_name, strand, sequence),
     FOREIGN KEY (region_name) REFERENCES regions (name)
