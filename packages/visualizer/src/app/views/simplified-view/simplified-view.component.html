@@ -1,7 +1,8 @@
 <mat-progress-bar *ngIf="loading" mode="indeterminate"></mat-progress-bar>
 
 <div *ngIf="(data$ | async) as currentData">
-    <div *ngFor="let simplifiedRegionData of currentData" class="plot-container">
+    <div *ngFor="let simplifiedRegionData of currentData" class="plot-element">
         <app-plot [regionData]="simplifiedRegionData"></app-plot>
+        <hr/>
     </div>
 </div>

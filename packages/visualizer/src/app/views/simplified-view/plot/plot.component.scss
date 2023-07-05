@@ -1,3 +1,8 @@
 .plot {
-    color: white;
+    overflow: visible;
+    svg {
+        display: flex;
+        overflow: visible;
+        margin: 1rem auto;
+    }
 }

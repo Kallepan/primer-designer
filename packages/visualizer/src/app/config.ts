@@ -28,7 +28,7 @@ export class CONFIG {
         PLOT_WIDTH: 1200,
 
         PLOT_MARGINS: {
-            TOP: 20,
+            TOP: 50,
             RIGHT: 20,
             BOTTOM: 50,
             LEFT: 70,
