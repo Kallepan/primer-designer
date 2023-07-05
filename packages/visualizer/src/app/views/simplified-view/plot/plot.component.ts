@@ -60,6 +60,31 @@ export class PlotComponent implements AfterViewInit {
       .style('text-anchor', 'middle')
       .style('fill', 'white')
       .text('Pool');
+
+    // add primers
+    svg.selectAll('primers')
+      .data(this.regionData.primers)
+      .enter()
+      .append('rect')
+      .attr('x', (primer) => x(primer.x1))
+      .attr('y', (primer) => y(primer.pool))
+      .attr('width', (primer) => x(primer.x2) - x(primer.x1))
+      .attr('height', 10)
+      .attr('transform', `translate(${margins.LEFT}, ${margins.TOP})`)
+      .style('fill', 'steelblue');
+    
+    // add amplicons
+    svg.selectAll('amplicons')
+      .data(this.regionData.amplicons)
+      .enter()
+      .append('rect')
+      .attr('x', (amplicon) => x(amplicon.x1))
+      .attr('y', (amplicon) => y(amplicon.pool))
+      .attr('width', (amplicon) => x(amplicon.x2) - x(amplicon.x1))
+      .attr('height', 10)
+      .attr('transform', `translate(${margins.LEFT}, ${margins.TOP})`)
+      .style('fill', 'red');
+
   }
 
   getTitle(): string {

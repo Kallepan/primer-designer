@@ -9,7 +9,7 @@ import { BehaviorSubject, tap, map } from 'rxjs';
 import { CONFIG } from 'src/app/config';
 import { ResultsService } from 'src/app/services/results.service';
 import { Region } from 'src/app/types';
-import { SimplifiedPrimerData, SimplifiedRegionData } from './types';
+import { SimplifiedAmpliconData, SimplifiedPrimerData, SimplifiedRegionData } from './types';
 
 @Component({
   selector: 'app-simplified-view',
@@ -28,31 +28,38 @@ export class SimplifiedViewComponent implements OnInit {
       // Format the data
       const formattedData: SimplifiedRegionData[] = [];
 
-      // Iterate over each region and calculate the relative positions for each primer
+      // Iterate over each region and extract the position and primers
       data.forEach((regionData) => {
         // Fetch the start and end positions of the region
         const start = regionData.start;
         const end = regionData.end;
 
-        // quotient is used to relativize the start and end positions of the primer
-        // It is calculated by dividing the scale factor by the length of the region
-        //const quotient = 1 / (end - start) * CONFIG.SIMPLIFIED_VIEW.SCALE_FACTOR;
+        // Iterate over each pool and extract the amplicons
+        const formattedAmplicons: SimplifiedAmpliconData[] = [];
+        regionData.primerPairsByPool.forEach((primerPairs, poolId) => {
+          primerPairs.forEach(primerPair => {
+            const ampliconName = primerPair.amplicon_name;
+            const ampliconStart = primerPair.forward_primer.position + primerPair.forward_primer.length;
+            const ampliconEnd = primerPair.reverse_primer.position;
 
-        // Iterate over each primer across all pool and append these 
-        // to the formatted data
-        
+            // Add the amplicon to the formatted data
+            formattedAmplicons.push({
+              name: ampliconName,
+              pool: "Pool " + poolId,
+              x1: ampliconStart,
+              x2: ampliconEnd,
+            });
+          });
+        });
+
+        // Iterate over each pool and extract the primers
         const formattedPrimers: SimplifiedPrimerData[] = [];
-        let idx = 1;
         regionData.primersByPool.forEach((primers, poolId) => {
           primers.forEach(primer => {
             // Fetch start and end positions of the primer
             const primerStart = primer.position;
             const primerEnd = primer.position + primer.length;
 
-            // Relativize the start and end positions of the primer
-            //const relativePrimerStart = (primerStart - start) * quotient;
-            //const relativePrimerEnd = (primerEnd - start) * quotient;
-            
             // Add the primer to the formatted data
             formattedPrimers.push({
               pool: "Pool " + poolId,
@@ -61,15 +68,14 @@ export class SimplifiedViewComponent implements OnInit {
               x2: primerEnd,
             });
           });
-
-          // Increment the index after each pool
-          idx += 1;
         });
+
         const formattedRegionData: SimplifiedRegionData = {
           name: regionData.name,
           start: start,
           end: end,
           primers: formattedPrimers,
+          amplicons: formattedAmplicons,
         }
 
         // Add the formatted primers to the formatted data
