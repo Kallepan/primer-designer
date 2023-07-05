@@ -1,0 +1,11 @@
+version: 2
+updates:
+  # Enable version updates for npm
+  - package-ecosystem: "npm"
+    # Look for `package.json` and `lock` files in the `root` directory
+    directory: "/packages/visualizer"
+    open-pull-requests-limit: 0
+    commit-message:
+      prefix: "chore: "
+    schedule:
+      interval: "weekly"
