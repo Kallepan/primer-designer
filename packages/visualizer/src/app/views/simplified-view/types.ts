@@ -1,0 +1,15 @@
+/*
+    Custom types for the simplified view
+*/
+export type SimplifiedPrimerData = {
+    pool: string;
+    id: string;
+    x1: number;
+    x2: number;
+};
+export type SimplifiedRegionData = {
+    name: string;
+    start: number;
+    end: number;
+    primers: SimplifiedPrimerData[];
+};

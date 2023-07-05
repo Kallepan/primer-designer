@@ -11,6 +11,7 @@ import { HomeComponent } from './home/home.component';
 import { APP_BASE_HREF, HashLocationStrategy, LocationStrategy } from '@angular/common';
 import { DetailedViewComponent } from './views/detailed-view/detailed-view.component';
 import { SimplifiedViewComponent } from './views/simplified-view/simplified-view.component';
+import { PlotComponent } from './views/simplified-view/plot/plot.component';
 
 @NgModule({
   declarations: [
@@ -19,7 +20,8 @@ import { SimplifiedViewComponent } from './views/simplified-view/simplified-view
     NavigationComponent,
     HomeComponent,
     DetailedViewComponent,
-    SimplifiedViewComponent
+    SimplifiedViewComponent,
+    PlotComponent
 
   ],
   imports: [

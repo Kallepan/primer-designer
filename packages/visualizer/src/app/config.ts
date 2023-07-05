@@ -17,15 +17,22 @@ export class CONFIG {
 
     // Configurations for the detailed view
     public static DETAILED_VIEW = {
-        SEQUENCE_MAX_LENGTH: 100_000,
+        SEQUENCE_MAX_LENGTH: 50_000,
         DEFAULT_COLOR: '#FFFFFF',
         PRIMER_COLOR: this.PRIMER_COLOR,
     };    
 
     // Configurations for the simplified view
     public static SIMPLIFIED_VIEW = {
-        PRIMER_OFFSET: 10,
-        SCALE_FACTOR: 1000,
+        PRIMER_OFFSET: 50,
+        PLOT_WIDTH: 1200,
+
+        PLOT_MARGINS: {
+            TOP: 20,
+            RIGHT: 20,
+            BOTTOM: 50,
+            LEFT: 70,
+        },
     };
 
     public static MESSAGES = {

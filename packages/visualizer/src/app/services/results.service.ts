@@ -18,12 +18,12 @@ export class ResultsService {
     const regions: RegionInfo[] = regionData as RegionInfo[];
 
     // Concat each primer pair into a single list
-    const listOfAllPrimers = this._pools.reduce((acc: PrimerPair[], element: Pool) => {
+    const listOfAllPrimers = this._pools.reduce((acc: PrimerPair[], pool: Pool) => {
       // Add pool_id to PrimerPair
-      element.primer_pairs.forEach((primerPair: PrimerPair) => primerPair.pool_id = element.pool_id);
+      pool.primer_pairs.forEach((primerPair: PrimerPair) => primerPair.pool_id = pool.pool_id);
 
       // Add the primer pairs to the list
-      return acc.concat(element.primer_pairs);
+      return acc.concat(pool.primer_pairs);
     }, []);
 
     // Group the primer pairs by region name
@@ -36,7 +36,11 @@ export class ResultsService {
           throw new Error(CONFIG.MESSAGES.NO_REGION_INFO);
         }
 
-        // Group the primer pairs by pool name
+        /*
+        Group the primer pairs by pool_id, so that we can iterate over each region and pool_id
+        to simply retrieve the primer pairs for that given region and pool_id. This way we can
+        simply retrieve an amplicon by observing the forward_primer start and reverse_primer end
+        */
         const primerPairsGroupedByPoolId =  groupBy<PrimerPair>(primerPairs, 'pool_id');
         primerPairsGroupedByPoolId.forEach((primerPairs: PrimerPair[]) => {
           // Sort the primer pairs by position using the forward primer
@@ -50,7 +54,11 @@ export class ResultsService {
           });
         });
         
-        // Extract the primers from the primer pairs
+        /* 
+        Separate the primer pairs into single primers and append all into a single list.
+        This way we can iterate over each primer in a pool if needed. This is useful for
+        displaying all primers from a pool in a 'simple' way haha.
+        */
         const primersByPool = new Map<string, Primer[]>();
         primerPairsGroupedByPoolId.forEach((primerPairs: PrimerPair[], key: string) => {
           // Extract the primers from the primer pairs

@@ -1,12 +1,7 @@
 <mat-progress-bar *ngIf="loading" mode="indeterminate"></mat-progress-bar>
 
-<div *ngIf="(data$ | async) as data">
-    <div class="region-container" *ngFor="let regionName of regionNames">
-        <div class="region-title">{{ regionName }}</div>
-        <div class="region-content">
-            <div class="region-content-item" *ngFor="let item of data.get(regionName)">
-                <!-- TODO: Implement simplified view -->
-            </div>
-        </div>
+<div *ngIf="(data$ | async) as currentData">
+    <div *ngFor="let simplifiedRegionData of currentData" class="plot-container">
+        <app-plot [regionData]="simplifiedRegionData"></app-plot>
     </div>
 </div>
