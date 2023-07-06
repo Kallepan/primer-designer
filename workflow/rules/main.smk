@@ -4,7 +4,7 @@ rule all:
         "results/dump/{species}.proto_primers.tsv",
         "results/dump/{species}.alignments.tsv",
         "results/{species}.bed",
-        "results/{species}.primer_set.json"
+        "results/{species}.summary.html"
     output: temp("results/{species}.dummy")
     log: "logs/{species}.final.log"
     conda: "../envs/base.yaml"
