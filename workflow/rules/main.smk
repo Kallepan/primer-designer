@@ -6,7 +6,7 @@ rule all:
         "results/{species}.bed",
         "results/{species}.primer_set.json"
     output: temp("results/{species}.dummy")
-    log: "results/{species}.dummy"
+    log: "logs/{species}.final.log"
     conda: "../envs/base.yaml"
     shell:
         "echo 'dummy' > {output}"
@@ -17,12 +17,13 @@ rule format_into_bed:
     output: "results/{species}.bed"
     log: "logs/{species}.bed.log"
     conda: "../envs/biopython.yaml"
+    params: chromosome=chromosome
     shell:
         """
         python3 workflow/scripts/format_into_bed.py \
             --input {input} \
             --output {output} \
-            --chrom chromosome \
+            --chrom {params.chromosome} \
         &> {log}"""
 
 rule dump_database:
