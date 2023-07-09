@@ -73,11 +73,14 @@ export class ResultsService {
           primersByPool.set(key, primers);
         });
         
+        // Recalculate start and end based on primers
+        const start = Math.min(...primerPairs.map((primerPair: PrimerPair) => primerPair.forward_primer.position))*0.9;
+        const end = Math.max(...primerPairs.map((primerPair: PrimerPair) => primerPair.reverse_primer.position))*1.1;
         // Create a new region object
         const region: Region = {
           name: regionInfo.name,
-          start: regionInfo.start,
-          end: regionInfo.end,
+          start: start,
+          end: end,
           sequence: regionInfo.sequence,
           primerPairsByPool: primerPairsGroupedByPoolId,
           primersByPool: primersByPool,

@@ -26,4 +26,4 @@ echo "Modifying CSS"
 sed -i 's/media="print"/type="text\/css"/g' single-dist/index.html
 echo "Done building visualizer"
 
-cp single-dist/index.html ../../$4
+mv single-dist/index.html ../../$4
