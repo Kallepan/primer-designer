@@ -16,8 +16,9 @@ rule regions_to_json:
         """
         
 pool_count = config["metadata"]["pool_count"]
-amplicon_size = config["primer_gen_config"]["amplicon_size"]
-amplicon_buffer = config["primer_gen_config"]["amplicon_buffer_size"]
+min_overlap = config["primer_gen_config"]["min_overlap"]
+min_amplicon_size = config["primer_gen_config"]["min_amplicon_size"]
+max_amplicon_size = config["primer_gen_config"]["max_amplicon_size"]
 rule generate_proto_primers:
     input:
         "results/{species}.regions.json",
@@ -25,9 +26,10 @@ rule generate_proto_primers:
         primer3_config = "config/primer3_settings.yaml",
         db = "results/{species}.db"
     params:
-        amplicon_size = amplicon_size,
-        amplicon_buffer = amplicon_buffer,
         pool_count = pool_count,
+        min_overlap = min_overlap,
+        min_amplicon_size = min_amplicon_size,
+        max_amplicon_size = max_amplicon_size,
         tmp_dir = temp("tmp/{species}/")
     conda: "../envs/primers.yaml"
     # Defining the log file as output is stupid, because it will be removed upon an error
@@ -35,10 +37,13 @@ rule generate_proto_primers:
     log: "logs/primer_gen/{species}.proto_primers.log"
     shell:
         """
-        python3 workflow/scripts/proto_primers.py \
+        python3 workflow/scripts/generate_proto_primers.py \
             -f {input.fasta} \
-            -p {input.primer3_config} \
             -d {input.db} \
+            -p {input.primer3_config} \
             -t {params.tmp_dir} \
-             &> {log} && touch {output}
+            --min_overlap {params.min_overlap} \
+            --min_amplicon_size {params.min_amplicon_size} \
+            --max_amplicon_size {params.max_amplicon_size} \
+            &> {log} && touch {output}
         """
