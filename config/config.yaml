@@ -1,6 +1,8 @@
 primer_gen_config:
-  amplicon_size: 200
-  amplicon_buffer_size: 50
+  min_amplicon_size: 200
+  max_amplicon_size: 300
+  min_overlap: 0.2 # 20% overlap between primers from different pools
+
 metadata:
   pool_count: 2 # This value does not affect the results and changing it just breaks snakemake. So don't change it.
   species: "myc_tuberculosis_h37Rv"

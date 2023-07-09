@@ -2,7 +2,7 @@ import argparse
 import logging
 import sys
 
-from db import DBHandler
+from handlers import DBHandler
 import pandas as pd
 import numpy as np
 from Bio import SeqIO

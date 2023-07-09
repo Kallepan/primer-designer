@@ -4,7 +4,7 @@ import sys
 
 import pandas as pd
 
-from db import DBHandler
+from handlers import DBHandler
 
 MISMATCH_WEIGHT = 0.5
 ALIGNMENT_WEIGHT = 0.5

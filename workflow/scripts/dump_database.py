@@ -6,7 +6,7 @@ import argparse
 import logging
 import pandas as pd
 import sys
-from db import DBHandler
+from handlers import DBHandler
 import os
 
 logging.basicConfig(level=logging.INFO)

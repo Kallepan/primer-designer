@@ -2,7 +2,7 @@ import argparse
 import sys
 import logging
 
-from db import DBHandler
+from handlers import DBHandler
 
 logging.basicConfig(level=logging.INFO)
 

@@ -13,7 +13,7 @@ import sys
 
 import pandas as pd
 
-from db import DBHandler
+from handlers import DBHandler
 
 DEFAULT_ADJACENCY_LIMIT = 500
 
