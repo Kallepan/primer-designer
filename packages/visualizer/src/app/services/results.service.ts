@@ -47,8 +47,13 @@ export class ResultsService {
           primerPairs.sort((a: PrimerPair, b: PrimerPair) => a.forward_primer.position - b.forward_primer.position);
 
           // Asign random hex code color to the primer pair
-          const validColors = CONFIG.COLORS;
+          const validColors = [...CONFIG.COLORS];
           primerPairs.forEach((primerPair: PrimerPair) => {
+            // Reset the valid colors if we run out
+            if (validColors.length === 0)
+              validColors.push(...CONFIG.COLORS); 
+            
+            // Assign the color to the primer pair
             const color = validColors.pop();
             primerPair.color = color || '#ffffff';
           });

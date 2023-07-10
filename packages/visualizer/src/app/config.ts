@@ -3,8 +3,8 @@
 //
 
 export class CONFIG {
-    public static PRIMER_COLOR = '#FF0000';
-    public static COLORS = [
+    public static readonly PRIMER_COLOR = '#FF0000';
+    public static readonly COLORS = [
         '#FFB722',
         '#D8FF22',
         '#6AFF22',
