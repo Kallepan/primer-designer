@@ -46,7 +46,7 @@ rule merge_saddle_output:
     input: expand("results/{species}.{pool}.saddle_set.json", species=species, pool=range(0, pool_count))
     conda: "../envs/base.yaml"
     log: "logs/saddle/{species}.merge.log"
-    output: "results/{species}.primer_set.json"
+    output: "results/final/{species}.primer_set.json"
     shell:
         """
         python workflow/scripts/merge_saddle_output.py \
