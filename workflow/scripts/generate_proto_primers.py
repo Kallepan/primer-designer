@@ -214,8 +214,12 @@ async def __generate_primers(
     """Generate the primer pairs for a given list of amplicon coordinates."""
 
     for idx, (amplicon_start, amplicon_end) in enumerate(amplicon_coords):
+        # Ensure valid amplicon coordinates
+        adjusted_amplicon_start = max(0, amplicon_start)
+        adjusted_amplicon_end = min(len(sequence), amplicon_end)
+
         # extract the amplicon sequence
-        amplicon_sequence = sequence[amplicon_start:amplicon_end]
+        amplicon_sequence = sequence[adjusted_amplicon_start:adjusted_amplicon_end]
 
         # create the primer generator
         primer_generator = PrimerGenerator(

@@ -28,3 +28,6 @@ saddle:
   min_subsequence_size: 4
   max_subsequence_size: 8
   optimal_iterations: 35_000
+
+plot:
+  plotting_buffer: 300

@@ -27,6 +27,14 @@ def __get_args() -> argparse.Namespace:
         "--output", type=str, required=True, help="Path to the output json file"
     )
 
+    parser.add_argument(
+        "--plotting_buffer",
+        type=int,
+        default=300,
+        required=False,
+        help="Buffer to add to the start and end positions of the regions to be plotted",
+    )
+
     return parser.parse_args()
 
 
@@ -49,14 +57,15 @@ def __get_regions(path_to_file: str) -> pd.DataFrame:
     return df
 
 
-def __extract_amplicons_from_fasta(
+def __extract_regions_sequence_from_fasta(
     args: argparse.Namespace, region_df: pd.DataFrame
 ) -> pd.DataFrame:
-    """Extract the amplicons from the fasta file and add them to the region dataframe"""
+    """Extract the regions sequence from the fasta file and add them to the region dataframe"""
 
     def __extract_region_from_seqrecord(
         start: int, end: int, seqrecord: SeqIO.SeqRecord
     ) -> str:
+        """Extract the region from the seqrecord"""
         return str(seqrecord.seq[start:end])
 
     # Load in the fasta file as seqrecord
@@ -71,6 +80,40 @@ def __extract_amplicons_from_fasta(
         axis=1,
     )
 
+    return region_df
+
+
+def __adjust_region_df_for_plotting(
+    args: argparse.Namespace, region_df: pd.DataFrame
+) -> pd.DataFrame:
+    def __adjust_start(row: pd.Series) -> int:
+        """Adjust the start position of the region to be plotted"""
+        return max(row["start"] - args.plotting_buffer, 0)
+
+    def __adjust_end(row: pd.Series, seqrecord: SeqIO.SeqRecord) -> int:
+        """Adjust the end position of the region to be plotted"""
+        return min(row["end"] + args.plotting_buffer, len(seqrecord))
+
+    def __extract_region_from_seqrecord(
+        start: int, end: int, seqrecord: SeqIO.SeqRecord
+    ) -> str:
+        """Extract the region from the seqrecord"""
+        return str(seqrecord.seq[start:end])
+
+    # Load in the fasta file as seqrecord
+    with open(args.fasta, "r") as file:
+        seqrecord = SeqIO.read(file, "fasta")
+
+    # Adjust the start and end positions of the regions
+    region_df["start"] = region_df.apply(__adjust_start, axis=1)
+    region_df["end"] = region_df.apply(lambda row: __adjust_end(row, seqrecord), axis=1)
+
+    region_df["sequence"] = region_df.apply(
+        lambda row: __extract_region_from_seqrecord(
+            row["start"], row["end"], seqrecord
+        ),
+        axis=1,
+    )
     return region_df
 
 
@@ -94,8 +137,12 @@ def main():
     args = __get_args()
     db = DBHandler(args.db)
     region_df = __get_regions(args.regions)
-    region_df = __extract_amplicons_from_fasta(args, region_df)
+    region_df = __extract_regions_sequence_from_fasta(args, region_df)
+
     __to_db(region_df, db)
+
+    logging.info("Writing regions to json file")
+    region_df = __adjust_region_df_for_plotting(args, region_df)
     __to_json(region_df, args)
 
 
