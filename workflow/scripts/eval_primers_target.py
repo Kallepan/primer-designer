@@ -54,6 +54,12 @@ def __get_args() -> argparse.Namespace:
         default=DEFAULT_ADJACENCY_LIMIT,
         help=f"Limit within which primers of opposite strand are considered adjancent enough to be problematic. Default: {DEFAULT_ADJACENCY_LIMIT}",
     )
+    parser.add_argument(
+        "--badness_threshold",
+        type=int,
+        default=0,
+        help="Threshold for badness score. Primers with a badness score above this threshold will be marked as bad in the database. Default: 0, i.e. no filtering",
+    )
 
     return parser.parse_args()
 
@@ -106,7 +112,7 @@ def __get_alignments_with_adjacent_primers(
             adjacent_alignments.aligned_to AS adjacent_alignment_aligned_to,
             adjacent_alignments.amplicon_name AS adjacent_alignment_amplicon_name
         FROM formatted_alignments AS alignments
-        -- inner join to only get alignments that have adjacent alignments
+        -- inner join to only get alignments that have adjacent alignments,
         INNER JOIN formatted_alignments AS adjacent_alignments
         ON 
             -- Select all alignments from the pool that are adjacent to the current alignment. Ignore the same amplicon and the same strand
@@ -174,10 +180,10 @@ def __update_db_table(db: DBHandler, df: pd.DataFrame) -> None:
     db.executemany(
         f"""
         UPDATE proto_primers
-        SET badness = ?
+        SET badness = ?, discarded = ?
         WHERE id = ?
     """,
-        df[["badness", "primer_id"]].values.tolist(),
+        df[["badness", "discarded", "primer_id"]].values.tolist(),
     )
 
 
@@ -197,13 +203,23 @@ def main():
     logging.info("Scoring primers...")
     args = __get_args()
     db = DBHandler(args.db)
+
+    # get alignments score and adjacent alignments score
     alignments = __get_alignments(db, args)
     alignments_with_adjacent_alignments = __get_alignments_with_adjacent_primers(
         db, args
     )
+
+    # calculate badness score for each primer
     scores = __calculate_badness_for_proto_primers(
         alignments, alignments_with_adjacent_alignments
     )
+
+    # set primers with badness score above threshold as discarded
+    if args.badness_threshold > 0:
+        scores["discarded"] = scores["badness"] > args.filter_threshold
+    else:
+        scores["discarded"] = False
 
     __update_db_table(db, scores)
 

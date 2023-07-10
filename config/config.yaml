@@ -15,14 +15,14 @@ alignment_settings:
   mismatch_weight: 0.5
   base_penalty: 100
 
-# The following primers limit the number of problematic primers
+# The following settings filter out misaligned primers and amplicons
 evaluation_settings:
-  max_adjacency_limit: 300
-  hard_filter: false
-  soft_filter_params:
-    null # TODO: Placeholder
-  hard_filter_params:
-    alignments_limit: 3
+  target_filter:
+    max_adjacency_limit: 300
+    threshold: 0
+  foreign_filter:
+    max_adjacency_limit: 300
+    threshold: 0
 
 saddle:
   min_subsequence_size: 4 # min size of subsequence to be considered for badness

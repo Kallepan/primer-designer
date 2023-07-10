@@ -62,22 +62,6 @@ rule format_align_primers_to_species:
             &> {log}
         """
 
-rule update_primer_position:
-    input:
-        alignment = "results/{species}.{pool}.alignment.tsv",
-        db = "results/{species}.db"
-    output: "results/{species}.{pool}.proto_primers.positions.tsv"
-    log: "logs/{species}.{pool}.primer_position.log"
-    conda: "../envs/biopython.yaml"
-    shell: """
-        python3 workflow/scripts/update_primer_position.py \
-        --db {input.db} \
-        --output {output} \
-        --pool {wildcards.pool} \
-        --species {wildcards.species} \
-        &> {log}
-    """
-
 base_penalty = config["alignment_settings"]["base_penalty"]
 alignment_weight = config["alignment_settings"]["alignment_weight"]
 mismatch_weight = config["alignment_settings"]["mismatch_weight"]
@@ -104,9 +88,8 @@ rule score_alignments:
         &> {log}
     """
 
-adjacency_limit = config["evaluation_settings"]["max_adjacency_limit"]
-hard_filter = config["evaluation_settings"]["hard_filter"]
-alignments_limit = config["evaluation_settings"]["hard_filter_params"]["alignments_limit"]
+adjacency_limit = config["evaluation_settings"]["target_filter"]["max_adjacency_limit"]
+badness_threshold = config["evaluation_settings"]["target_filter"]["threshold"]
 rule eval_primers_with_target:
     input:
         scores = "results/{species}.{pool}.alignment.scores.tsv",
@@ -115,36 +98,23 @@ rule eval_primers_with_target:
     log: "logs/filter/{species}.{pool}.evaluation.log"
     params:
         adjacency_limit = adjacency_limit,
-        alignments_limit = alignments_limit,
-        hard_filter = hard_filter,
+        badness_threshold = badness_threshold
     conda:
         "../envs/primers.yaml"
     shell:
-        # Check if we are using hard or soft filtering
         """
-        if [ "{params.hard_filter}" == "True" ]; then
-            python3 workflow/scripts/eval_primers_hard.py \
-            --db {input.db} \
-            --output {output} \
-            --pool {wildcards.pool} \
-            --species {wildcards.species} \
-            --adjacency_limit {params.adjacency_limit} \
-            --alignments_limit {params.alignments_limit} \
-            &> {log}
-        else
-            python3 workflow/scripts/eval_primers_soft.py \
-            --db {input.db} \
-            --output {output} \
-            --pool {wildcards.pool} \
-            --species {wildcards.species} \
-            --adjacency_limit {params.adjacency_limit} \
-            &> {log}
-        fi
+        python3 workflow/scripts/eval_primers_target.py \
+        --db {input.db} \
+        --output {output} \
+        --pool {wildcards.pool} \
+        --species {wildcards.species} \
+        --adjacency_limit {params.adjacency_limit} \
+        --badness_threshold {params.badness_threshold} \
+        &> {log}
         """
 
 rule export_to_json:
     input:
-        positions = "results/{species}.{pool}.proto_primers.positions.tsv",
         scores = "results/{species}.{pool}.proto_primers.scores.tsv",
         db = "results/{species}.db",
     output: "results/{species}.{pool}.evaluated_primers.json"
