@@ -38,8 +38,14 @@ pub struct PrimerPair {
     pub reverse_primer: Primer,
 }
 #[derive(Clone, Serialize)]
-pub struct Set {
+pub struct Data {
     pub primer_pairs: Vec<PrimerPair>,
     pub pool_id: String,
     pub loss: f64,
+}
+
+#[derive(Clone, Serialize)]
+pub struct Loss {
+    pub losses: Vec<f64>,
+    pub pool_id: String,
 }

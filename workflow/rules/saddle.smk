@@ -1,10 +1,9 @@
-
-rule ensure_saddle_binary_is_build:
+rule build_saddle_binary:
     input: "packages/saddle/Cargo.toml"
     output: "packages/saddle/target/release/saddle"
     log: "logs/saddle/build.log"
     conda: "../envs/saddle.yaml"
-    shell: "rm -rf {output}/.. && cargo build --manifest-path {input} --release &> {log}"
+    shell: "cargo build --manifest-path {input} --release &> {log}"
 
 min_subsequence_size = config["saddle"]["min_subsequence_size"]
 max_subsequence_size = config["saddle"]["max_subsequence_size"]
@@ -42,11 +41,23 @@ rule run_saddle:
 
 pool_count = config["metadata"]["pool_count"]
 species = config["metadata"]["species"]
-rule merge_saddle_output:
+rule merge_saddle_data_output:
     input: expand("results/{species}.{pool}.saddle_set.json", species=species, pool=range(0, pool_count))
     conda: "../envs/base.yaml"
     log: "logs/saddle/{species}.merge.log"
     output: "results/final/{species}.primer_set.json"
+    shell:
+        """
+        python workflow/scripts/merge_saddle_output.py \
+            --output {output} \
+            --input {input} \
+            &> {log}
+        """
+rule merge_saddle_loss_output:
+    input: expand("results/{species}.{pool}.saddle_loss.json", species=species, pool=range(0, pool_count))
+    conda: "../envs/base.yaml"
+    log: "logs/saddle/{species}.merge.log"
+    output: "results/final/{species}.loss_set.json"
     shell:
         """
         python workflow/scripts/merge_saddle_output.py \

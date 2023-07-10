@@ -1,4 +1,4 @@
-use crate::json::{Set, Pool, PrimerPair, Region};
+use crate::json::{Data, Pool, PrimerPair, Region, Loss};
 use crate::utils::PrimerUtils;
 use crate::utils;
 use rand::random;
@@ -237,7 +237,7 @@ pub fn run(
     let loss = calculate_loss(&hash_map, &primer_pairs, subsequence_min_size, subsequence_max_size);
     let pool_id = pool.pool_id.clone();
 
-    let mut current_set = Set {
+    let mut current_data_set = Data {
         primer_pairs,
         pool_id,
         loss,
@@ -249,7 +249,7 @@ pub fn run(
         If the temp set is accepted, store the temp set and continue.
         If the temp set is not accepted, restore the old hash map, store the temp set, and continue.
         */
-        let mut temp_set = current_set.clone();
+        let mut temp_set = current_data_set.clone();
         let old_hash_map = hash_map.clone();
 
         replace_primer_in_set(&pool, &mut temp_set.primer_pairs, &mut hash_map, subsequence_min_size, subsequence_max_size);
@@ -257,12 +257,12 @@ pub fn run(
         
         // Simulated Annealing
         let accept;
-        if temp_set.loss <= current_set.loss {
+        if temp_set.loss <= current_data_set.loss {
             // Better set -> accept
             accept = true;
         } else {
             // Worse set -> Calculate acceptance and determine wether to discard or accept
-            let acceptance_prob = ((current_set.loss - temp_set.loss) / sa_temp as f64).exp();
+            let acceptance_prob = ((current_data_set.loss - temp_set.loss) / sa_temp as f64).exp();
             let random_number: f64 = random::<f64>();
 
             log::info!("Acceptance Probability: {}, Random Number: {}, SA Temp: {}", acceptance_prob, random_number, sa_temp);
@@ -272,28 +272,33 @@ pub fn run(
                 accept = false;
             }
         }
-        log::info!("Iteration: {}, Current Loss: {}, Temp Loss: {}, Accept: {}", iteration, current_set.loss, temp_set.loss, accept);
+        log::info!("Iteration: {}, Current Loss: {}, Temp Loss: {}, Accept: {}", iteration, current_data_set.loss, temp_set.loss, accept);
 
         // Implementation of (non)-acceptment of current set
         if accept {
-            current_set = temp_set;
+            current_data_set = temp_set;
         } else {
             hash_map = old_hash_map;
         }
 
         // Store loss
-        losses.push(current_set.loss);
+        losses.push(current_data_set.loss);
         // Update SA Temp and iteration index
         sa_temp = f64::max(1.0, sa_temp - (sa_temp_initial / numsteps as f64));
         iteration += 1;
     }
 
-    match utils::write_set_to_file(output_file_set, current_set) {
+    match utils::write_data_set_to_file(output_file_set, &current_data_set) {
         Ok(_) => println!("Successfully wrote output to file {}.", output_file_set),
         Err(e) => println!("Failed to write to file. Error: {}", e)
     }
 
-    match utils::write_losses_to_file(output_file_loss, losses) {
+    // Write losses to file using pool_id in attribute
+    let loss_data = Loss {
+        pool_id: current_data_set.pool_id,
+        losses: losses,
+    };
+    match utils::write_loss_set_to_file(output_file_loss, &loss_data) {
         Ok(_) => println!("Successfully wrote losses to file {}.", output_file_loss),
         Err(e) => println!("Failed to write to file. Error: {}", e)
     }

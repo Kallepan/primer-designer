@@ -1,6 +1,6 @@
 use std::error::Error;
 use std::ops::{Bound, RangeBounds};
-use crate::json::{Pool, Set};
+use crate::json::{Pool, Data, Loss};
 
 pub struct SubsequenceInfo {
     pub seq: String,
@@ -113,14 +113,14 @@ pub fn load_json_from_file(input_file_path: &str) -> Result<Pool, Box<dyn Error>
     Ok(pools)
 }
 
-pub fn write_set_to_file(file_path: &str, set: Set) -> Result<(), Box<dyn Error>>{
-    let json = serde_json::to_string_pretty(&set).unwrap();
+pub fn write_data_set_to_file(file_path: &str, data_set: &Data) -> Result<(), Box<dyn Error>>{
+    let json = serde_json::to_string_pretty(data_set).unwrap();
     std::fs::write(file_path, json)?;
 
     Ok(())
 }
-pub fn write_losses_to_file(file_path: &str, losses: Vec<f64>) -> Result<(), Box<dyn Error>>{
-    let json = serde_json::to_string_pretty(&losses).unwrap();
+pub fn write_loss_set_to_file(file_path: &str, loss_set: &Loss) -> Result<(), Box<dyn Error>>{
+    let json = serde_json::to_string_pretty(loss_set).unwrap();
     std::fs::write(file_path, json)?;
 
     Ok(())
