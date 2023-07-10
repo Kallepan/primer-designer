@@ -17,6 +17,7 @@ from handlers import DBHandler
 
 logging.basicConfig(level=logging.INFO)
 
+
 class PrimerGenerator:
     """
     Generates the Primers for a given amplicon using Primer3
@@ -133,6 +134,7 @@ class PrimerGenerator:
 
 class RegionIterator:
     """Iterate over the regions in the database"""
+
     def __init__(self, regions: pd.DataFrame):
         self.regions = regions.iterrows()
 
