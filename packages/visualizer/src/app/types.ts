@@ -41,6 +41,14 @@ export type RegionInfo = {
 }
 
 //
+// Type definitions to import loss json file
+//
+export type Loss = {
+    pool_id: string;
+    losses: number[];
+}
+
+//
 // Type definitions of the data used for visualization
 //
 export type Region = {

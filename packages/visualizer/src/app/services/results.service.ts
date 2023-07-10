@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { Pool, RegionInfo, Region, PrimerPair, Primer } from '../types';
+import { Pool, RegionInfo, Region, PrimerPair, Primer, Loss } from '../types';
 import resultData from '../../assets/results.json';
 import regionData from '../../assets/regions.json';
+import lossData from '../../assets/loss.json';
 import { groupBy } from '../utils';
 import { CONFIG } from '../config';
 
@@ -10,15 +11,29 @@ import { CONFIG } from '../config';
 })
 export class ResultsService {
   private _error: boolean = false;
-  private _results: Map<string, Region> = new Map<string, Region>();
-  private _pools: Pool[] = (resultData as Pool[]);
+  private _results: Map<string, Region>;
+  private _loss: Map<string, Array<number>>;
+
+  private _initLoss(): void {
+    // Load the loss data
+    const loss = (lossData as Loss[]);
+
+    // Create a map of pool_id to losses
+    this._loss = new Map<string, Array<number>>();
+
+    // Add the losses to the map
+    loss.forEach(element => {
+      this._loss.set(element.pool_id, element.losses);
+    });
+  }
 
   private _initResults(): void {
+    const pools = (resultData as Pool[]);
     // Load the results and regions data
     const regions: RegionInfo[] = regionData as RegionInfo[];
 
     // Concat each primer pair into a single list
-    const listOfAllPrimers = this._pools.reduce((acc: PrimerPair[], pool: Pool) => {
+    const listOfAllPrimers = pools.reduce((acc: PrimerPair[], pool: Pool) => {
       // Add pool_id to PrimerPair
       pool.primer_pairs.forEach((primerPair: PrimerPair) => primerPair.pool_id = pool.pool_id);
 
@@ -92,6 +107,10 @@ export class ResultsService {
     this._results = results;
   }
 
+  getLosses(): Map<string, Array<number>> {
+    return this._loss;
+  }
+
   getResults(): Map<string, Region> {
     return this._results;
   }
@@ -102,5 +121,6 @@ export class ResultsService {
 
   constructor() { 
     this._initResults();
+    this._initLoss();
   }
 }

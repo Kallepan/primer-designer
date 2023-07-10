@@ -4,11 +4,11 @@ import * as d3 from 'd3';
 import { CONFIG } from 'src/app/config';
 
 @Component({
-  selector: 'app-plot',
-  templateUrl: './plot.component.html',
-  styleUrls: ['./plot.component.scss']
+  selector: 'app-simple-plot',
+  templateUrl: './simple-plot.component.html',
+  styleUrls: ['./simple-plot.component.scss']
 })
-export class PlotComponent implements AfterViewInit {
+export class SimplePlotComponent implements AfterViewInit {
   @Input() regionData: SimplifiedRegionData = {} as SimplifiedRegionData;
 
   private _generatePlot(): void {
@@ -16,8 +16,7 @@ export class PlotComponent implements AfterViewInit {
     const margins = CONFIG.SIMPLIFIED_VIEW.PLOT_MARGINS;
     const width = CONFIG.SIMPLIFIED_VIEW.PLOT_WIDTH;
     const height = pools.length * CONFIG.SIMPLIFIED_VIEW.PRIMER_OFFSET + margins.TOP + margins.BOTTOM;
-    const name = this.regionData.name;
-    const id = `#${name}-plot`;
+    const id = "#" + this.getId();
     
     // D3 code here
     const svg = d3.select(id)
@@ -159,7 +158,7 @@ export class PlotComponent implements AfterViewInit {
 
   getId(): string {
     const name = this.regionData?.name;
-    return `${name}-plot`;
+    return `plot-${name}`;
   }
 
   ngAfterViewInit(): void {

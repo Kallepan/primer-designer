@@ -3,7 +3,7 @@
 <div *ngIf="(data$ | async) as currentData" class="center">
     <small>Sequences are displayed from 5' -> 3'</small>
     <div *ngFor="let simplifiedRegionData of currentData" class="plot-element">
-        <app-plot [regionData]="simplifiedRegionData"></app-plot>
+        <app-simple-plot [regionData]="simplifiedRegionData"></app-simple-plot>
         <hr/>
     </div>
 </div>

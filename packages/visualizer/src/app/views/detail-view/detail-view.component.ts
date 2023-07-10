@@ -6,11 +6,11 @@ import { CONFIG } from '../../config';
 import { MessageService } from 'src/app/services/message.service';
 
 @Component({
-  selector: 'app-detailed-view',
-  templateUrl: './detailed-view.component.html',
-  styleUrls: ['./detailed-view.component.scss']
+  selector: 'app-detail-view',
+  templateUrl: './detail-view.component.html',
+  styleUrls: ['./detail-view.component.scss']
 })
-export class DetailedViewComponent implements OnInit {
+export class DetailViewComponent implements OnInit {
   minSequencePos = 1;
   maxSequencePos = 100;
   validRegions: string[] = [];

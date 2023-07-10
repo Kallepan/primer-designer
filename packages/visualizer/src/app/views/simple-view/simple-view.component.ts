@@ -11,11 +11,11 @@ import { Region } from 'src/app/types';
 import { SimplifiedAmpliconData, SimplifiedPrimerData, SimplifiedRegionData } from './types';
 
 @Component({
-  selector: 'app-simplified-view',
-  templateUrl: './simplified-view.component.html',
-  styleUrls: ['./simplified-view.component.scss']
+  selector: 'app-simple-view',
+  templateUrl: './simple-view.component.html',
+  styleUrls: ['./simple-view.component.scss']
 })
-export class SimplifiedViewComponent implements OnInit {
+export class SimpleViewComponent implements OnInit {
   loading = true;
 
   private _data$ = new BehaviorSubject<Map<string,Region> | null>(null);

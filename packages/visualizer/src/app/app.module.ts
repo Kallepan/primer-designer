@@ -9,9 +9,11 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationComponent } from './navigation/navigation.component';
 import { HomeComponent } from './home/home.component';
 import { APP_BASE_HREF, HashLocationStrategy, LocationStrategy } from '@angular/common';
-import { DetailedViewComponent } from './views/detailed-view/detailed-view.component';
-import { SimplifiedViewComponent } from './views/simplified-view/simplified-view.component';
-import { PlotComponent } from './views/simplified-view/plot/plot.component';
+import { DetailViewComponent } from './views/detail-view/detail-view.component';
+import { SimpleViewComponent } from './views/simple-view/simple-view.component';
+import { SimplePlotComponent } from './views/simple-view/simple-plot/simple-plot.component';
+import { SaddleViewComponent } from './views/saddle-view/saddle-view.component';
+import { SaddlePlotComponent } from './views/saddle-view/saddle-plot/saddle-plot.component';
 
 @NgModule({
   declarations: [
@@ -19,10 +21,11 @@ import { PlotComponent } from './views/simplified-view/plot/plot.component';
     HomeComponent,
     NavigationComponent,
     HomeComponent,
-    DetailedViewComponent,
-    SimplifiedViewComponent,
-    PlotComponent
-
+    DetailViewComponent,
+    SimpleViewComponent,
+    SimplePlotComponent,
+    SaddleViewComponent,
+    SaddlePlotComponent
   ],
   imports: [
     BrowserModule,

@@ -1,16 +1,16 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { PlotComponent } from './plot.component';
+import { SimplePlotComponent } from './simple-plot.component';
 
 describe('PlotComponent', () => {
-  let component: PlotComponent;
-  let fixture: ComponentFixture<PlotComponent>;
+  let component: SimplePlotComponent;
+  let fixture: ComponentFixture<SimplePlotComponent>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [PlotComponent]
+      declarations: [SimplePlotComponent]
     });
-    fixture = TestBed.createComponent(PlotComponent);
+    fixture = TestBed.createComponent(SimplePlotComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

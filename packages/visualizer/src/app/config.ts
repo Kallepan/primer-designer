@@ -35,6 +35,19 @@ export class CONFIG {
         },
     };
 
+    // Configurations for the saddle view
+    public static SADDLE_VIEW = {
+        PLOT_WIDTH: 1200,
+        PLOT_HEIGHT: 600,
+
+        PLOT_MARGINS: {
+            TOP: 20,
+            RIGHT: 30,
+            BOTTOM: 30,
+            LEFT: 40,
+        },
+    };
+
     public static MESSAGES = {
         NO_RESULTS: 'No results found for the given region.',
         NO_REGION_INFO: 'No region info found for the given region.',
