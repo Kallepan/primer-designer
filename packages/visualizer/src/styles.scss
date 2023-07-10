@@ -87,7 +87,7 @@ $visualizer-warn: mat.define-palette(mat.$red-palette);
 
 // Create the theme object. A theme consists of configurations for individual
 // theming systems such as "color" or "typography".
-$visualizer-theme: mat.define-dark-theme(
+$visualizer-dark-theme: mat.define-dark-theme(
   (
     color: (primary: $visualizer-primary,
         accent: $visualizer-accent,
@@ -96,7 +96,7 @@ $visualizer-theme: mat.define-dark-theme(
   )
 );
 
-$visualizer-dark-theme: mat.define-light-theme(
+$visualizer-light-theme: mat.define-light-theme(
   (
     color: (primary: $visualizer-primary,
         accent: $visualizer-accent,
@@ -108,29 +108,28 @@ $visualizer-dark-theme: mat.define-light-theme(
 // Include theme styles for core and each component used in your app.
 // Alternatively, you can import and @include the theme mixins for each component
 // that you are using.
-@include mat.all-component-themes($visualizer-theme);
-
-.dark-mode {
-  @include mat.all-component-colors($visualizer-dark-theme);
-}
+@include mat.all-component-themes($visualizer-dark-theme);
 
 /* You can add global styles to this file, and also import other style files */
-
 body {
   margin: 0;
   font-family: Roboto, "Helvetica Neue", sans-serif;
+  // Set background color, dark
+  background-color: #303030;
 }
 
 .container {
-  min-height: 100vh;
-  margin: 10px;
   display: flex;
   flex-direction: column;
 }
 
+.center {
+  text-align: center;
+}
+
 .central-container {
   text-align: left;
+  margin: 0 auto;
+  width: 100%;
   max-width: 800px;
-  margin-left: auto;
-  margin-right: auto;
 }
