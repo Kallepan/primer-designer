@@ -80,10 +80,19 @@ class PrimerGenerator:
         """Extract the primer data from the primer3 output. Extracts the sequence, tm, gc_percent and hairpin_th."""
         primers = []
         for i in range(0, n_primers):
-            pattern = rf"PRIMER_{left_or_right}_{i}_(SEQUENCE|TM|GC_PERCENT|HAIRPIN_TH)=(\w+.*)\r?\n"
-            data_pattern = re.compile(pattern)
-            data = re.findall(data_pattern, output)
+            # Create a dictionary for each primer
             primer_entry = {}
+
+            # Extract the index of the primer to later get the position
+            raw_index_pattern = rf"PRIMER_{left_or_right}_{i}=(\d+),(\d+)\r?\n"
+            index_pattern = re.compile(raw_index_pattern)
+            index = re.search(index_pattern, output)
+            primer_entry["index"] = int(index.group(1))
+
+            # Extract the data for each primer
+            raw_data_pattern = rf"PRIMER_{left_or_right}_{i}_(SEQUENCE|TM|GC_PERCENT|HAIRPIN_TH)=(\w+.*)\r?\n"
+            data_pattern = re.compile(raw_data_pattern)
+            data = re.findall(data_pattern, output)
             for entry in data:
                 key = entry[0].lower()
                 try:
@@ -254,6 +263,7 @@ async def __generate_primers(
                     "gc_percent": primer["gc_percent"],
                     "hairpin_th": primer["hairpin_th"],
                     "badness": 0.0,
+                    "position": primer["index"] + adjusted_amplicon_start,
                 }
             )
 
@@ -269,6 +279,7 @@ async def __generate_primers(
                     "gc_percent": primer["gc_percent"],
                     "hairpin_th": primer["hairpin_th"],
                     "badness": 0.0,
+                    "position": primer["index"] + adjusted_amplicon_start,
                 }
             )
 
@@ -357,6 +368,7 @@ async def main():
 
     # Insert the primers into the database
     df = pd.DataFrame(list_of_primers)
+    print(df)
     df.to_sql("proto_primers", db.conn, if_exists="append", index=False)
 
 

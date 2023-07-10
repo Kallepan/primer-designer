@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS proto_primers(
     hairpin_th REAL NOT NULL,
     discarded BOOLEAN NOT NULL DEFAULT FALSE,
     badness REAL NOT NULL DEFAULT 0.0,
-    position INT NOT NULL DEFAULT -1, --If a primer is not aligned correctly, this will be -1
+    position INT NOT NULL,
 
     UNIQUE(pool, region_name, amplicon_name, strand, sequence),
     FOREIGN KEY (region_name) REFERENCES regions (name)
