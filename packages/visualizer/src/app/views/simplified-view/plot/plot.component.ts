@@ -59,7 +59,7 @@ export class PlotComponent implements AfterViewInit {
       .attr('dy', '1em')
       .style('text-anchor', 'middle')
       .style('fill', 'white')
-      .text('Pool');
+      .text('Pools');
 
     // add title
     svg.append('text')
@@ -78,7 +78,7 @@ export class PlotComponent implements AfterViewInit {
       .attr('y', (primer) => y(primer.pool))
       .attr('width', (primer) => x(primer.x2) - x(primer.x1))
       .attr('height', 10)
-      .attr('transform', `translate(${margins.LEFT}, ${margins.TOP})`)
+      .attr('transform', `translate(0, ${margins.TOP})`)
       .style('fill', 'steelblue');
     
     const div = d3.select('body').append('div')
@@ -101,7 +101,7 @@ export class PlotComponent implements AfterViewInit {
       .attr('y', (amplicon) => y(amplicon.pool))
       .attr('width', (amplicon) => x(amplicon.x2) - x(amplicon.x1))
       .attr('height', 10)
-      .attr('transform', `translate(${margins.LEFT}, ${margins.TOP})`)
+      .attr('transform', `translate(0, ${margins.TOP})`)
       .on('mouseover', (event, amplicon) => {
         d3.select(event.currentTarget).transition()
           .duration(50)
