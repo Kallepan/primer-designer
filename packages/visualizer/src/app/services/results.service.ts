@@ -36,11 +36,9 @@ export class ResultsService {
           throw new Error(CONFIG.MESSAGES.NO_REGION_INFO);
         }
 
-        /*
-        Group the primer pairs by pool_id, so that we can iterate over each region and pool_id
+        /* Group the primer pairs by pool_id, so that we can iterate over each region and pool_id
         to simply retrieve the primer pairs for that given region and pool_id. This way we can
-        simply retrieve an amplicon by observing the forward_primer start and reverse_primer end
-        */
+        simply retrieve an amplicon by observing the forward_primer start and reverse_primer end */
         const primerPairsGroupedByPoolId =  groupBy<PrimerPair>(primerPairs, 'pool_id');
         primerPairsGroupedByPoolId.forEach((primerPairs: PrimerPair[]) => {
           // Sort the primer pairs by position using the forward primer
@@ -59,11 +57,9 @@ export class ResultsService {
           });
         });
         
-        /* 
-        Separate the primer pairs into single primers and append all into a single list.
+        /* Separate the primer pairs into single primers and append all into a single list.
         This way we can iterate over each primer in a pool if needed. This is useful for
-        displaying all primers from a pool in a 'simple' way haha.
-        */
+        displaying all primers from a pool in a 'simple' way haha. */
         const primersByPool = new Map<string, Primer[]>();
         primerPairsGroupedByPoolId.forEach((primerPairs: PrimerPair[], key: string) => {
           // Extract the primers from the primer pairs
@@ -78,14 +74,11 @@ export class ResultsService {
           primersByPool.set(key, primers);
         });
         
-        // Recalculate start and end based on primers and apply a small buffer
-        const start = Math.round(Math.min(...primerPairs.map((primerPair: PrimerPair) => primerPair.forward_primer.position))*0.99995);
-        const end = Math.round(Math.max(...primerPairs.map((primerPair: PrimerPair) => primerPair.reverse_primer.position))*1.00005);
         // Create a new region object
         const region: Region = {
           name: regionInfo.name,
-          start: start,
-          end: end,
+          start: regionInfo.start,
+          end: regionInfo.end,
           sequence: regionInfo.sequence,
           primerPairsByPool: primerPairsGroupedByPoolId,
           primersByPool: primersByPool,
