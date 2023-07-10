@@ -201,7 +201,10 @@ pub fn run(
     output_file_loss: &String,
     subsequence_min_size: usize,
     subsequence_max_size: usize,
-    optimal_iterations: usize,) {
+    optimal_iterations: usize,
+    amplicons_weight: f64,
+    primers_weight: f64,
+) {
     
     let pool = match utils::load_json_from_file(&input_file_path) {
         Ok(data) => data,
@@ -218,7 +221,7 @@ pub fn run(
     log::info!("Number of Primers: {}", number_of_primers);
 
     // Calculate Simulated Annealing Parameters
-    let sa_temp_initial = (number_of_amplicons * 5 + number_of_primers * 10) as f64;
+    let sa_temp_initial = (number_of_amplicons as f64) * amplicons_weight + (number_of_primers as f64) * primers_weight;
     let numsteps = optimal_iterations;
 
     log::info!("Initial Temperature: {}", sa_temp_initial);

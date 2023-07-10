@@ -28,6 +28,8 @@ fn main() {
     let min_subsequence_size = args.min_subsequence_size.unwrap_or(4);
     let max_subsequence_size = args.max_subsequence_size.unwrap_or(8);
     let optimal_iterations = args.optimal_iterations.unwrap_or(40_000);
+    let amplicons_weight = args.amplicons_weight.unwrap_or(5.0);
+    let primers_weight = args.primers_weight.unwrap_or(10.0);
 
     let start = time::Instant::now();
     saddle::run(
@@ -37,6 +39,8 @@ fn main() {
         min_subsequence_size,
         max_subsequence_size,
         optimal_iterations,
+        amplicons_weight,
+        primers_weight,
     );
     println!("Script used {:?}", start.elapsed()); 
 }

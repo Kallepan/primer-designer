@@ -29,6 +29,10 @@ pub struct Opts {
     pub max_subsequence_size: Option<usize>,
     #[clap(long)]
     pub optimal_iterations: Option<usize>,
+    #[clap(long)]
+    pub amplicons_weight: Option<f64>,
+    #[clap(long)]
+    pub primers_weight: Option<f64>,
 }
 
 pub fn get_args() -> Opts {
