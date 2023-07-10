@@ -26,7 +26,6 @@ mv single-dist/index.html ../../$4
 
 # cleanup
 echo "Cleaning up"
-rm src/assets/results.json
-rm src/assets/regions.json
+
 rm dist -rf
 rm single-dist -rf

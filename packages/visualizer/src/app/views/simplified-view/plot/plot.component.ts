@@ -1,5 +1,5 @@
 import { AfterViewInit, Component, Input } from '@angular/core';
-import { SimplifiedRegionData, SimplifiedPrimerData } from '../types';
+import { SimplifiedRegionData } from '../types';
 import * as d3 from 'd3';
 import { CONFIG } from 'src/app/config';
 
@@ -45,52 +45,77 @@ export class PlotComponent implements AfterViewInit {
     // Get unique pool names
     const range = pools.map((_, index) => index * CONFIG.SIMPLIFIED_VIEW.PRIMER_OFFSET);
     const y = d3.scaleOrdinal(pools, range);
-
+    
     // add y-axis
     svg.append('g')
-      .attr('transform', `translate(${margins.LEFT}, ${margins.TOP})`)
-      .call(d3.axisLeft(y));
+    .attr('transform', `translate(${margins.LEFT}, ${margins.TOP})`)
+    .call(d3.axisLeft(y));
     
     // add y-axis label
     svg.append('text')
-      .attr('transform', 'rotate(-90)')
-      .attr('y', 0)
-      .attr('x', 0 - (height / 2))
-      .attr('dy', '1em')
-      .style('text-anchor', 'middle')
-      .style('fill', 'white')
-      .text('Pools');
-
+    .attr('transform', 'rotate(-90)')
+    .attr('y', 0)
+    .attr('x', 0 - (height / 2))
+    .attr('dy', '1em')
+    .style('text-anchor', 'middle')
+    .style('fill', 'white')
+    .text('Pools');
+    
     // add title
     svg.append('text')
-      .attr('x', width / 2)
-      .attr('y', margins.TOP / 3)
-      .attr('text-anchor', 'middle')
-      .style('fill', 'white')
-      .text(this.getTitle());
+    .attr('x', width / 2)
+    .attr('y', margins.TOP / 3)
+    .attr('text-anchor', 'middle')
+    .style('fill', 'white')
+    .text(this.getTitle());
 
-    // add primers
-    svg.selectAll('primers')
-      .data(this.regionData.primers)
-      .enter()
-      .append('rect')
-      .attr('x', (primer) => x(primer.x1))
-      .attr('y', (primer) => y(primer.pool))
-      .attr('width', (primer) => x(primer.x2) - x(primer.x1))
-      .attr('height', 10)
-      .attr('transform', `translate(0, ${margins.TOP})`)
-      .style('fill', 'steelblue');
-    
+    // Hover tooltip
     const div = d3.select('body').append('div')
       .attr('class', 'tooltip')
-      .style('background-color', 'white')
+      .style('background-color', '#313639')
+      .style('color', 'white')
       .style('font-size', '12px')
-      .style('border', 'solid 1px #313639')
+      .style('border', 'solid 1px #000')
       .style('border-radius', '8px')
       .style('padding', '.25rem')
       .style('position', 'absolute')
       .style('text-align', 'center')
       .style('opacity', 0);
+    
+    // add primers
+    svg.selectAll('primers')
+    .data(this.regionData.primers)
+    .enter()
+    .append('rect')
+    .attr('x', (primer) => x(primer.x1))
+      .attr('y', (primer) => y(primer.pool))
+      .attr('width', (primer) => x(primer.x2) - x(primer.x1))
+      .attr('height', 10)
+      .attr('transform', `translate(0, ${margins.TOP})`)
+      .style('fill', 'steelblue')
+    .on('mouseover', (event, primer) => {
+      d3.select(event.currentTarget).transition()
+        .duration(50)
+        .attr('opacity', '.85');
+      div.transition()
+        .duration(50)
+        .style('opacity', 1);
+      div.html(`Id: ${primer.id}<br>Sequence: ${primer.sequence}<br>Start: ${primer.x1}<br>End: ${primer.x2}<br>Length: ${primer.x2-primer.x1}<br>Badness: ${primer.score}`)
+        .style('left', `${event.pageX + 10}px`)
+        .style('top', `${event.pageY - 15}px`);
+    })
+    .on('mouseout', event => {
+      d3.select(event.currentTarget).transition()
+        .duration(50)
+        .attr('opacity', '1');
+      div.style('left', 0).style('top', 0);
+      div.transition()
+        .duration(50)
+        .style('opacity', 0);
+      div
+        .style('left', '-100px')
+        .style('top', '-100px');
+    });
 
     // add amplicons
     svg.selectAll('amplicons')
@@ -109,17 +134,20 @@ export class PlotComponent implements AfterViewInit {
         div.transition()
           .duration(50)
           .style('opacity', 1);
-        div.html(`Amplicon: ${amplicon.name}<br>Start: ${amplicon.x1}<br>End: ${amplicon.x2}`)
+        div.html(`Amplicon: ${amplicon.name}<br>Start: ${amplicon.x1}<br>End: ${amplicon.x2}<br>Length: ${amplicon.x2 - amplicon.x1}`)
           .style('left', `${event.pageX + 10}px`)
           .style('top', `${event.pageY - 15}px`);
       })
-      .on('mouseout', (event, amplicon) => {
+      .on('mouseout', event => {
         d3.select(event.currentTarget).transition()
           .duration(50)
           .attr('opacity', '1');
         div.transition()
           .duration(50)
           .style('opacity', 0);
+        div
+          .style('left', '-100px')
+          .style('top', '-100px');
       })
       .style('fill', 'red');
 

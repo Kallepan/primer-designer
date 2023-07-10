@@ -6,6 +6,9 @@ export type SimplifiedPrimerData = {
     id: string;
     x1: number;
     x2: number;
+
+    sequence: string;
+    score: number;
 };
 
 export type SimplifiedAmpliconData = {

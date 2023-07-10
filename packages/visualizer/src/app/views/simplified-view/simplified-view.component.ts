@@ -6,7 +6,6 @@
 */
 import { Component, OnInit } from '@angular/core';
 import { BehaviorSubject, tap, map } from 'rxjs';
-import { CONFIG } from 'src/app/config';
 import { ResultsService } from 'src/app/services/results.service';
 import { Region } from 'src/app/types';
 import { SimplifiedAmpliconData, SimplifiedPrimerData, SimplifiedRegionData } from './types';
@@ -66,6 +65,8 @@ export class SimplifiedViewComponent implements OnInit {
               id: primer.id,
               x1: primerStart,
               x2: primerEnd,
+              sequence: primer.sequence,
+              score: Number(primer.badness.toFixed(2)),
             });
           });
         });
