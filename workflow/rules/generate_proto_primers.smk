@@ -37,7 +37,7 @@ rule generate_proto_primers:
         tmp_dir = temp("tmp/{species}/")
     conda: "../envs/primers.yaml"
     # Defining the log file as output is stupid, because it will be removed upon an error
-    output: temp("results/{species}.proto_primers.dummy")
+    output: "results/{species}.proto_primers.dummy"
     log: "logs/primer_gen/{species}.proto_primers.log"
     shell:
         """
