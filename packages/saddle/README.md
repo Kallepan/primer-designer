@@ -16,7 +16,8 @@ cargo build --release
 ./saddle \
     --input-file <input_file> \
     --output-folder <output_folder> \
-    # Optional arguments, defaults are 4 and 8 respectively
+    # Optional arguments, defaults are 4, 8 and 40_000 respectively
     --min-subsequence-size <min_subsequence_size> \ 
-    --max-subsequence-size <max_subsequence_size>
+    --max-subsequence-size <max_subsequence_size> \
+    --optimal-iterations <optimal_iterations>
 ```

@@ -1,6 +1,6 @@
-use crate::{json};
 use crate::json::{Set, Pool, PrimerPair, Region};
 use crate::utils::PrimerUtils;
+use crate::utils;
 use rand::random;
 use std::collections::HashMap;
 
@@ -203,7 +203,7 @@ pub fn run(
     subsequence_max_size: usize,
     optimal_iterations: usize,) {
     
-    let pool = match json::load_json_from_file(&input_file_path) {
+    let pool = match utils::load_json_from_file(&input_file_path) {
         Ok(data) => data,
         Err(e) => panic!("Failed to parse JSON file. Error: {}", e)
     };
@@ -218,7 +218,7 @@ pub fn run(
     log::info!("Number of Primers: {}", number_of_primers);
 
     // Calculate Simulated Annealing Parameters
-    let sa_temp_initial = (number_of_amplicons * 10 + number_of_primers * 20) as f64;
+    let sa_temp_initial = (number_of_amplicons * 5 + number_of_primers * 10) as f64;
     let numsteps = optimal_iterations;
 
     log::info!("Initial Temperature: {}", sa_temp_initial);
@@ -239,6 +239,7 @@ pub fn run(
         pool_id,
         loss,
     };
+
     while iteration <= numsteps as usize {
         /*
         Generate a temp set and calculate the loss by recalculating the hash map. Store the old hash map in case the temp set is not accepted.
@@ -284,12 +285,12 @@ pub fn run(
         iteration += 1;
     }
 
-    match json::write_set_to_file(output_file_set, current_set) {
+    match utils::write_set_to_file(output_file_set, current_set) {
         Ok(_) => println!("Successfully wrote output to file {}.", output_file_set),
         Err(e) => println!("Failed to write to file. Error: {}", e)
     }
 
-    match json::write_losses_to_file(output_file_loss, losses) {
+    match utils::write_losses_to_file(output_file_loss, losses) {
         Ok(_) => println!("Successfully wrote losses to file {}.", output_file_loss),
         Err(e) => println!("Failed to write to file. Error: {}", e)
     }

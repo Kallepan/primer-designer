@@ -1,4 +1,6 @@
+use std::error::Error;
 use std::ops::{Bound, RangeBounds};
+use crate::json::{Pool, Set};
 
 pub struct SubsequenceInfo {
     pub seq: String,
@@ -17,6 +19,7 @@ impl RoundUtils for f64 {
     }
 }
 
+// Primer (e.g.: string) utility functions
 pub trait PrimerUtils {
     /*
         Returns a substring of the string, between the first argument (inclusive) and the second argument (exclusive).
@@ -100,4 +103,25 @@ impl PrimerUtils for str {
         } - start;
         self.substring(start, len)
     }
+}
+
+// JSON utility functions
+pub fn load_json_from_file(input_file_path: &str) -> Result<Pool, Box<dyn Error>> {
+    let file_content = std::fs::read_to_string(&input_file_path)?;
+    let pools: Pool = serde_json::from_str(&file_content)?;
+
+    Ok(pools)
+}
+
+pub fn write_set_to_file(file_path: &str, set: Set) -> Result<(), Box<dyn Error>>{
+    let json = serde_json::to_string_pretty(&set).unwrap();
+    std::fs::write(file_path, json)?;
+
+    Ok(())
+}
+pub fn write_losses_to_file(file_path: &str, losses: Vec<f64>) -> Result<(), Box<dyn Error>>{
+    let json = serde_json::to_string_pretty(&losses).unwrap();
+    std::fs::write(file_path, json)?;
+
+    Ok(())
 }

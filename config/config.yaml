@@ -23,3 +23,8 @@ evaluation_settings:
     null # TODO: Placeholder
   hard_filter_params:
     alignments_limit: 3
+
+saddle:
+  min_subsequence_size: 4
+  max_subsequence_size: 8
+  optimal_iterations: 35_000
