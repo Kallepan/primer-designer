@@ -4,17 +4,8 @@
 
 export class CONFIG {
     public static readonly PRIMER_COLOR = '#FF0000';
-    public static readonly COLORS = [
-        '#FFB722',
-        '#D8FF22',
-        '#6AFF22',
-        '#22FF48',
-        '#22FFB7',
-        '#22D8FF',
-        '#EF22FF',
-        '#2234FF',
-    ];
-
+    public static readonly COLORS = ["#b30000", "#7c1158", "#4421af", "#1a53ff", "#0d88e6", "#00b7c7", "#5ad45a", "#8be04e", "#ebdc78"];
+    
     // Configurations for the detailed view
     public static DETAILED_VIEW = {
         SEQUENCE_MAX_LENGTH: 50_000,

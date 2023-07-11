@@ -68,7 +68,7 @@ export class SaddlePlotComponent implements AfterViewInit {
     svg.append('path')
       .datum(losses)
       .attr('fill', 'none')
-      .attr('stroke', 'white')
+      .attr('stroke', '#b57efc')
       .attr('stroke-width', 1.5)
       .attr('d', line);
   }
