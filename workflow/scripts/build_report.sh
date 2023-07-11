@@ -3,8 +3,8 @@ cd $4
 
 # copy files
 cp ../../$1 src/assets/results.json
-cp ../../$2 src/assets/regions.json
-cp ../../$3 src/assets/loss.json
+cp ../../$2 src/assets/loss.json
+cp ../../$3 src/assets/regions.json
 
 # install dependencies
 echo "Installing dependencies"
