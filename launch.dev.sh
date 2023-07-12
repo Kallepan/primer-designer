@@ -6,6 +6,7 @@
 
 rm results -rf
 rm logs -rf
-rm tmp -rf
+# rm tmp -rf
 
+# Snakemake: use conda, use singularity, 4 cores, print shell commands
 snakemake --use-conda --use-singularity -j 4 -p results/myc_tuberculosis_h37Rv.dummy

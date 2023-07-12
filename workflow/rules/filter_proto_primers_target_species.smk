@@ -4,14 +4,14 @@ rule create_index_for_target:
     input:
         fasta = "data/{species}.fasta"
     output:
-        temp(expand("tmp/indexes/{{species}}.{version}.ebwt", version=range(1, 5))),
-        temp(expand("tmp/indexes/{{species}}.rev.{version}.ebwt", version=range(1, 3)))
+        expand("data/indexes/{{species}}.{version}.ebwt", version=range(1, 5)),
+        expand("data/indexes/{{species}}.rev.{version}.ebwt", version=range(1, 3))
     params:
-        outdir = lambda w, input: os.path.join("tmp", "indexes", os.path.splitext(os.path.basename(input.fasta))[0])
-    log: "logs/filter/{species}.index.log"
+        outdir = lambda w, input: os.path.join("data", "indexes", os.path.splitext(os.path.basename(input.fasta))[0])
+    log: "logs/indexes/{species}.index.log"
     conda: "../envs/bowtie.yaml"
     shell:
-        "bowtie-build {input.fasta} {params.outdir} >> {log} 2>&1"
+        "bowtie-build {input.fasta} {params.outdir} &> {log}"
 
 rule format_pool_into_fasta:
     input: 
@@ -25,14 +25,14 @@ rule format_pool_into_fasta:
 max_mismatches = config["alignment_settings"]["max_mismatches"]
 rule align_primers_to_species:
     input:
-        expand("tmp/indexes/{{species}}.{version}.ebwt", version=range(1, 5)),
-        expand("tmp/indexes/{{species}}.rev.{version}.ebwt", version=range(1, 3)),
+        expand("data/indexes/{{species}}.{version}.ebwt", version=range(1, 5)),
+        expand("data/indexes/{{species}}.rev.{version}.ebwt", version=range(1, 3)),
         primers_fasta = "results/{species}.{pool}.proto_primers.fasta",
         db = "results/{species}.db"
-    output: "results/{species}.{pool}.alignment.raw"
-    log: "logs/filter/{species}.{pool}.alignment.log"
+    output: "results/filter/target/{species}.{pool}.alignment.raw"
+    log: "logs/filter/target/{species}.{pool}.alignment.log"
     params:
-        index = lambda w, input: os.path.join("tmp", "indexes", os.path.basename(input.primers_fasta).split(".")[0]),
+        index = lambda w, input: os.path.join("data", "indexes", os.path.basename(input.primers_fasta).split(".")[0]),
         mismatches = max_mismatches
     conda: "../envs/bowtie.yaml"
     shell:
@@ -46,10 +46,10 @@ rule align_primers_to_species:
 
 rule format_align_primers_to_species:
     input: 
-        raw_alignment = "results/{species}.{pool}.alignment.raw",
+        raw_alignment = "results/filter/target/{species}.{pool}.alignment.raw",
         db = "results/{species}.db"
-    output: "results/{species}.{pool}.alignment.tsv"
-    log: "logs/filter/{species}.{pool}.alignment.format.log"
+    output: "results/filter/target/{species}.{pool}.alignment.tsv"
+    log: "logs/filter/target/{species}.{pool}.alignment.format.log"
     conda: "../envs/biopython.yaml"
     shell: 
         """
@@ -67,10 +67,10 @@ alignment_weight = config["alignment_settings"]["alignment_weight"]
 mismatch_weight = config["alignment_settings"]["mismatch_weight"]
 rule score_alignments:
     input:
-        alignment = "results/{species}.{pool}.alignment.tsv",
+        alignment = "results/filter/target/{species}.{pool}.alignment.tsv",
         db = "results/{species}.db",
-    output: "results/{species}.{pool}.alignment.scores.tsv"
-    log: "logs/filter/{species}.{pool}.alignment.scores.log"
+    output: "results/filter/target/{species}.{pool}.alignment.scores.tsv"
+    log: "logs/filter/target/{species}.{pool}.alignment.scores.log"
     conda: "../envs/primers.yaml"
     params:
         base_penalty = base_penalty,
@@ -92,10 +92,10 @@ adjacency_limit = config["evaluation_settings"]["target_filter"]["max_adjacency_
 badness_threshold = config["evaluation_settings"]["target_filter"]["threshold"]
 rule eval_primers_with_target:
     input:
-        scores = "results/{species}.{pool}.alignment.scores.tsv",
+        scores = "results/filter/target/{species}.{pool}.alignment.scores.tsv",
         db = "results/{species}.db",
-    output: "results/{species}.{pool}.proto_primers.scores.tsv"
-    log: "logs/filter/{species}.{pool}.evaluation.log"
+    output: "results/filter/target/{species}.{pool}.proto_primers.scores.tsv"
+    log: "logs/filter/target/{species}.{pool}.evaluation.log"
     params:
         adjacency_limit = adjacency_limit,
         badness_threshold = badness_threshold
@@ -115,7 +115,7 @@ rule eval_primers_with_target:
 
 rule export_to_json:
     input:
-        scores = "results/{species}.{pool}.proto_primers.scores.tsv",
+        scores = "results/filter/target/{species}.{pool}.proto_primers.scores.tsv",
         db = "results/{species}.db",
     output: "results/{species}.{pool}.evaluated_primers.json"
     log: "logs/{species}.{pool}.export.log"

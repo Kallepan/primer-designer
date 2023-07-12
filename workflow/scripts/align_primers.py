@@ -40,7 +40,7 @@ def __run_bowtie(args: argparse.Namespace):
 
 
 def main():
-    logging.info("Aligning primers to reference genome")
+    logging.info("Aligning primers to a given genome")
 
     args = __get_parser()
     raw_alignment = __run_bowtie(args)

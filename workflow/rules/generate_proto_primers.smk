@@ -34,7 +34,7 @@ rule generate_proto_primers:
         min_overlap = min_overlap,
         min_amplicon_size = min_amplicon_size,
         max_amplicon_size = max_amplicon_size,
-        tmp_dir = temp("tmp/{species}/")
+        tmp_dir = "tmp/{species}/"
     conda: "../envs/primers.yaml"
     # Defining the log file as output is stupid, because it will be removed upon an error
     output: "results/{species}.proto_primers.dummy"

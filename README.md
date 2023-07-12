@@ -58,6 +58,11 @@ If true then overlap is not possible:
 
 - TODO: Align primers against other species using bowtie
 - Simulate PCR? Taking into consideration mismatches and adjacent alignments
+- To reduce runtime, you can generate these indexes yourself and place them in the indexes folder. Alternatively genomes and indexes are offered for download [Illumina](http://support.illumina.com/sequencing/sequencing_software/igenome.ilmn). Indexes can be generated using bowtie-build:
+
+```bash
+bowtie-build exclude/sequence.fasta indexes/sequence
+```
 
 ## 3. SADDLE
 
