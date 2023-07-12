@@ -141,3 +141,8 @@ results/
 # Ignore files used for testing
 helper_scripts/
 debug.sh
+test.sh
+
+# Ignore indexes
+*.ebwt
+*.ebwtl
