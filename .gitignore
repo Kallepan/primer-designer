@@ -146,3 +146,8 @@ test.sh
 # Ignore indexes
 *.ebwt
 *.ebwtl
+
+# Ignore compressed files
+*.gz
+*.bz2
+*.zip

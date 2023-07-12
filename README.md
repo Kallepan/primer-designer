@@ -61,7 +61,7 @@ If true then overlap is not possible:
 - To reduce runtime, you can generate these indexes yourself and place them in the indexes folder. Alternatively genomes and indexes are offered for download [Illumina](http://support.illumina.com/sequencing/sequencing_software/igenome.ilmn). Indexes can be generated using bowtie-build:
 
 ```bash
-bowtie-build exclude/sequence.fasta indexes/sequence
+bowtie-build foreign_species/sequence.fasta indexes/sequence
 ```
 
 ## 3. SADDLE

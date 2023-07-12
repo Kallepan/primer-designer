@@ -1,6 +1,6 @@
 # Fetch all fasta files to be excluded against
 import os
-fasta_files = os.listdir("data/exclude/")
+fasta_files = os.listdir("data/foreign_species/")
 
 rule all_foreign_species:
     input:
@@ -13,7 +13,7 @@ rule all_foreign_species:
 # Build indexes. Note: Indexes can be supplied to skip this step
 rule build_indexes_for_foreign_species:
     input: 
-        foreign_species_fasta = "data/exclude/{fasta}.fasta"
+        foreign_species_fasta = "data/foreign_species/{fasta}.fasta"
     output:
         expand("data/indexes/{{fasta}}.{version}.ebwt", version=range(1, 5)),
         expand("data/indexes/{{fasta}}.rev.{version}.ebwt", version=range(1, 3)),
