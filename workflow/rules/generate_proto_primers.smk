@@ -2,9 +2,9 @@ plotting_buffer = config["plot"]["plotting_buffer"]
 rule regions_to_json:
     input: 
         db = "results/{species}.db",
-        regions = "data/regions.csv",
-        fasta = "data/{species}.fasta"
-    output: "results/{species}.regions.json"
+        regions = config["regions"],
+        fasta = config["reference_genome"]
+    output: expand("{results}/{{species}}.regions.json", results = config["results_dir"])
     log: "logs/primer_gen/{species}.regions.log"
     conda: "../envs/biopython.yaml"
     params:
@@ -25,8 +25,8 @@ min_amplicon_size = config["primer_gen_config"]["min_amplicon_size"]
 max_amplicon_size = config["primer_gen_config"]["max_amplicon_size"]
 rule generate_proto_primers:
     input:
-        "results/{species}.regions.json",
-        fasta = "data/{species}.fasta",
+        expand("{results}/{{species}}.regions.json", results = config["results_dir"]),
+        fasta = config["reference_genome"],
         primer3_config = "config/primer3_settings.yaml",
         db = "results/{species}.db"
     params:
@@ -34,7 +34,7 @@ rule generate_proto_primers:
         min_overlap = min_overlap,
         min_amplicon_size = min_amplicon_size,
         max_amplicon_size = max_amplicon_size,
-        tmp_dir = "tmp/{species}/"
+        tmp_dir = "tmp"
     conda: "../envs/primers.yaml"
     # Defining the log file as output is stupid, because it will be removed upon an error
     output: "results/{species}.proto_primers.dummy"

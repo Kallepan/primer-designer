@@ -1,11 +1,11 @@
 rule build_report:
     conda: "../envs/nodejs.yaml"
     input: 
-        primer_set = "results/final/{species}.primer_set.json",
-        loss = "results/final/{species}.loss_set.json",
-        regions = "results/{species}.regions.json"
+        primer_set = expand("{results}/{{species}}.primer_set.json", results = config["results_dir"]),
+        loss = expand("{results}/{{species}}.loss_set.json", results = config["results_dir"]),
+        regions = expand("{results}/{{species}}.regions.json", results = config["results_dir"])
     log: "logs/report/{species}.build_report.log"
-    output: "results/final/{species}.summary.html"
+    output: expand("{results}/{{species}}.summary.html", results = config["results_dir"])
     params:
         source_dir = "packages/visualizer/"
     shell:

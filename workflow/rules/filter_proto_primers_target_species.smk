@@ -2,12 +2,12 @@ import os
 
 rule create_index_for_target:
     input:
-        fasta = "data/{species}.fasta"
+        fasta = config["reference_genome"]
     output:
-        expand("data/indexes/{{species}}.{version}.ebwt", version=range(1, 5)),
-        expand("data/indexes/{{species}}.rev.{version}.ebwt", version=range(1, 3))
+        expand("{index}/{{species}}.{version}.ebwt", version=range(1, 5), index=config["index_dir"]),
+        expand("{index}/{{species}}.rev.{version}.ebwt", version=range(1, 3), index=config["index_dir"])
     params:
-        outdir = lambda w, input: os.path.join("data", "indexes", os.path.splitext(os.path.basename(input.fasta))[0])
+        outdir = lambda w, input: os.path.join(config["index_dir"], os.path.splitext(os.path.basename(input.fasta))[0])
     log: "logs/indexes/{species}.index.log"
     conda: "../envs/bowtie.yaml"
     shell:
@@ -25,14 +25,14 @@ rule format_pool_into_fasta:
 max_mismatches = config["alignment_settings"]["max_mismatches"]
 rule align_primers_to_species:
     input:
-        expand("data/indexes/{{species}}.{version}.ebwt", version=range(1, 5)),
-        expand("data/indexes/{{species}}.rev.{version}.ebwt", version=range(1, 3)),
+        expand("{index}/{{species}}.{version}.ebwt", version=range(1, 5), index=config["index_dir"]),
+        expand("{index}/{{species}}.rev.{version}.ebwt", version=range(1, 3), index=config["index_dir"]),
         primers_fasta = "results/{species}.{pool}.proto_primers.fasta",
         db = "results/{species}.db"
     output: "results/filter/target/{species}.{pool}.alignment.raw"
     log: "logs/filter/target/{species}.{pool}.alignment.log"
     params:
-        index = lambda w, input: os.path.join("data", "indexes", os.path.basename(input.primers_fasta).split(".")[0]),
+        index = lambda w, input: os.path.join(config["index_dir"], os.path.basename(input.primers_fasta).split(".")[0]),
         mismatches = max_mismatches
     conda: "../envs/bowtie.yaml"
     shell:

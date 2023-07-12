@@ -45,7 +45,7 @@ rule merge_saddle_data_output:
     input: expand("results/{species}.{pool}.saddle_set.json", species=species, pool=range(0, pool_count))
     conda: "../envs/base.yaml"
     log: "logs/saddle/{species}.merge.log"
-    output: "results/final/{species}.primer_set.json"
+    output: expand("{results}/{{species}}.primer_set.json", results=config["results_dir"])
     shell:
         """
         python workflow/scripts/merge_saddle_output.py \
@@ -57,7 +57,7 @@ rule merge_saddle_loss_output:
     input: expand("results/{species}.{pool}.saddle_loss.json", species=species, pool=range(0, pool_count))
     conda: "../envs/base.yaml"
     log: "logs/saddle/{species}.merge.log"
-    output: "results/final/{species}.loss_set.json"
+    output: expand("{results}/{{species}}.loss_set.json", results=config["results_dir"])
     shell:
         """
         python workflow/scripts/merge_saddle_output.py \

@@ -3,8 +3,8 @@ rule all:
     input:
         "results/dump/{species}.proto_primers.tsv",
         "results/dump/{species}.alignments.tsv",
-        "results/final/{species}.bed",
-        "results/final/{species}.summary.html"
+        expand("{results}/{{species}}.bed", results=config["results_dir"]),
+        expand("{results}/{{species}}.summary.html", results=config["results_dir"])
     output: temp("results/{species}.dummy")
     log: "logs/{species}.final.log"
     conda: "../envs/base.yaml"
@@ -13,8 +13,8 @@ rule all:
 
 chromosome = config["metadata"]["chromosome"]
 rule format_into_bed:
-    input: "results/final/{species}.primer_set.json"
-    output: "results/final/{species}.bed"
+    input: expand("{results}/{{species}}.primer_set.json", results=config["results_dir"])
+    output: expand("{results}/{{species}}.bed", results=config["results_dir"])
     log: "logs/{species}.bed.log"
     conda: "../envs/biopython.yaml"
     params: chromosome=chromosome

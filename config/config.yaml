@@ -1,3 +1,11 @@
+# input files 
+reference_genome: "/homes/kkandeepan/Dev/primer-designer/data/myc_tuberculosis_h37Rv.fasta" 
+regions: "/homes/kkandeepan/Dev/primer-designer/data/regions.csv" 
+index_dir: "/homes/kkandeepan/Dev/primer-designer/data/indexes" 
+results_dir: "/homes/kkandeepan/Dev/primer-designer/data/results"
+foreign_species_genomes: 
+  - "/homes/kkandeepan/Dev/primer-designer/data/foreign_species/GRCh38.fasta"
+
 primer_gen_config:
   min_amplicon_size: 200
   max_amplicon_size: 300
