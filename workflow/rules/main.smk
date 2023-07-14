@@ -33,10 +33,12 @@ rule dump_database:
         expand("{results}/dump/{{species}}.alignments.tsv", results=config["results_dir"])
     log: "logs/{species}.dump.log"
     conda: "../envs/base.yaml"
+    params:
+        output_dir = expand("{results}/dump", results=config["results_dir"])
     shell:
         """
         python3 workflow/scripts/dump_database.py \
             --db results/{wildcards.species}.db \
             --species {wildcards.species} \
-            --output_dir results/dump/ \
+            --output_dir {params.output_dir} \
         &> {log}"""

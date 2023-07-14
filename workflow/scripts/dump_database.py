@@ -6,8 +6,10 @@ import argparse
 import logging
 import pandas as pd
 import sys
-from handlers import DBHandler
 import os
+
+from handlers import DBHandler
+from pathlib import Path
 
 logging.basicConfig(level=logging.INFO)
 
@@ -26,6 +28,9 @@ def __get_args() -> argparse.Namespace:
 def __export(args: argparse.Namespace) -> None:
     db = DBHandler(args.db)
     tables = db.get_tables()
+
+    # create output dir if it does not exist
+    Path(args.output_dir).mkdir(parents=True, exist_ok=True)
 
     for table_name in tables:
         # Extract the tables
