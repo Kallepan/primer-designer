@@ -1,10 +1,16 @@
-# input files 
-reference_genome: "/homes/kkandeepan/Dev/primer-designer/data/myc_tuberculosis_h37Rv.fasta" 
-regions: "/homes/kkandeepan/Dev/primer-designer/data/regions.csv" 
-index_dir: "/homes/kkandeepan/Dev/primer-designer/data/indexes" 
-results_dir: "/homes/kkandeepan/Dev/primer-designer/data/results"
+### input files ###
+# regions: path to csv file containing regions to be amplified 
+regions: "/homes/kkandeepan/data/regions.csv" 
+# target_genome: path to fasta file containing target genome
+target_genome: "myc_tuberculosis_h37Rv"
+# genomes_dir: path to directory containing all fasta files (target and foreign species)
+genomes_dir: "/homes/kkandeepan/data/genomes"
+# index_dir: path to directory containing indexes of foreign species genomes
+index_dir: "/homes/kkandeepan/data/indexes" 
+# results_dir: path to directory where *final* results will be stored
+results_dir: "/homes/kkandeepan/data/results" 
 foreign_species_genomes: 
-  - "/homes/kkandeepan/Dev/primer-designer/data/foreign_species/GRCh38.fasta"
+  - "/homes/kkandeepan/data/foreign_species/GRCh38.fasta" 
 
 primer_gen_config:
   min_amplicon_size: 200

@@ -3,7 +3,7 @@ rule regions_to_json:
     input: 
         db = "results/{species}.db",
         regions = config["regions"],
-        fasta = config["reference_genome"]
+        fasta = expand("{genomes_dir}/{target_genome}.fasta", genomes_dir = config["genomes_dir"], target_genome = config["target_genome"])
     output: expand("{results}/{{species}}.regions.json", results = config["results_dir"])
     log: "logs/primer_gen/{species}.regions.log"
     conda: "../envs/biopython.yaml"
@@ -26,7 +26,7 @@ max_amplicon_size = config["primer_gen_config"]["max_amplicon_size"]
 rule generate_proto_primers:
     input:
         expand("{results}/{{species}}.regions.json", results = config["results_dir"]),
-        fasta = config["reference_genome"],
+        fasta = expand("{genomes_dir}/{target_genome}.fasta", genomes_dir = config["genomes_dir"], target_genome = config["target_genome"]),
         primer3_config = "config/primer3_settings.yaml",
         db = "results/{species}.db"
     params:

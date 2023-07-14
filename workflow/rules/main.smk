@@ -1,8 +1,8 @@
 pool_count = config["metadata"]["pool_count"]
 rule all:
     input:
-        "results/dump/{species}.proto_primers.tsv",
-        "results/dump/{species}.alignments.tsv",
+        expand("{results}/dump/{{species}}.proto_primers.tsv", results=config["results_dir"]),
+        expand("{results}/dump/{{species}}.alignments.tsv", results=config["results_dir"]),
         expand("{results}/{{species}}.bed", results=config["results_dir"]),
         expand("{results}/{{species}}.summary.html", results=config["results_dir"])
     output: temp("results/{species}.dummy")
@@ -29,8 +29,8 @@ rule format_into_bed:
 rule dump_database:
     input: expand("results/{{species}}.{pool}.evaluated_primers.json", pool=range(0, pool_count))
     output: 
-        "results/dump/{species}.proto_primers.tsv",
-        "results/dump/{species}.alignments.tsv"
+        expand("{results}/dump/{{species}}.proto_primers.tsv", results=config["results_dir"]),
+        expand("{results}/dump/{{species}}.alignments.tsv", results=config["results_dir"])
     log: "logs/{species}.dump.log"
     conda: "../envs/base.yaml"
     shell:

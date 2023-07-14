@@ -1,17 +1,17 @@
 import os
 
-rule create_index_for_target:
-    input:
-        fasta = config["reference_genome"]
+# Generate a list of species from the config file
+
+rule build_index:
+    input: expand("{genomes_dir}/{{species}}.fasta", genomes_dir=config["genomes_dir"])
     output:
         expand("{index}/{{species}}.{version}.ebwt", version=range(1, 5), index=config["index_dir"]),
         expand("{index}/{{species}}.rev.{version}.ebwt", version=range(1, 3), index=config["index_dir"])
     params:
-        outdir = lambda w, input: os.path.join(config["index_dir"], os.path.splitext(os.path.basename(input.fasta))[0])
+        outdir = lambda w, input: os.path.join(config["index_dir"], w.species)
     log: "logs/indexes/{species}.index.log"
     conda: "../envs/bowtie.yaml"
-    shell:
-        "bowtie-build {input.fasta} {params.outdir} &> {log}"
+    shell: "bowtie-build {input} {params.outdir} &> {log}"
 
 rule format_pool_into_fasta:
     input: 
