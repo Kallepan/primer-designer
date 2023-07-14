@@ -5,11 +5,8 @@ rule all:
         expand("{results}/dump/{{species}}.alignments.tsv", results=config["results_dir"]),
         expand("{results}/{{species}}.bed", results=config["results_dir"]),
         expand("{results}/{{species}}.summary.html", results=config["results_dir"])
-    output: temp("results/{species}.dummy")
+    output: touch("results/{species}.dummy")
     log: "logs/{species}.final.log"
-    conda: "../envs/base.yaml"
-    shell:
-        "echo 'dummy' > {output}"
 
 chromosome = config["metadata"]["chromosome"]
 rule format_into_bed:

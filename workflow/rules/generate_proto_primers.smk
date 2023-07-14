@@ -37,7 +37,7 @@ rule generate_proto_primers:
         tmp_dir = "tmp"
     conda: "../envs/primers.yaml"
     # Defining the log file as output is stupid, because it will be removed upon an error
-    output: "results/{species}.proto_primers.dummy"
+    output: touch("results/{species}.proto_primers.dummy")
     log: "logs/primer_gen/{species}.proto_primers.log"
     shell:
         """
@@ -49,5 +49,5 @@ rule generate_proto_primers:
             --min_overlap {params.min_overlap} \
             --min_amplicon_size {params.min_amplicon_size} \
             --max_amplicon_size {params.max_amplicon_size} \
-            &> {log} && touch {output}
+            &> {log}
         """

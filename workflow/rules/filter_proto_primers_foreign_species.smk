@@ -5,10 +5,8 @@ foreign_species = [os.path.splitext(os.path.basename(f))[0] for f in fasta_files
 rule all_foreign_species:
     # TODO: This rule is broken. It should be a union of all the eval files
     input: expand("results/filter/foreign/{{species}}.{fasta}.{{pool}}.eval", fasta=foreign_species)
-    output: "results/filter/foreign/all.done"
+    output: touch("results/filter/foreign/all.done")
     log: "logs/filter/foreign/all.log"
-    conda: "../envs/base.yaml"
-    shell: "touch {output} &> {log}"
 
 max_mismatches = config["alignment_settings"]["max_mismatches"]
 rule align_primers_to_foreign_species:
@@ -54,7 +52,4 @@ rule dummy:
     input:
         "results/filter/foreign/{species}.{fasta}.{pool}.alignment.tsv",
         db = "results/{species}.db"
-    output: "results/{species}.{fasta}.{pool}.eval"
-    conda: "../envs/primers.yaml"
-    shell: "touch {output}"
-    
+    output: touch("results/{species}.{fasta}.{pool}.eval")
