@@ -121,11 +121,9 @@ def __get_alignments_with_adjacent_primers(
             CASE
                 -- Find only adjacent alignments (withing adjacency_limit) on the same strand
                 WHEN alignments.aligned_to = 'forward' THEN
-                    adjacent_alignments.position >= alignments.position AND
-                    adjacent_alignments.position <= alignments.position + ?
+                    adjacent_alignments.position BETWEEN alignments.position AND alignments.position + ?
                 WHEN alignments.aligned_to = 'reverse' THEN
-                    adjacent_alignments.position <= alignments.position AND
-                    adjacent_alignments.position >= alignments.position - ?
+                    adjacent_alignments.position BETWEEN alignments.position - ? AND alignments.position
             END
         ORDER BY 
             alignments.primer_id ASC, 

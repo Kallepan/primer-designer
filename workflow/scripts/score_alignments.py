@@ -70,10 +70,11 @@ def __get_alignments(db: DBHandler, args: argparse.Namespace) -> pd.DataFrame:
         FROM alignments
         LEFT JOIN proto_primers ON alignments.primer_id = proto_primers.id
         WHERE alignments.pool = ? AND alignments.species = ? AND (
-            -- Filter out correct alignments so they don't get scored, default: 0.0
+            -- Filter out correct alignments so they don't get scored, default score: 0.0
             alignments.matches <> 1 OR
             alignments.mismatches_descriptor IS NOT NULL OR
-            proto_primers.strand <> alignments.aligned_to
+            proto_primers.strand <> alignments.aligned_to OR
+            proto_primers.position <> alignments.position
         )
         ORDER BY alignments.id ASC
         """,

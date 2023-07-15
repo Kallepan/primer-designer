@@ -1,7 +1,5 @@
 import os
 
-# Generate a list of species from the config file
-
 rule build_index:
     input: expand("{genomes_dir}/{{species}}.fasta", genomes_dir=config["genomes_dir"])
     output:
