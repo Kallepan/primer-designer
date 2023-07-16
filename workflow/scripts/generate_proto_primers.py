@@ -368,7 +368,6 @@ async def main():
 
     # Insert the primers into the database
     df = pd.DataFrame(list_of_primers)
-    print(df)
     df.to_sql("proto_primers", db.conn, if_exists="append", index=False)
 
 

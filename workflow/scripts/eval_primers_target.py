@@ -71,64 +71,65 @@ def __get_alignments_with_adjacent_primers(
     Returns all misaligned alignments with adjacent aligning primers
     I do a simple inner join with conditions to find adjacent alignments
     """
-    data, columns = db.select(
-        """
-        WITH formatted_alignments AS (
-            -- Select all alignments from the pool and add information from proto_primers
-            SELECT 
-                alignments.id, 
-                alignments.primer_id, 
-                alignments.position,
-                alignments.matches,
-                alignments.mismatches_descriptor,
-                alignments.score, 
-                alignments.aligned_to,
-                alignments.pool,
-                alignments.species,
-                proto_primers.amplicon_name,
-                proto_primers.strand AS primer_strand
-            FROM alignments
-            LEFT JOIN proto_primers
-            ON proto_primers.id = alignments.primer_id
-            WHERE 
-                alignments.pool = ? AND 
-                alignments.species = ?
-        )
-        SELECT
-            alignments.id AS id,
-            alignments.primer_id AS primer_id,
-            alignments.position AS position,
-            alignments.matches AS matches,
-            alignments.mismatches_descriptor AS mismatches_descriptor,
-            alignments.score AS score,
-            alignments.aligned_to AS aligned_to,
-            alignments.amplicon_name AS amplicon_name,
-            alignments.pool AS pool,
-            alignments.species AS species,
-            adjacent_alignments.id AS adjacent_alignment_id,
-            adjacent_alignments.primer_id AS adjacent_alignment_primer_id,
-            adjacent_alignments.position AS adjacent_alignment_position,
-            adjacent_alignments.score AS adjacent_alignment_score,
-            adjacent_alignments.aligned_to AS adjacent_alignment_aligned_to,
-            adjacent_alignments.amplicon_name AS adjacent_alignment_amplicon_name
-        FROM formatted_alignments AS alignments
-        -- inner join to only get alignments that have adjacent alignments,
-        INNER JOIN formatted_alignments AS adjacent_alignments
-        ON 
-            -- Select all alignments from the pool that are adjacent to the current alignment. Ignore the same amplicon and the same strand
-            adjacent_alignments.amplicon_name <> alignments.amplicon_name AND 
-            adjacent_alignments.aligned_to <> alignments.aligned_to AND
-            CASE
-                -- Find only adjacent alignments (withing adjacency_limit) on the same strand
-                WHEN alignments.aligned_to = 'forward' THEN
-                    adjacent_alignments.position BETWEEN alignments.position AND alignments.position + ?
-                WHEN alignments.aligned_to = 'reverse' THEN
-                    adjacent_alignments.position BETWEEN alignments.position - ? AND alignments.position
-            END
-        ORDER BY 
-            alignments.primer_id ASC, 
-            alignments.id ASC
-    """,
+    query = """
+    WITH formatted_alignments AS (
+        -- Select all alignments from the pool and add information from proto_primers
+        SELECT 
+            alignments.id, 
+            alignments.primer_id, 
+            alignments.position,
+            alignments.matches,
+            alignments.mismatches_descriptor,
+            alignments.score, 
+            alignments.aligned_to,
+            alignments.pool,
+            alignments.species,
+            proto_primers.amplicon_name,
+            proto_primers.strand AS primer_strand
+        FROM alignments
+        LEFT JOIN proto_primers
+        ON proto_primers.id = alignments.primer_id
+        WHERE 
+            alignments.pool = ? AND 
+            alignments.species = ?
+    )
+    SELECT
+        alignments.id AS id,
+        alignments.primer_id AS primer_id,
+        alignments.position AS position,
+        alignments.matches AS matches,
+        alignments.mismatches_descriptor AS mismatches_descriptor,
+        alignments.score AS score,
+        alignments.aligned_to AS aligned_to,
+        alignments.amplicon_name AS amplicon_name,
+        alignments.pool AS pool,
+        alignments.species AS species,
+        adjacent_alignments.id AS adjacent_alignment_id,
+        adjacent_alignments.primer_id AS adjacent_alignment_primer_id,
+        adjacent_alignments.position AS adjacent_alignment_position,
+        adjacent_alignments.score AS adjacent_alignment_score,
+        adjacent_alignments.aligned_to AS adjacent_alignment_aligned_to,
+        adjacent_alignments.amplicon_name AS adjacent_alignment_amplicon_name
+    FROM formatted_alignments AS alignments
+    -- inner join to only get alignments that have adjacent alignments,
+    INNER JOIN formatted_alignments AS adjacent_alignments
+    ON 
+        -- Select all alignments from the pool that are adjacent to the current alignment. Ignore the same amplicon and the same strand
+        adjacent_alignments.amplicon_name <> alignments.amplicon_name AND 
+        adjacent_alignments.aligned_to <> alignments.aligned_to AND
+        CASE
+            -- Find only adjacent alignments (withing adjacency_limit) on the same strand
+            WHEN alignments.aligned_to = 'forward' THEN
+                adjacent_alignments.position BETWEEN alignments.position AND alignments.position + ?
+            WHEN alignments.aligned_to = 'reverse' THEN
+                adjacent_alignments.position BETWEEN alignments.position - ? AND alignments.position
+        END
+    ORDER BY 
+        alignments.primer_id ASC, 
+        alignments.id ASC
+    """
+
+    data, columns = db.select(query,
         (args.pool, args.species, args.adjacency_limit, args.adjacency_limit),
     )
     return pd.DataFrame(data, columns=columns)

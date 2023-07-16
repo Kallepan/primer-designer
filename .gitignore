@@ -151,3 +151,6 @@ test.sh
 *.gz
 *.bz2
 *.zip
+
+# vscode    
+.vscode/
