@@ -69,4 +69,10 @@ class DBHandler:
             raise e
 
     def __del__(self):
-        self.conn.close()
+        try:
+            with self.conn:
+                self.conn.execute("PRAGMA optimize")
+        except Exception as e:
+            raise e
+        finally:
+            self.conn.close()
