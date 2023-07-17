@@ -1,4 +1,4 @@
-pool_count = config["metadata"]["pool_count"]
+pools = config["metadata"]["pools"]
 rule all:
     input:
         expand("{results}/dump/{{species}}.proto_primers.tsv", results=config["results_dir"]),
@@ -6,7 +6,6 @@ rule all:
         expand("{results}/{{species}}.bed", results=config["results_dir"]),
         expand("{results}/{{species}}.summary.html", results=config["results_dir"])
     output: touch("results/{species}.dummy")
-    log: "logs/{species}.final.log"
 
 chromosome = config["metadata"]["chromosome"]
 rule format_into_bed:
@@ -24,7 +23,7 @@ rule format_into_bed:
         &> {log}"""
 
 rule dump_database:
-    input: expand("results/{{species}}.{pool}.evaluated_primers.json", pool=range(0, pool_count))
+    input: expand("results/{{species}}.{pool}.evaluated_primers.json", pool=pools)
     output: 
         expand("{results}/dump/{{species}}.proto_primers.tsv", results=config["results_dir"]),
         expand("{results}/dump/{{species}}.alignments.tsv", results=config["results_dir"])

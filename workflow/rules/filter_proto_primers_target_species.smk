@@ -86,8 +86,8 @@ rule score_alignments:
         &> {log}
     """
 
-adjacency_limit = config["evaluation_settings"]["target_filter"]["max_adjacency_limit"]
-badness_threshold = config["evaluation_settings"]["target_filter"]["threshold"]
+adjacency_limit = config["evaluation_settings"]["target_species"]["adjacency_limit"]
+badness_threshold = config["evaluation_settings"]["target_species"]["threshold"]
 rule eval_primers_with_target:
     input:
         scores = "results/filter/target/{species}.{pool}.alignment.scores.tsv",
@@ -114,6 +114,7 @@ rule eval_primers_with_target:
 rule export_to_json:
     input:
         scores = "results/filter/target/{species}.{pool}.proto_primers.scores.tsv",
+        foreign_species = "results/filter/foreign/{species}.foreign_species.dummy",
         db = "results/{species}.db",
     output: "results/{species}.{pool}.evaluated_primers.json"
     log: "logs/{species}.{pool}.export.log"

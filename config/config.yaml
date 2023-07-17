@@ -9,7 +9,7 @@ genomes_dir: "/homes/kkandeepan/data/genomes"
 index_dir: "/homes/kkandeepan/data/indexes" 
 # results_dir: path to directory where *final* results will be stored
 results_dir: "/homes/kkandeepan/data/results" 
-foreign_species_genomes: 
+foreign_species_fastas: 
   - "/homes/kkandeepan/data/foreign_species/GRCh38.fasta" 
 
 primer_gen_config:
@@ -18,7 +18,9 @@ primer_gen_config:
   min_overlap: 0.2 # 20% overlap between primers from different pools
 
 metadata:
-  pool_count: 2 # This value does not affect the results and changing it just breaks snakemake. So don't change it.
+  pools: # This value does not affect the results and changing it just breaks snakemake. So don't change it.
+    - 0
+    - 1 
   species: "myc_tuberculosis_h37Rv"
   chromosome: "NC_000962.3"
 
@@ -31,12 +33,13 @@ alignment_settings:
 
 # The following settings filter out misaligned primers and amplicons
 evaluation_settings:
-  target_filter:
-    max_adjacency_limit: 300
+  target_species:
+    adjacency_limit: 200
     threshold: 0
-  foreign_filter:
-    max_adjacency_limit: 300
-    threshold: 0
+  foreign_species:
+    adjacency_limit: 200
+    max_mismatches: 2
+    bases_to_ignore: 3
 
 saddle:
   min_subsequence_size: 4 # min size of subsequence to be considered for badness

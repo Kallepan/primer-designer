@@ -19,7 +19,7 @@ def __write_fasta(db: DBHandler, args: argparse.Namespace) -> None:
     with open(args.output, "w") as file:
         primers, _ = db.select(
             """
-                SELECT id, sequence FROM proto_primers WHERE pool = ? ORDER BY id ASC;
+                SELECT id, sequence FROM proto_primers WHERE pool = ? AND discarded = 0 ORDER BY id ASC;
             """,
             (args.pool,),
         )

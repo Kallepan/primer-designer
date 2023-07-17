@@ -1,15 +1,15 @@
-# Fetch all fasta files to be excluded against
-fasta_files = config["foreign_species_genomes"]
-foreign_species = [os.path.splitext(os.path.basename(f))[0] for f in fasta_files]
-
-rule all_foreign_species:
-    # TODO: This rule is broken. It should be a union of all the eval files
-    input: expand("results/filter/foreign/{{species}}.{fasta}.{{pool}}.eval", fasta=foreign_species)
-    output: touch("results/filter/foreign/all.done")
-    log: "logs/filter/foreign/all.log"
-
 max_mismatches = config["alignment_settings"]["max_mismatches"]
-rule align_primers_to_foreign_species:
+
+pools = config["metadata"]["pools"]
+fasta_files = config["foreign_species_fastas"]
+fasta_names = [os.path.splitext(os.path.basename(f))[0] for f in fasta_files]
+rule all_foreign_species:
+    input:
+        expand("results/filter/foreign/{{species}}.{fasta}.{pool}.alignment.eval.tsv", fasta=fasta_names, pool=pools)
+    output: touch("results/filter/foreign/{species}.foreign_species.dummy")
+
+
+rule align_primers_foreign_species:
     input:
         # ancient is a helper function that ensures the index is not rebuilt if it already exists
         ancient(expand("{index}/{{fasta}}.{version}.ebwt", version=range(1, 5), index=config["index_dir"])),
@@ -31,7 +31,8 @@ rule align_primers_to_foreign_species:
             --output {output} &> {log}
         """
 
-rule format_align_primers_to_foreign_species:
+
+rule format_align_primers_foreign_species:
     input: 
         raw_alignment = "results/filter/foreign/{species}.{fasta}.{pool}.alignment.raw",
         db = "results/{species}.db"
@@ -49,8 +50,30 @@ rule format_align_primers_to_foreign_species:
             &> {log}
         """
 
-rule dummy:
-    input:
-        "results/filter/foreign/{species}.{fasta}.{pool}.alignment.tsv",
+adjacency_limit = config["evaluation_settings"]["foreign_species"]["adjacency_limit"]
+max_mismatches = config["evaluation_settings"]["foreign_species"]["max_mismatches"]
+bases_to_ignore = config["evaluation_settings"]["foreign_species"]["bases_to_ignore"]
+rule eval_align_primers_foreign_species:
+    input: 
+        alignment = "results/filter/foreign/{species}.{fasta}.{pool}.alignment.tsv",
         db = "results/{species}.db"
-    output: touch("results/{species}.{fasta}.{pool}.eval")
+    output: "results/filter/foreign/{species}.{fasta}.{pool}.alignment.eval.tsv"
+    log: "logs/filter/foreign/{species}.{fasta}.{pool}.alignment.eval.log"
+    conda: "../envs/base.yaml"
+    params:
+        adjacency_limit = adjacency_limit,
+        max_mismatches = max_mismatches,
+        bases_to_ignore = bases_to_ignore
+    shell:
+        """
+            python3 workflow/scripts/eval_primers_foreign.py \
+            --db {input.db} \
+            --pool {wildcards.pool} \
+            --species {wildcards.fasta} \
+            --output {output} \
+            --adjacency_limit {params.adjacency_limit} \
+            --max_mismatches {params.max_mismatches} \
+            --bases_to_ignore {params.bases_to_ignore} \
+            &> {log}
+        """
+

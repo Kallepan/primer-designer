@@ -129,7 +129,8 @@ def __get_alignments_with_adjacent_primers(
         alignments.id ASC
     """
 
-    data, columns = db.select(query,
+    data, columns = db.select(
+        query,
         (args.pool, args.species, args.adjacency_limit, args.adjacency_limit),
     )
     return pd.DataFrame(data, columns=columns)

@@ -18,8 +18,8 @@ rule regions_to_json:
             --plotting_buffer {params.plotting_buffer} \
             --output {output}  &> {log}
         """
-        
-pool_count = config["metadata"]["pool_count"]
+
+
 min_overlap = config["primer_gen_config"]["min_overlap"]
 min_amplicon_size = config["primer_gen_config"]["min_amplicon_size"]
 max_amplicon_size = config["primer_gen_config"]["max_amplicon_size"]
@@ -30,7 +30,6 @@ rule generate_proto_primers:
         primer3_config = "config/primer3_settings.yaml",
         db = "results/{species}.db"
     params:
-        pool_count = pool_count,
         min_overlap = min_overlap,
         min_amplicon_size = min_amplicon_size,
         max_amplicon_size = max_amplicon_size,

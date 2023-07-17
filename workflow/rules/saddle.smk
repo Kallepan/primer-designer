@@ -39,10 +39,10 @@ rule run_saddle:
             &> {log}
         """
 
-pool_count = config["metadata"]["pool_count"]
+pools = config["metadata"]["pools"]
 species = config["metadata"]["species"]
 rule merge_saddle_data_output:
-    input: expand("results/{species}.{pool}.saddle_set.json", species=species, pool=range(0, pool_count))
+    input: expand("results/{species}.{pool}.saddle_set.json", species=species, pool=pools)
     conda: "../envs/base.yaml"
     log: "logs/saddle/{species}.merge.log"
     output: expand("{results}/{{species}}.primer_set.json", results=config["results_dir"])
@@ -54,7 +54,7 @@ rule merge_saddle_data_output:
             &> {log}
         """
 rule merge_saddle_loss_output:
-    input: expand("results/{species}.{pool}.saddle_loss.json", species=species, pool=range(0, pool_count))
+    input: expand("results/{species}.{pool}.saddle_loss.json", species=species, pool=pools)
     conda: "../envs/base.yaml"
     log: "logs/saddle/{species}.merge.log"
     output: expand("{results}/{{species}}.loss_set.json", results=config["results_dir"])

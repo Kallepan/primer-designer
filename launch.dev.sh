@@ -12,11 +12,4 @@ rm tmp -rf
 
 snakemake --use-conda --use-singularity -j 4 -p results/myc_tuberculosis_h37Rv.dummy
 
-# development
-rm /homes/kkandeepan/data/results/* -rf
-rm results -rf
-rm logs -rf
-rm tmp -rf
-
-snakemake --use-conda --use-singularity -j 5 -p results/myc_tuberculosis_h37Rv.GRCh38.0.eval
-python3 workflow/scripts/eval_primers_foreign.py --db results/myc_tuberculosis_h37Rv.db --pool 0 --output results/filter/foreign/test_foreign.tsv --species GRCh38
+# python3 workflow/scripts/eval_primers_foreign.py --db results/myc_tuberculosis_h37Rv.db --pool 0 --output results/filter/foreign/test_foreign.tsv --species GRCh38
