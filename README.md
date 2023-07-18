@@ -44,21 +44,22 @@ If true then overlap is not possible:
 
 ### Filter against target organism
 
-- Align primers against the target organism using bowtie
-- Score primers
-  - score each alignment based on the amount of mismatches
-  - score each alignment based on the mismatches in the 3' end
-  - score each alignment based on the amount of adjacent alignments
-- Let the user choose the method of filtering. Either:
-  - Hard filter -> discard all primers aligning multiple times with adjacent alignments
-  - Soft filter -> score primers based on the amount of adjacent alignments
-- Mark filtered primers in the database and store the score
+- Align primers against the target organism using bowtie and store the results in a table
+- Apply filters on the alignments:
+  - The number of mismatches
+  - The number of mismatches close to 3' end
+  - The number of adjacent alignments of primers on the complementary strand
+  - The number of times the primer misaligns to the genome
 
 ### Filter against other species
 
-- TODO: Align primers against other species using bowtie
-- Simulate PCR? Taking into consideration mismatches and adjacent alignments
-- To reduce runtime, you can generate these indexes yourself and place them in the indexes folder. Alternatively genomes and indexes are offered for download [Illumina](http://support.illumina.com/sequencing/sequencing_software/igenome.ilmn). Indexes can be generated using bowtie-build:
+- Align primers against the target organism using bowtie and store the results in a table.
+- Apply filters on the alignments:
+  - The number of mismatches
+  - The number of mismatches close to 3' end
+  - The number of adjacent alignments of primers on the complementary strand
+  - The number of times the primer misaligns to the genome
+- Bowtie uses pre-built indexes to align the primers against the genome. To reduce runtime, you can generate these indexes yourself and place them in the indexes folder. Alternatively genomes and indexes are offered for download [Illumina](http://support.illumina.com/sequencing/sequencing_software/igenome.ilmn). Indexes can be generated using bowtie-build:
 
 ```bash
 bowtie-build foreign_species/sequence.fasta indexes/sequence
