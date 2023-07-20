@@ -14,8 +14,11 @@ DEFAULT_BASES_TO_IGNORE = 3
 DEFAULT_MAX_MISMATCHES = 2
 DEFAULT_MAX_MISALIGNMENTS = -1
 
+
 def __get_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Evaluates the primers against the original target species")
+    parser = argparse.ArgumentParser(
+        description="Evaluates the primers against the original target species"
+    )
 
     parser.add_argument(
         "--output",
@@ -70,8 +73,9 @@ def __get_args() -> argparse.Namespace:
 
     return parser.parse_args()
 
+
 def __get_alignments(db: DBHandler, args: argparse.Namespace) -> pd.DataFrame:
-    """ Fetches all alignments from a given species and pool. """
+    """Fetches all alignments from a given species and pool."""
     # Build the query
     query = """
     SELECT
@@ -116,6 +120,7 @@ def __get_alignments(db: DBHandler, args: argparse.Namespace) -> pd.DataFrame:
 
     return pd.DataFrame(alignments, columns=columns)
 
+
 def __calculate_adjacent_alignments(
     alignments: pd.DataFrame, adjacency_limit: int, max_mismatches: int
 ) -> dict[str, list]:
@@ -129,7 +134,9 @@ def __calculate_adjacent_alignments(
 
     adjacent_primers_for_primer: dict[str, list] = defaultdict(list)
     for chromosome, alignments in alignments_by_chromosome:
-        logging.info(f"Processing alignments for chromosome {chromosome} with {len(alignments)} alignments")
+        logging.info(
+            f"Processing alignments for chromosome {chromosome} with {len(alignments)} alignments"
+        )
 
         # Sort alignments by position
         alignments = alignments.sort_values("position")
@@ -165,7 +172,7 @@ def __calculate_adjacent_alignments(
             # Add the adjacent alignments to the dict
             key = int(alignment["primer_id"])
             adjacent_primers_for_primer[key].extend(adjacent_alignments_info)
-        
+
         # Repeat for reverse alignments
         for _, alignment in alignments_reverse.iterrows():
             # Filter out complementary alignments that are not within the adjacency limit
@@ -190,21 +197,26 @@ def __calculate_adjacent_alignments(
 
     return adjacent_primers_for_primer
 
-def __select_misaligned_primers(alignments: pd.DataFrame, max_misalignments: int) -> set[int]:
-    """ Counts how often a primer misaligns and returns a set of primers that misalign more than max_misalignments times """
+
+def __select_misaligned_primers(
+    alignments: pd.DataFrame, max_misalignments: int
+) -> set[int]:
+    """Counts how often a primer misaligns and returns a set of primers that misalign more than max_misalignments times"""
     if max_misalignments < 0:
         return set()
-    
+
     # Count the number of misalignments for each primer
-    misalignments = alignments[alignments["primer_id"].map(alignments["primer_id"].value_counts()) > max_misalignments]
+    misalignments = alignments[
+        alignments["primer_id"].map(alignments["primer_id"].value_counts())
+        > max_misalignments
+    ]
 
     # Return a set of primer_ids
     return set(misalignments["primer_id"].unique())
 
-def __select_adjacent_primers(
-    adjacent_primers_for_primer: dict[int, list]
-) -> set[int]:
-    """ Select misaligned primers which will be removed in the database """
+
+def __select_adjacent_primers(adjacent_primers_for_primer: dict[int, list]) -> set[int]:
+    """Select misaligned primers which will be removed in the database"""
 
     # Transform adjacent_primers_for_primer into a list of tuples
     # Each tuple contains the primer_id and the list of adjacent primers
@@ -214,7 +226,6 @@ def __select_adjacent_primers(
         for adjacent_primer_info in adjacent_primers_infos:
             adjacent_primer_id = int(adjacent_primer_info["primer_id"])
             connections.append((primer_id, adjacent_primer_id))
-    
 
     # Filter out duplicate connections
     connections = list(set(connections))
@@ -227,9 +238,8 @@ def __select_adjacent_primers(
 
     return set(primer_ids_to_discard)
 
-def __mark_primers_as_discarded(
-    db: DBHandler, primer_ids_to_discard: set[int]
-) -> None:
+
+def __mark_primers_as_discarded(db: DBHandler, primer_ids_to_discard: set[int]) -> None:
     """Marks the primers as discarded in the database"""
 
     # Create the query
@@ -245,6 +255,7 @@ def __mark_primers_as_discarded(
     # Execute the query for each primer_id
     db.executemany(query, primer_ids_to_discard)
 
+
 def __write_primers_as_discarded_to_file(
     primer_ids_to_discard: set[int], output: str
 ) -> None:
@@ -253,6 +264,7 @@ def __write_primers_as_discarded_to_file(
     with open(output, "w") as f:
         for primer_id in primer_ids_to_discard:
             f.write(f"{primer_id}\n")
+
 
 def main():
     logging.info("Starting evaluation of primers against target species")
@@ -270,10 +282,12 @@ def main():
     # Select primers to discard by unioning the sets of primers to discard
     primers_to_discard = set()
     primers_to_discard |= __select_adjacent_primers(adjacent_primers_for_primer)
-    primers_to_discard |= __select_misaligned_primers(alignments, args.max_misalignments)
+    primers_to_discard |= __select_misaligned_primers(
+        alignments, args.max_misalignments
+    )
 
     logging.info(f"Marking {len(primers_to_discard)} primers as discarded")
-    
+
     __mark_primers_as_discarded(db, primers_to_discard)
     __write_primers_as_discarded_to_file(primers_to_discard, args.output)
 

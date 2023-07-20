@@ -222,9 +222,7 @@ def __select_primers_to_discard(
     return set(primer_ids_to_discard)
 
 
-def __mark_primers_as_discarded(
-    db: DBHandler, primer_ids_to_discard: set[int]
-) -> None:
+def __mark_primers_as_discarded(db: DBHandler, primer_ids_to_discard: set[int]) -> None:
     """Marks the primers as discarded in the database"""
 
     # Create the query
@@ -239,6 +237,7 @@ def __mark_primers_as_discarded(
     # Execute the query for each primer_id
     db.executemany(query, primer_ids_to_discard)
 
+
 def __write_primers_as_discarded_to_file(
     primers_to_discard: set[int], output: str
 ) -> None:
@@ -247,6 +246,7 @@ def __write_primers_as_discarded_to_file(
     with open(output, "w") as f:
         for primer_id in primers_to_discard:
             f.write(f"{primer_id}\n")
+
 
 def main():
     logging.info("Scoring primers against foreign genomes")
