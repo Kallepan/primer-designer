@@ -50,6 +50,7 @@ rule format_align_primers_foreign_species:
             &> {log}
         """
 
+
 adjacency_limit = config["evaluation_settings"]["foreign_species"]["adjacency_limit"]
 max_mismatches = config["evaluation_settings"]["foreign_species"]["max_mismatches"]
 bases_to_ignore = config["evaluation_settings"]["foreign_species"]["bases_to_ignore"]

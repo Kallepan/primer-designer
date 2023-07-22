@@ -5,6 +5,7 @@ rule build_saddle_binary:
     conda: "../envs/saddle.yaml"
     shell: "cargo build --manifest-path {input} --release &> {log}"
 
+
 min_subsequence_size = config["saddle"]["min_subsequence_size"]
 max_subsequence_size = config["saddle"]["max_subsequence_size"]
 optimal_iterations = config["saddle"]["optimal_iterations"]
@@ -39,6 +40,7 @@ rule run_saddle:
             &> {log}
         """
 
+
 pools = config["metadata"]["pools"]
 species = config["metadata"]["species"]
 rule merge_saddle_data_output:
@@ -53,6 +55,8 @@ rule merge_saddle_data_output:
             --input {input} \
             &> {log}
         """
+
+
 rule merge_saddle_loss_output:
     input: expand("results/{species}.{pool}.saddle_loss.json", species=species, pool=pools)
     conda: "../envs/base.yaml"
@@ -65,3 +69,4 @@ rule merge_saddle_loss_output:
             --input {input} \
             &> {log}
         """
+

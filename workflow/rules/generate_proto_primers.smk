@@ -1,25 +1,3 @@
-plotting_buffer = config["plot"]["plotting_buffer"]
-rule regions_to_json:
-    input: 
-        db = "results/{species}.db",
-        regions = config["regions"],
-        fasta = expand("{genomes_dir}/{target_genome}.fasta", genomes_dir = config["genomes_dir"], target_genome = config["target_genome"])
-    output: expand("{results}/{{species}}.regions.json", results = config["results_dir"])
-    log: "logs/primer_gen/{species}.regions.log"
-    conda: "../envs/biopython.yaml"
-    params:
-        plotting_buffer = plotting_buffer
-    shell:
-        """
-        python3 workflow/scripts/regions_to_json.py \
-            --db {input.db} \
-            --regions {input.regions} \
-            --fasta {input.fasta} \
-            --plotting_buffer {params.plotting_buffer} \
-            --output {output}  &> {log}
-        """
-
-
 min_overlap = config["primer_gen_config"]["min_overlap"]
 min_amplicon_size = config["primer_gen_config"]["min_amplicon_size"]
 max_amplicon_size = config["primer_gen_config"]["max_amplicon_size"]

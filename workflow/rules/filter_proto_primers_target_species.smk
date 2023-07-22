@@ -1,5 +1,6 @@
 import os
 
+
 rule build_index:
     input: expand("{genomes_dir}/{{species}}.fasta", genomes_dir=config["genomes_dir"])
     output:
@@ -9,7 +10,14 @@ rule build_index:
         outdir = lambda w, input: os.path.join(config["index_dir"], w.species)
     log: "logs/indexes/{species}.index.log"
     conda: "../envs/bowtie.yaml"
-    shell: "bowtie-build {input} {params.outdir} &> {log}"
+    shell: 
+        """
+        bowtie-build \
+            {input} \
+            {params.outdir} \
+            &> {log}
+        """
+
 
 rule format_pool_into_fasta:
     input: 
@@ -18,7 +26,14 @@ rule format_pool_into_fasta:
     output: "results/{species}.{pool}.proto_primers.fasta"
     log: "logs/filter/{species}.{pool}.format.log"
     conda: "../envs/primers.yaml"
-    shell: "python3 workflow/scripts/format_into_fasta.py --db {input.db} --output {output} --pool {wildcards.pool} &> {log}"
+    shell: 
+        """
+        python3 workflow/scripts/format_pool_into_fasta.py \
+            --db {input.db} \
+            --output {output} \
+            --pool {wildcards.pool} \
+            &> {log}
+        """
 
 max_mismatches = config["alignment_settings"]["max_mismatches"]
 rule align_primers_target_species:
@@ -42,6 +57,7 @@ rule align_primers_target_species:
             --output {output} &> {log}
         """
 
+
 rule format_align_primers_target_species:
     input: 
         raw_alignment = "results/filter/target/{species}.{pool}.alignment.raw",
@@ -60,6 +76,7 @@ rule format_align_primers_target_species:
             &> {log}
         """
 
+
 adjacency_limit = config["evaluation_settings"]["target_species"]["adjacency_limit"]
 rule eval_primers_with_target_species:
     input:
@@ -74,15 +91,16 @@ rule eval_primers_with_target_species:
     shell:
         """
         python3 workflow/scripts/eval_primers_target.py \
-        --db {input.db} \
-        --output {output} \
-        --pool {wildcards.pool} \
-        --species {wildcards.species} \
-        --adjacency_limit {params.adjacency_limit} \
-        &> {log}
+            --db {input.db} \
+            --output {output} \
+            --pool {wildcards.pool} \
+            --species {wildcards.species} \
+            --adjacency_limit {params.adjacency_limit} \
+            &> {log}
         """
 
-rule export_to_json:
+
+rule export_evaluated_primers:
     input:
         target_species = "results/filter/target/{species}.{pool}.alignment.eval.tsv",
         foreign_species = "results/filter/foreign/{species}.foreign_species.dummy",
@@ -92,8 +110,8 @@ rule export_to_json:
     conda: "../envs/primers.yaml"
     shell:
         """
-        python3 workflow/scripts/format_into_json.py \
-        --db {input.db} \
-        --output {output} \
-        --pool {wildcards.pool} &> {log}
+        python3 workflow/scripts/export_evaluated_primers.py \
+            --db {input.db} \
+            --output {output} \
+            --pool {wildcards.pool} &> {log}
         """
