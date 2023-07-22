@@ -8,7 +8,6 @@ export type Primer = {
     gc_percent: number;
     hairpin_th: number;
     length: number;
-    badness: number;
     position: number;
 
     // Needed for visualization

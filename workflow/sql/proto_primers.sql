@@ -9,7 +9,6 @@ CREATE TABLE IF NOT EXISTS proto_primers (
     gc_percent REAL NOT NULL,
     hairpin_th REAL NOT NULL,
     discarded BOOLEAN NOT NULL DEFAULT FALSE,
-    badness REAL NOT NULL DEFAULT 0.0,
     position INT NOT NULL,
 
     UNIQUE(pool, region_name, amplicon_name, strand, sequence),

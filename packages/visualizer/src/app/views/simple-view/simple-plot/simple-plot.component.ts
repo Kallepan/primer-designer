@@ -99,7 +99,7 @@ export class SimplePlotComponent implements AfterViewInit {
       div.transition()
         .duration(50)
         .style('opacity', 1);
-      div.html(`Id: ${primer.id}<br>Sequence: ${primer.sequence}<br>Start: ${primer.x1}<br>End: ${primer.x2}<br>Length: ${primer.x2-primer.x1}<br>Badness: ${primer.score}`)
+      div.html(`Id: ${primer.id}<br>Sequence: ${primer.sequence}<br>Start: ${primer.x1}<br>End: ${primer.x2}<br>Length: ${primer.x2-primer.x1}`)
         .style('left', `${event.pageX + 10}px`)
         .style('top', `${event.pageY - 15}px`);
     })

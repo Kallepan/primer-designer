@@ -8,7 +8,6 @@ export type SimplifiedPrimerData = {
     x2: number;
 
     sequence: string;
-    score: number;
 };
 
 export type SimplifiedAmpliconData = {

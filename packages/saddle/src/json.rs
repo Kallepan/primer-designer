@@ -9,7 +9,6 @@ pub struct Primer {
     pub gc_percent: f64,
     pub hairpin_th: f64,
     pub length: usize,
-    pub badness: f64,
     pub position: isize,
 }
 #[derive(Deserialize, Serialize, Clone)]

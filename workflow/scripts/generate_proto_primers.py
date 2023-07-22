@@ -262,7 +262,6 @@ async def __generate_primers(
                     "tm": primer["tm"],
                     "gc_percent": primer["gc_percent"],
                     "hairpin_th": primer["hairpin_th"],
-                    "badness": 0.0,
                     "position": primer["index"] + adjusted_amplicon_start,
                 }
             )
@@ -278,7 +277,6 @@ async def __generate_primers(
                     "tm": primer["tm"],
                     "gc_percent": primer["gc_percent"],
                     "hairpin_th": primer["hairpin_th"],
-                    "badness": 0.0,
                     "position": primer["index"] + adjusted_amplicon_start,
                 }
             )

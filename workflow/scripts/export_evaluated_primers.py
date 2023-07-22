@@ -40,8 +40,7 @@ def __get_primer_object(primer: list) -> dict:
             "tm": float(primer[7]),
             "gc_percent": float(primer[8]),
             "hairpin_th": float(primer[9]),
-            "badness": float(primer[10]),
-            "position": int(primer[11]),
+            "position": int(primer[10]),
         }
     except (TypeError, ValueError) as e:
         logging.error(f"Failed to parse primer {primer[0]}: {e}")
@@ -53,8 +52,7 @@ def __get_primer_object(primer: list) -> dict:
             "tm": primer[7],
             "gc_percent": primer[8],
             "hairpin_th": primer[9],
-            "badness": primer[10],
-            "position": primer[11],
+            "position": primer[10],
         }
     return data
 
@@ -62,7 +60,7 @@ def __get_primer_object(primer: list) -> dict:
 def __get_primer_df(db: DBHandler, pool: str) -> pd.DataFrame:
     primers, column_names = db.select(
         """
-            SELECT id, pool, region_name, amplicon_name, strand, sequence, length(sequence), tm, gc_percent, hairpin_th, badness, position
+            SELECT id, pool, region_name, amplicon_name, strand, sequence, length(sequence), tm, gc_percent, hairpin_th, position
             FROM proto_primers
             WHERE 
                 pool = ? AND 

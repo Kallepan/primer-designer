@@ -18,7 +18,6 @@ fn calculate_loss(hash_map: &HashMap<String, f64>, amplicon_primer_pairs: &Vec<P
     /*
     For every sequence in the hash table find the reverse complement in all primers with the distance to 3' End
     Calculate the loss for every subsequence SUM(1 / (distance_of_revcomp + 1)) * 2^length_of_subsequence * 2^num_gc_of_subsequence * Hashvalue
-    if none are found -> loss is just the badness of the primer
     */
     fn calculate_distance(length: usize, subsequence_start_index: usize, subsequence_length: usize) -> f64 {
         /*
@@ -44,10 +43,6 @@ fn calculate_loss(hash_map: &HashMap<String, f64>, amplicon_primer_pairs: &Vec<P
     for primer_pair in amplicon_primer_pairs {
         let left_primer = &primer_pair.forward_primer.sequence;
         let right_primer = &primer_pair.reverse_primer.sequence;
-
-        // Add self badness from each primer
-        loss += &primer_pair.forward_primer.badness;
-        loss += &primer_pair.reverse_primer.badness;
 
         for subsequence_info in left_primer.get_all_substrings_between(subsequence_min_size, subsequence_max_size) {
             let rev_comp = calculate_reverse_complement(&subsequence_info.seq);

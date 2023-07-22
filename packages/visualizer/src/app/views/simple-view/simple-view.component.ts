@@ -66,7 +66,6 @@ export class SimpleViewComponent implements OnInit {
               x1: primerStart,
               x2: primerEnd,
               sequence: primer.sequence,
-              score: Number(primer.badness.toFixed(2)),
             });
           });
         });
