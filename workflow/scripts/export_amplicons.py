@@ -35,6 +35,24 @@ def __get_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def __write_amplicons(amplicons: list[dict], output: str) -> None:
+    """Write the amplicons to a json file."""
+    with open(output, "w") as f:
+        json.dump(amplicons, f, indent=4)
+
+
+def __extract_failed_amplicons(db: DBHandler) -> pd.DataFrame:
+    """Extract all failed amplicons from the database."""
+    query = """
+        SELECT amplicon_name, region_name, pool
+        FROM failed_amplicons
+    """
+
+    data, columns = db.select(query)
+
+    return pd.DataFrame(data, columns=columns)
+
+
 def __extract_primers(db: DBHandler) -> pd.DataFrame:
     """Extract all proto_primers from the database."""
     query = """
@@ -47,9 +65,35 @@ def __extract_primers(db: DBHandler) -> pd.DataFrame:
     return pd.DataFrame(data, columns=columns)
 
 
-def __extract_discarded_amplicons(df: pd.DataFrame, output: str) -> None:
+def __extract_amplicons_from_generation(df: pd.DataFrame) -> list[dict]:
     """
-    Take the dataframe with all proto primers and group them by region. Data is stored in a list with each item being an amplicon. Each region contains two lists: active_amplicons and discarded_amplicons.
+    Take the dataframe with all failed amplicons and iterate over them. Data is stored in a list with each item being an amplicon.
+    """
+
+    # Create a list of amplicons
+    amplicons = []
+
+    # Iterate over each amplicon
+    for _, row in df.iterrows():
+        amplicon = defaultdict(str)
+
+        # Add the amplicon information
+        amplicon["name"] = row["amplicon_name"]
+        amplicon["region"] = row["region_name"]
+        amplicon["pool"] = str(row["pool"])
+        amplicon["discarded"] = True
+        amplicon["n_forward"] = 0
+        amplicon["n_reverse"] = 0
+
+        # Add the amplicon to the list
+        amplicons.append(amplicon)
+    
+    return amplicons
+
+
+def __extract_amplicons_from_filtering(df: pd.DataFrame) -> list[dict]:
+    """
+    Take the dataframe with all proto primers and group them by region. Data is stored in a list with each item being an amplicon.
 
     active_amplicons: list of amplicons that are active in the region
     discarded_amplicons: list of amplicons that are discarded in the region
@@ -79,6 +123,11 @@ def __extract_discarded_amplicons(df: pd.DataFrame, output: str) -> None:
         amplicon["name"] = amplicon_name
         amplicon["region"] = region_name
         amplicon["pool"] = str(pool)
+        amplicon["n_forward"] = len(forward_primers)
+        amplicon["n_reverse"] = len(reverse_primers)
+        amplicon["n_discarded_forward"] = forward_primers["discarded"].sum()
+        amplicon["n_discarded_reverse"] = reverse_primers["discarded"].sum()
+
 
         # If all forward or all reverse primers are discarded, the amplicon is discarded
         if forward_primers["discarded"].all() or reverse_primers["discarded"].all():
@@ -89,9 +138,8 @@ def __extract_discarded_amplicons(df: pd.DataFrame, output: str) -> None:
         # Add the amplicon to the list
         amplicons.append(amplicon)
 
-    # Write the list to a json
-    with open(output, "w") as f:
-        json.dump(amplicons, f, indent=4)
+    # Return the list of amplicons
+    return amplicons
 
 
 def main():
@@ -100,11 +148,18 @@ def main():
     logging.info("Connecting to database...")
     db = DBHandler(args.db)
 
-    logging.info("Extracting discarded amplicons...")
-    df = __extract_primers(db)
-    __extract_discarded_amplicons(df, args.output)
+    # Extract the discarded amplicons generated during primer filtering
+    logging.info("Extracting amplicons were primers were removed during filtering...")
+    proto_primers = __extract_primers(db)
+    amplicons = __extract_amplicons_from_filtering(proto_primers)
 
-    logging.info("Done!")
+    # Extract the failed amplicons generated during primer generation
+    logging.info("Extracting amplicons without primers...")
+    failed_amplicons = __extract_failed_amplicons(db)
+    amplicons.extend(__extract_amplicons_from_generation(failed_amplicons))
+
+    # Write the amplicons to a json file
+    __write_amplicons(amplicons, args.output)
 
 
 if __name__ == "__main__":
