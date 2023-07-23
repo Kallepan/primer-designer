@@ -14,6 +14,7 @@ import { SimpleViewComponent } from './views/simple-view/simple-view.component';
 import { SimplePlotComponent } from './views/simple-view/simple-plot/simple-plot.component';
 import { SaddleViewComponent } from './views/saddle-view/saddle-view.component';
 import { SaddlePlotComponent } from './views/saddle-view/saddle-plot/saddle-plot.component';
+import { StatisticsComponent } from './statistics/statistics.component';
 
 @NgModule({
   declarations: [
@@ -25,7 +26,8 @@ import { SaddlePlotComponent } from './views/saddle-view/saddle-plot/saddle-plot
     SimpleViewComponent,
     SimplePlotComponent,
     SaddleViewComponent,
-    SaddlePlotComponent
+    SaddlePlotComponent,
+    StatisticsComponent
   ],
   imports: [
     BrowserModule,

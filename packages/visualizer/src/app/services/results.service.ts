@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import { Pool, RegionInfo, Region, PrimerPair, Primer, Loss } from '../types';
+import { Pool, RegionInfo, Region, PrimerPair, Primer, Loss, Amplicon } from '../types';
 import resultData from '../../assets/results.json';
 import regionData from '../../assets/regions.json';
 import lossData from '../../assets/loss.json';
+import ampliconData from '../../assets/amplicons.json';
 import { groupBy } from '../utils';
 import { CONFIG } from '../config';
 
@@ -117,6 +118,10 @@ export class ResultsService {
 
   isErrored(): boolean {
     return this._error;
+  }
+
+  getAmplicons(): Array<Amplicon> {
+    return ampliconData as Amplicon[];
   }
 
   constructor() { 

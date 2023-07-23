@@ -82,8 +82,6 @@ def __extract_amplicons_from_generation(df: pd.DataFrame) -> list[dict]:
         amplicon["region"] = row["region_name"]
         amplicon["pool"] = str(row["pool"])
         amplicon["discarded"] = True
-        amplicon["n_forward"] = 0
-        amplicon["n_reverse"] = 0
 
         # Add the amplicon to the list
         amplicons.append(amplicon)
