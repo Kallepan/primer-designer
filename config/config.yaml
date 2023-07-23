@@ -26,10 +26,6 @@ metadata:
 
 alignment_settings:
   max_mismatches: 3 # must be between 0 and 3
-  # Misalignment score params (incorrect alignments are penalized) 
-  alignment_weight: 0.5
-  mismatch_weight: 0.5
-  base_penalty: 100
 
 # The following settings filter out misaligned primers and amplicons
 evaluation_settings:

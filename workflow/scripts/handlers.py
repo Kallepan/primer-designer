@@ -71,7 +71,7 @@ class DBHandler:
         except Exception as e:
             raise e
 
-    def __del__(self):
+    def __del__(self) -> None:
         if self.conn is None:
             return
 
@@ -89,25 +89,25 @@ class DBHandler:
 class Graph(object):
     """Graph data structure, undirected by default."""
 
-    def __init__(self, connections, directed=False):
+    def __init__(self, connections, directed=False) -> None:
         self._graph = defaultdict(set)
         self._directed = directed
         self.__add_connections(connections)
 
-    def __add_connections(self, connections):
+    def __add_connections(self, connections) -> None:
         """Add connections (list of tuple pairs) to graph"""
 
         for node1, node2 in connections:
             self.add(node1, node2)
 
-    def add(self, node1, node2):
+    def add(self, node1, node2) -> None:
         """Add connection between node1 and node2"""
 
         self._graph[node1].add(node2)
         if not self._directed:
             self._graph[node2].add(node1)
 
-    def remove(self, node):
+    def remove(self, node) -> None:
         """Remove all references to node"""
 
         for n, cxns in self._graph.items():  # python3: items(); python2: iteritems()
@@ -120,12 +120,12 @@ class Graph(object):
         except KeyError:
             pass
 
-    def is_connected(self, node1, node2):
+    def is_connected(self, node1, node2) -> bool:
         """Is node1 directly connected to node2"""
 
         return node1 in self._graph and node2 in self._graph[node1]
 
-    def find_path(self, node1, node2, path=[]):
+    def find_path(self, node1, node2, path=[]) -> list[object]:
         """Find any path between node1 and node2 (may not be shortest)"""
 
         path = path + [node1]
@@ -170,7 +170,7 @@ class Graph(object):
 
         return [x for x in visited if visited[x]]
 
-    def __str__(self):
+    def __str__(self) -> str:
         """String representation of the graph"""
         return "{}({})".format(self.__class__.__name__, dict(self._graph))
 

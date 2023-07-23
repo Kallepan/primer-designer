@@ -15,7 +15,7 @@ rule run_saddle:
     input: 
         binary = "packages/saddle/target/release/saddle",
         pool = "results/{species}.{pool}.evaluated_primers.json"
-    output: 
+    output:
         set = "results/{species}.{pool}.saddle_set.json",
         loss = "results/{species}.{pool}.saddle_loss.json"
     params:

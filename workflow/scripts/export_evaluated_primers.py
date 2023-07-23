@@ -63,8 +63,8 @@ def __get_primer_df(db: DBHandler, pool: str) -> pd.DataFrame:
             SELECT id, pool, region_name, amplicon_name, strand, sequence, length(sequence), tm, gc_percent, hairpin_th, position
             FROM proto_primers
             WHERE 
-                pool = ? AND 
-                NOT (discarded)
+                pool = ? AND
+                discarded = 0
             ORDER BY id ASC
         """,
         (pool,),

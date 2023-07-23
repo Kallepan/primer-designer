@@ -144,10 +144,10 @@ class PrimerGenerator:
 class RegionIterator:
     """Iterate over the regions in the database"""
 
-    def __init__(self, regions: pd.DataFrame):
+    def __init__(self, regions: pd.DataFrame) -> None:
         self.regions = regions.iterrows()
 
-    def __aiter__(self):
+    def __aiter__(self) -> "RegionIterator":
         return self
 
     async def __anext__(self) -> tuple[str, pd.Series]:

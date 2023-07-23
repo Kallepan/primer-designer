@@ -1,0 +1,115 @@
+"""
+Extracts the discarded amplicons from the database and writes them to a json.
+"""
+import argparse
+import json
+import logging
+import sys
+
+import pandas as pd
+
+from collections import defaultdict
+from handlers import DBHandler
+
+logging.basicConfig(level=logging.INFO)
+
+
+def __get_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Extracts the discarded amplicons from the database and writes them to a json."
+    )
+
+    parser.add_argument(
+        "--db",
+        type=str,
+        required=True,
+        help="Path to the database",
+    )
+    parser.add_argument(
+        "--output",
+        type=str,
+        required=True,
+        help="Path to the output file",
+    )
+
+    return parser.parse_args()
+
+
+def __extract_primers(db: DBHandler) -> pd.DataFrame:
+    """Extract all proto_primers from the database."""
+    query = """
+        SELECT *
+        FROM proto_primers
+    """
+
+    data, columns = db.select(query)
+
+    return pd.DataFrame(data, columns=columns)
+
+
+def __extract_discarded_amplicons(df: pd.DataFrame, output: str) -> None:
+    """
+    Take the dataframe with all proto primers and group them by region. Data is stored in a list with each item being an amplicon. Each region contains two lists: active_amplicons and discarded_amplicons.
+
+    active_amplicons: list of amplicons that are active in the region
+    discarded_amplicons: list of amplicons that are discarded in the region
+
+    The amplicon is assigned each list by retrieving all prot_primers for an amplicon using groupby. If all forward or all reverse primers are discarded, the amplicon is discarded. Otherwise, it is active.
+    """
+    # Convert discarded column to boolean
+    df["discarded"] = df["discarded"].astype(bool)
+
+    # Group by region and amplicon
+    dfs = df.groupby(["region_name", "amplicon_name", "pool"])
+
+    # Create a list of amplicons
+    amplicons = []
+
+    # Iterate over each region and amplicon
+    for (region_name, amplicon_name, pool), group in dfs:
+        # group is a dataframe with all primers for an amplicon, region and pool
+        # Split the dataframe into forward and reverse primers
+        forward_primers = group[group["strand"] == "forward"]
+        reverse_primers = group[group["strand"] == "reverse"]
+
+        # Create a dictionary for the amplicon
+        amplicon = defaultdict(str)
+        
+        # Add the amplicon information
+        amplicon["name"] = amplicon_name
+        amplicon["region"] = region_name
+        amplicon["pool"] = str(pool)
+
+        # If all forward or all reverse primers are discarded, the amplicon is discarded
+        if forward_primers["discarded"].all() or reverse_primers["discarded"].all():
+            amplicon["discarded"] = True
+        else:
+            amplicon["discarded"] = False
+        
+        # Add the amplicon to the list
+        amplicons.append(amplicon)
+
+    # Write the list to a json
+    with open(output, "w") as f:
+        json.dump(amplicons, f, indent=4)
+
+
+def main():
+    args = __get_args()
+
+    logging.info("Connecting to database...")
+    db = DBHandler(args.db)
+
+    logging.info("Extracting discarded amplicons...")
+    df = __extract_primers(db)
+    __extract_discarded_amplicons(df, args.output)
+
+    logging.info("Done!")
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as e:
+        logging.exception(e)
+        sys.exit(1)

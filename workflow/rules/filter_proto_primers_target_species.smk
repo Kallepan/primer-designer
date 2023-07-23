@@ -99,19 +99,3 @@ rule eval_primers_with_target_species:
             &> {log}
         """
 
-
-rule export_evaluated_primers:
-    input:
-        target_species = "results/filter/target/{species}.{pool}.alignment.eval.tsv",
-        foreign_species = "results/filter/foreign/{species}.foreign_species.dummy",
-        db = "results/{species}.db",
-    output: "results/{species}.{pool}.evaluated_primers.json"
-    log: "logs/{species}.{pool}.export.log"
-    conda: "../envs/primers.yaml"
-    shell:
-        """
-        python3 workflow/scripts/export_evaluated_primers.py \
-            --db {input.db} \
-            --output {output} \
-            --pool {wildcards.pool} &> {log}
-        """

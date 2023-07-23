@@ -1,11 +1,11 @@
 #!/bin/bash
-cd $4
+cd $5
 
 # copy files
 cp $1 src/assets/results.json
 cp $2 src/assets/loss.json
 cp $3 src/assets/regions.json
-# cp $4 src/assets/amplicons.json
+cp $4 src/assets/amplicons.json
 
 # install dependencies
 echo "Installing dependencies"
@@ -24,7 +24,7 @@ sed -i 's/media="print"/type="text\/css"/g' single-dist/index.html
 echo "Done building visualizer"
 
 # copy to output
-mv single-dist/index.html $5
+mv single-dist/index.html $6
 
 # cleanup
 echo "Cleaning up"
