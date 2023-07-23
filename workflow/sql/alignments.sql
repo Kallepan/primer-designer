@@ -15,16 +15,16 @@ CREATE TABLE IF NOT EXISTS alignments (
     FOREIGN KEY (primer_id) REFERENCES proto_primers (id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_alignments_id ON alignments(id);
-CREATE INDEX IF NOT EXISTS idx_alignments_pool ON alignments(pool);
-CREATE INDEX IF NOT EXISTS idx_alignments_primer_id ON alignments(primer_id);
-CREATE INDEX IF NOT EXISTS idx_alignments_aligned_to ON alignments(aligned_to);
-CREATE INDEX IF NOT EXISTS idx_alignments_position ON alignments(position);
-CREATE INDEX IF NOT EXISTS idx_alignments_chromosome ON alignments(chromosome);
-CREATE INDEX IF NOT EXISTS idx_alignments_species ON alignments(species);
-CREATE INDEX IF NOT EXISTS idx_alignments_matches ON alignments(matches);
-CREATE INDEX IF NOT EXISTS idx_alignments_mismatches_descriptor ON alignments(mismatches_descriptor);
+CREATE INDEX IF NOT EXISTS idx_alignments_id_idx ON alignments(id);
+CREATE INDEX IF NOT EXISTS idx_alignments_pool_idx ON alignments(pool);
+CREATE INDEX IF NOT EXISTS idx_alignments_primer_id_idx ON alignments(primer_id);
+CREATE INDEX IF NOT EXISTS idx_alignments_aligned_to_idx ON alignments(aligned_to);
+CREATE INDEX IF NOT EXISTS idx_alignments_position_idx ON alignments(position);
+CREATE INDEX IF NOT EXISTS idx_alignments_chromosome_idx ON alignments(chromosome);
+CREATE INDEX IF NOT EXISTS idx_alignments_species_idx ON alignments(species);
+CREATE INDEX IF NOT EXISTS idx_alignments_matches_idx ON alignments(matches);
+CREATE INDEX IF NOT EXISTS idx_alignments_mismatches_descriptor_idx ON alignments(mismatches_descriptor);
 
-CREATE INDEX IF NOT EXISTS idx_alignments_multi_one ON alignments(pool, primer_id, aligned_to, chromosome, position, matches);
-CREATE INDEX IF NOT EXISTS idx_alignments_multi_two ON alignments(pool, primer_id, aligned_to, chromosome, position, matches, species);
-CREATE INDEX IF NOT EXISTS idx_alignments_multi_three ON alignments(chromosome, aligned_to, position);
+CREATE INDEX IF NOT EXISTS idx_alignments_multi_one_idx ON alignments(pool, primer_id, aligned_to, chromosome, position, matches);
+CREATE INDEX IF NOT EXISTS idx_alignments_multi_two_idx ON alignments(pool, primer_id, aligned_to, chromosome, position, matches, species);
+CREATE INDEX IF NOT EXISTS idx_alignments_multi_three_idx ON alignments(chromosome, aligned_to, position);

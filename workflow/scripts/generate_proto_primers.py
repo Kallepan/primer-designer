@@ -219,6 +219,7 @@ async def __generate_primers(
     primer_ok_regions_list: list[int, int, int, int],
     config: PrimerGenConfig,
     list_of_primers: list[dict],
+    failed_amplicons: list[dict],
 ) -> None:
     """Generate the primer pairs for a given list of amplicon coordinates."""
 
@@ -243,8 +244,17 @@ async def __generate_primers(
         # generate the primers
         forward_primers, reverse_primers = await primer_generator.generate_primers()
 
-        # check if forward AND reverse primers were generated. If not, skip the amplicon
+        # check if forward AND reverse primers were generated.
         if forward_primers is None or reverse_primers is None:
+            failed_amplicons.append(
+                {
+                    "region_name": region_name,
+                    "amplicon_name": f"{region_name}-{idx}-{pool_name}",
+                    "pool": pool_name,
+                    "amplicon_start": adjusted_amplicon_start,
+                    "amplicon_end": adjusted_amplicon_end,
+                }
+            )
             logging.warning(
                 f"No primers generated for region {region_name} amplicon {idx}. Skipping amplicon."
             )
@@ -316,6 +326,7 @@ async def main():
 
     # Create the RegionIterator
     list_of_primers: list[dict] = []
+    failed_amplicons: list[dict] = []
     async for _, row in RegionIterator(regions=regions):
         start = row["start"]
         end = row["end"]
@@ -353,6 +364,7 @@ async def main():
             primer_ok_regions_list,
             config,
             list_of_primers,
+            failed_amplicons,
         )
         await __generate_primers(
             name,
@@ -362,12 +374,16 @@ async def main():
             primer_ok_regions_list,
             config,
             list_of_primers,
+            failed_amplicons,
         )
 
     # Insert the primers into the database
     df = pd.DataFrame(list_of_primers)
     df.to_sql("proto_primers", db.conn, if_exists="append", index=False)
 
+    # Insert the failed amplicons into the database
+    df = pd.DataFrame(failed_amplicons)
+    df.to_sql("failed_amplicons", db.conn, if_exists="append", index=False)
 
 if __name__ == "__main__":
     # Run the main function using asyncio
