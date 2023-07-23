@@ -27,7 +27,7 @@ export class DetailViewComponent implements OnInit {
       // If regionData.sequence length is greater than the max sequence length display warning
       if (regionData.sequence.length > CONFIG.DETAILED_VIEW.SEQUENCE_MAX_LENGTH)
         this._messageService.openSnackBar(`Only the first ${CONFIG.DETAILED_VIEW.SEQUENCE_MAX_LENGTH} bases are displayed.`, 'OK');
-      
+
       // Set the current sequence
       this.currentSequence = regionData.sequence.slice(
         0,

@@ -18,7 +18,7 @@ import { SimplifiedAmpliconData, SimplifiedPrimerData, SimplifiedRegionData } fr
 export class SimpleViewComponent implements OnInit {
   loading = true;
 
-  private _data$ = new BehaviorSubject<Map<string,Region> | null>(null);
+  private _data$ = new BehaviorSubject<Map<string, Region> | null>(null);
   data$ = this._data$.asObservable().pipe(
     map(data => {
       // Check if data is available
@@ -86,7 +86,7 @@ export class SimpleViewComponent implements OnInit {
     }),
     tap(data => {
       if (!data) return;
-      
+
       // Set timeout to 0 to prevent ExpressionChangedAfterItHasBeenCheckedError
       setTimeout(() => {
         this.loading = false;
@@ -100,5 +100,5 @@ export class SimpleViewComponent implements OnInit {
 
   constructor(
     private _resultsService: ResultsService,
-  ) {  }
+  ) { }
 }

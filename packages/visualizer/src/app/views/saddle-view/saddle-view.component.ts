@@ -11,12 +11,12 @@ import { SaddlePlotData } from './types';
 export class SaddleViewComponent implements OnInit {
   loading = true;
 
-  private _data$ = new BehaviorSubject<Map<string,Array<number>> | null>(null);
+  private _data$ = new BehaviorSubject<Map<string, Array<number>> | null>(null);
   data$ = this._data$.asObservable().pipe(
     map(data => {
       // Check if data is available
       if (!data) return;
-      
+
       const formattedData: SaddlePlotData[] = [];
       data.forEach((losses, poolId) => {
         formattedData.push({

@@ -55,7 +55,7 @@ export class ResultsService {
         /* Group the primer pairs by pool_id, so that we can iterate over each region and pool_id
         to simply retrieve the primer pairs for that given region and pool_id. This way we can
         simply retrieve an amplicon by observing the forward_primer start and reverse_primer end */
-        const primerPairsGroupedByPoolId =  groupBy<PrimerPair>(primerPairs, 'pool_id');
+        const primerPairsGroupedByPoolId = groupBy<PrimerPair>(primerPairs, 'pool_id');
         primerPairsGroupedByPoolId.forEach((primerPairs: PrimerPair[]) => {
           // Sort the primer pairs by position using the forward primer
           primerPairs.sort((a: PrimerPair, b: PrimerPair) => a.forward_primer.position - b.forward_primer.position);
@@ -65,14 +65,14 @@ export class ResultsService {
           primerPairs.forEach((primerPair: PrimerPair) => {
             // Reset the valid colors if we run out
             if (validColors.length === 0)
-              validColors.push(...CONFIG.COLORS); 
-            
+              validColors.push(...CONFIG.COLORS);
+
             // Assign the color to the primer pair
             const color = validColors.pop();
             primerPair.color = color || '#ffffff';
           });
         });
-        
+
         /* Separate the primer pairs into single primers and append all into a single list.
         This way we can iterate over each primer in a pool if needed. This is useful for
         displaying all primers from a pool in a 'simple' way haha. */
@@ -89,7 +89,7 @@ export class ResultsService {
           // Add the primers to the map
           primersByPool.set(key, primers);
         });
-        
+
         // Create a new region object
         const region: Region = {
           name: regionInfo.name,
@@ -103,7 +103,7 @@ export class ResultsService {
         // Add the region to the list of regions
         results.set(key, region);
       });
-    
+
     // Set the results
     this._results = results;
   }
@@ -124,7 +124,7 @@ export class ResultsService {
     return ampliconData as Amplicon[];
   }
 
-  constructor() { 
+  constructor() {
     this._initResults();
     this._initLoss();
   }

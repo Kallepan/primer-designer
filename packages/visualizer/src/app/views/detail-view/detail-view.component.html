@@ -16,8 +16,8 @@
         <div class="sequence" *ngFor="let pool_id of presentPools">
             <h2>Pool {{pool_id}}</h2>
             <span class="letter" *ngFor="let letter of currentSequence; let i = index"
-            [matTooltip]="getTooltip(i, pool_id)" [ngStyle]="{'background-color': getColor(i, pool_id)}">
-            {{letter}}
+                [matTooltip]="getTooltip(i, pool_id)" [ngStyle]="{'background-color': getColor(i, pool_id)}">
+                {{letter}}
             </span>
         </div>
     </div>

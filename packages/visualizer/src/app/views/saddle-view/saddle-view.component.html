@@ -3,6 +3,6 @@
 <div *ngIf="(data$ | async) as currentData" class="center">
     <div *ngFor="let saddlePlotData of currentData" class="plot-element">
         <app-saddle-plot [saddleData]="saddlePlotData"></app-saddle-plot>
-        <hr/>
+        <hr />
     </div>
 </div>

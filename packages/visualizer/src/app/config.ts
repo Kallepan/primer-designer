@@ -5,13 +5,13 @@
 export class CONFIG {
     public static readonly PRIMER_COLOR = '#FF0000';
     public static readonly COLORS = ["#b30000", "#7c1158", "#4421af", "#1a53ff", "#0d88e6", "#00b7c7", "#5ad45a", "#8be04e", "#ebdc78"];
-    
+
     // Configurations for the detailed view
     public static DETAILED_VIEW = {
         SEQUENCE_MAX_LENGTH: 50_000,
         DEFAULT_COLOR: '#FFFFFF',
         PRIMER_COLOR: this.PRIMER_COLOR,
-    };    
+    };
 
     // Configurations for the simplified view
     public static SIMPLIFIED_VIEW = {

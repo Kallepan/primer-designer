@@ -39,11 +39,11 @@ export class SaddlePlotComponent implements AfterViewInit {
     svg.append('g')
       .attr('transform', `translate(0, ${height - margins.BOTTOM})`)
       .call(xAxis);
-    
+
     svg.append('g')
       .attr('transform', `translate(${margins.LEFT}, 0)`)
       .call(yAxis);
-    
+
     // Add axis labels
     svg.append('text')
       .attr('transform', `translate(${width / 2}, ${height})`)
@@ -59,7 +59,7 @@ export class SaddlePlotComponent implements AfterViewInit {
       .style('text-anchor', 'middle')
       .style('fill', 'white')
       .text('Loss');
-    
+
     // Add line
     const line = d3.line<number>()
       .x((_, index) => xScale(index + 1))
