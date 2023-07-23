@@ -12,7 +12,7 @@
             <div [ngSwitch]="column.key">
                 <ng-container *ngSwitchCase="'discarded'">
                     <span class="dot" [ngStyle]="{'background-color': element.discarded? '#F44336': '#4CAF50'}"
-                        [matTooltip]="element.discarded? 'absent' : 'discarded'"></span>
+                        [matTooltip]="element.discarded? 'absent' : 'present'"></span>
                 </ng-container>
                 <ng-container *ngSwitchDefault>
                     {{element[column.key]}}
