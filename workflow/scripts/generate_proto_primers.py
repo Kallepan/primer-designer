@@ -385,6 +385,7 @@ async def main():
     df = pd.DataFrame(failed_amplicons)
     df.to_sql("failed_amplicons", db.conn, if_exists="append", index=False)
 
+
 if __name__ == "__main__":
     # Run the main function using asyncio
     try:

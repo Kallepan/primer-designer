@@ -87,7 +87,7 @@ def __extract_amplicons_from_generation(df: pd.DataFrame) -> list[dict]:
 
         # Add the amplicon to the list
         amplicons.append(amplicon)
-    
+
     return amplicons
 
 
@@ -118,23 +118,22 @@ def __extract_amplicons_from_filtering(df: pd.DataFrame) -> list[dict]:
 
         # Create a dictionary for the amplicon
         amplicon = defaultdict(str)
-        
+
         # Add the amplicon information
         amplicon["name"] = amplicon_name
         amplicon["region"] = region_name
         amplicon["pool"] = str(pool)
-        amplicon["n_forward"] = len(forward_primers)
-        amplicon["n_reverse"] = len(reverse_primers)
-        amplicon["n_discarded_forward"] = forward_primers["discarded"].sum()
-        amplicon["n_discarded_reverse"] = reverse_primers["discarded"].sum()
-
+        amplicon["n_forward"] = int(len(forward_primers))
+        amplicon["n_reverse"] = int(len(reverse_primers))
+        amplicon["n_discarded_forward"] = int(forward_primers["discarded"].sum())
+        amplicon["n_discarded_reverse"] = int(reverse_primers["discarded"].sum())
 
         # If all forward or all reverse primers are discarded, the amplicon is discarded
         if forward_primers["discarded"].all() or reverse_primers["discarded"].all():
             amplicon["discarded"] = True
         else:
             amplicon["discarded"] = False
-        
+
         # Add the amplicon to the list
         amplicons.append(amplicon)
 
