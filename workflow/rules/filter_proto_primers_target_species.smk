@@ -35,7 +35,7 @@ rule format_pool_into_fasta:
             &> {log}
         """
 
-max_mismatches = config["alignment_settings"]["max_mismatches"]
+max_mismatches = config["filter_settings"]["target_species"]["max_mismatches"]
 rule align_primers_target_species:
     input:
         expand("{index}/{{species}}.{version}.ebwt", version=range(1, 5), index=config["index_dir"]),
@@ -77,7 +77,9 @@ rule format_align_primers_target_species:
         """
 
 
-adjacency_limit = config["evaluation_settings"]["target_species"]["adjacency_limit"]
+adjacency_limit = config["filter_settings"]["target_species"]["adjacency_limit"]
+bases_to_ignore = config["filter_settings"]["target_species"]["bases_to_ignore"]
+max_misalignments = config["filter_settings"]["target_species"]["max_misalignments"]
 rule eval_primers_with_target_species:
     input:
         scores = "results/filter/target/{species}.{pool}.alignment.tsv",
@@ -85,7 +87,9 @@ rule eval_primers_with_target_species:
     output: "results/filter/target/{species}.{pool}.alignment.eval.tsv"
     log: "logs/filter/target/{species}.{pool}.alignment.eval.log"
     params:
-        adjacency_limit = adjacency_limit
+        adjacency_limit = adjacency_limit,
+        bases_to_ignore = bases_to_ignore,
+        max_misalignments = max_misalignments
     conda:
         "../envs/base.yaml"
     shell:
@@ -96,6 +100,8 @@ rule eval_primers_with_target_species:
             --pool {wildcards.pool} \
             --species {wildcards.species} \
             --adjacency_limit {params.adjacency_limit} \
+            --bases_to_ignore {params.bases_to_ignore} \
+            --max_misalignments {params.max_misalignments} \
             &> {log}
         """
 

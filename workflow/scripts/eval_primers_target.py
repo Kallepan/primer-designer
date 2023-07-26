@@ -11,7 +11,6 @@ logging.basicConfig(level=logging.INFO)
 
 DEFAULT_ADJACENCY_LIMIT = 500
 DEFAULT_BASES_TO_IGNORE = 3
-DEFAULT_MAX_MISMATCHES = 2
 DEFAULT_MAX_MISALIGNMENTS = -1
 
 
@@ -57,12 +56,6 @@ def __get_args() -> argparse.Namespace:
         type=int,
         default=DEFAULT_BASES_TO_IGNORE,
         help=f"Number of bases with mismatches at the 3' end of the primer to ignore when evaluating alignments. Default: {DEFAULT_BASES_TO_IGNORE}",
-    )
-    parser.add_argument(
-        "--max_mismatches",
-        type=int,
-        default=DEFAULT_MAX_MISMATCHES,
-        help=f"Number of mismatches allowed in the primer alignment. Default: {DEFAULT_MAX_MISMATCHES}",
     )
     parser.add_argument(
         "--max_misalignments",
@@ -122,7 +115,8 @@ def __get_alignments(db: DBHandler, args: argparse.Namespace) -> pd.DataFrame:
 
 
 def __calculate_adjacent_alignments(
-    alignments: pd.DataFrame, adjacency_limit: int, max_mismatches: int
+    alignments: pd.DataFrame,
+    adjacency_limit: int,
 ) -> dict[str, list]:
     """
     For each alignment, find the next alignment that is within the adjacency limit.
@@ -140,13 +134,6 @@ def __calculate_adjacent_alignments(
 
         # Sort alignments by position
         alignments = alignments.sort_values("position")
-
-        # Filter the alginments keep ones that have no mismatches_descriptor or have mismatches_descriptor with less than max_mismatches mismatches
-        # We can simply count the occurences of the character '>' to get the number of mismatches
-        alignments = alignments[
-            (alignments["mismatches_descriptor"].isnull())
-            | (alignments["mismatches_descriptor"].str.count(">") <= max_mismatches)
-        ]
 
         # Split the alignments into forward and reverse alignments
         alignments_forward = alignments[alignments["aligned_to"] == "forward"]
@@ -276,7 +263,7 @@ def main():
     logging.info(f"Found {alignments.shape[0]} alignments to evaluate")
 
     adjacent_primers_for_primer = __calculate_adjacent_alignments(
-        alignments, args.adjacency_limit, args.max_mismatches
+        alignments, args.adjacency_limit
     )
 
     # Select primers to discard by unioning the sets of primers to discard

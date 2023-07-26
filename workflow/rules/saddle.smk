@@ -42,7 +42,7 @@ rule run_saddle:
 
 
 pools = config["metadata"]["pools"]
-species = config["metadata"]["species"]
+species = config["metadata"]["target_species"]
 rule merge_saddle_data_output:
     input: expand("results/{species}.{pool}.saddle_set.json", species=species, pool=pools)
     conda: "../envs/base.yaml"

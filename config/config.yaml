@@ -9,6 +9,7 @@ genomes_dir: "/homes/kkandeepan/data/genomes"
 index_dir: "/homes/kkandeepan/data/indexes" 
 # results_dir: path to directory where *final* results will be stored
 results_dir: "/homes/kkandeepan/data/results" 
+# file containing list of foreign species genomes to be used during filtering
 foreign_species_fastas: 
   - "/homes/kkandeepan/data/foreign_species/GRCh38.fasta" 
 
@@ -21,21 +22,20 @@ metadata:
   pools: # This value does not affect the results and changing it just breaks snakemake. So don't change it.
     - 0
     - 1 
-  species: "myc_tuberculosis_h37Rv"
+  target_species: "myc_tuberculosis_h37Rv"
   chromosome: "NC_000962.3"
 
-alignment_settings:
-  max_mismatches: 3 # must be between 0 and 3
-
 # The following settings filter out misaligned primers and amplicons
-evaluation_settings:
+filter_settings:
   target_species:
-    adjacency_limit: 200
-    threshold: 0
+    max_mismatches: 3 # Number of mismatches allowed for alignments of the primer. Bowtie allows 0-3 mismatches
+    adjacency_limit: 200 # max distance between two primers to be considered adjacent
+    bases_to_ignore: 3 # bases from 3' end of primer where mismatches cause the alignment to be ignored
+    max_misalignments: -1 # max number of misalignments allowed for a primer
   foreign_species:
-    adjacency_limit: 200
-    max_mismatches: 2
-    bases_to_ignore: 3
+    max_mismatches: 3 # Number of mismatches allowed for alignments of the primer. Bowtie allows 0-3 mismatches
+    adjacency_limit: 200 # same as above
+    bases_to_ignore: 3 # bases from 3' end of primer where mismatches cause the alignment to be ignored
 
 saddle:
   min_subsequence_size: 4 # min size of subsequence to be considered for badness
@@ -45,4 +45,4 @@ saddle:
   primers_weight: 10.0 # weight of primers during simulated annealing temperature calculation
 
 plot:
-  plotting_buffer: 300
+  plotting_buffer: 300 # +/- buffer for plotting, has no effect on results

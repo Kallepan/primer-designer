@@ -1,4 +1,3 @@
-max_mismatches = config["alignment_settings"]["max_mismatches"]
 
 pools = config["metadata"]["pools"]
 fasta_files = config["foreign_species_fastas"]
@@ -9,6 +8,7 @@ rule all_foreign_species:
     output: touch("results/filter/foreign/{species}.foreign_species.dummy")
 
 
+max_mismatches = config["filter_settings"]["foreign_species"]["max_mismatches"]
 rule align_primers_foreign_species:
     input:
         # ancient is a helper function that ensures the index is not rebuilt if it already exists
@@ -51,9 +51,8 @@ rule format_align_primers_foreign_species:
         """
 
 
-adjacency_limit = config["evaluation_settings"]["foreign_species"]["adjacency_limit"]
-max_mismatches = config["evaluation_settings"]["foreign_species"]["max_mismatches"]
-bases_to_ignore = config["evaluation_settings"]["foreign_species"]["bases_to_ignore"]
+adjacency_limit = config["filter_settings"]["foreign_species"]["adjacency_limit"]
+bases_to_ignore = config["filter_settings"]["foreign_species"]["bases_to_ignore"]
 rule eval_align_primers_foreign_species:
     input: 
         alignment = "results/filter/foreign/{species}.{fasta}.{pool}.alignment.tsv",
@@ -63,7 +62,6 @@ rule eval_align_primers_foreign_species:
     conda: "../envs/base.yaml"
     params:
         adjacency_limit = adjacency_limit,
-        max_mismatches = max_mismatches,
         bases_to_ignore = bases_to_ignore
     shell:
         """
@@ -73,7 +71,6 @@ rule eval_align_primers_foreign_species:
             --species {wildcards.fasta} \
             --output {output} \
             --adjacency_limit {params.adjacency_limit} \
-            --max_mismatches {params.max_mismatches} \
             --bases_to_ignore {params.bases_to_ignore} \
             &> {log}
         """
