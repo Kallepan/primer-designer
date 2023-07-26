@@ -1,5 +1,16 @@
 # Primer Design Pipeline
 
+## Requirements
+
+### Config files
+
+- Please use the config.yaml file and primer3_settings.yaml to adjust the settings of the pipeline
+
+### Software requirements
+
+- The pipeline requires the conda package manager, and snakemake to be installed
+- Snakemake can be installed using conda. It will automatically install all other dependencies
+
 ## 1. Proto-Primers Generation
 
 - Generate all possible primers using Primer3
@@ -14,31 +25,26 @@
 
 ### Formula for determining if amplicons can overlap
 
-```latex
-\documentclass{article}
-\begin{document}
-
 Formula for calculating whether the amplicons can overlap or not.
 If true then overlap is not possible:
-\[ Amax <= 2*Amin*(1-min_overlap) \] 
-
-\end{document}
-```
+$$A_{max} \leq 2 * A_{min} * (1 -min\_overlap)$$
 
 ### PrimerGen Algorithm
 
 - Generate seed sites with a certain distance between them
-  - Distance: min_amp_size * (1 - min_overlap)
-  - pool offset: min_amp_size * (1 - min_overlap)
+  - Distance between amplicon seed sites:
+  $$min\_amp\_size*(1-min\_overlap*2) $$
+  - pool offset: $$ min\_amp\_size*(1-min\_overlap) $$
 - Generate primers for each amplicon using primer3:
   - Forward primer: 5'->3'
-  - Reverse primer: 3'->5' (output is in 5'->3' direction)
+  - Reverse primer: 3'->5'
+  - **primers are always stored and given in 5'->3' direction**
 - Primers are generated for each amplicon
 - Primers are only allowed in a so called buffer region:
-  - Forward in: 0 to buffer_region
-  - Reverse in: min_amplicon_size - buffer_region to min_amplicon_size
-- If no primers are found in the buffer region -> skip amplicon
-- Store the primers in the database with metadata
+  - Forward primers are placed in: 0 to buffer_region
+  - Reverse primers are placed in: min_amplicon_size - buffer_region to min_amplicon_size
+- If no forward or no reverse primers are found in this buffer region, the amplicon is skipped and not included in the final output
+- Store the primers in the database with metadata extracted from the primer3 output
 
 ## 2. Filter Proto-Primers
 
@@ -50,6 +56,7 @@ If true then overlap is not possible:
   - The number of mismatches close to 3' end
   - The number of adjacent alignments of primers on the complementary strand
   - The number of times the primer misaligns to the genome
+- Primers which do not meet filter criteria are marked as discarded in the database
 
 ### Filter against other species
 
@@ -59,9 +66,12 @@ If true then overlap is not possible:
   - The number of mismatches close to 3' end
   - The number of adjacent alignments of primers on the complementary strand
   - The number of times the primer misaligns to the genome
-- Bowtie uses pre-built indexes to align the primers against the genome. To reduce runtime, you can generate these indexes yourself and place them in the indexes folder. Alternatively genomes and indexes are offered for download [Illumina](http://support.illumina.com/sequencing/sequencing_software/igenome.ilmn). Indexes can be generated using bowtie-build:
+- All alignments are checked for adjacent alignments. The relationship of alignment with each other is stored in a graph. Using the minimal vertex cover problem, nodes/primers are selected which cover all edges/alignments. The selected primers are marked as discarded in the database.
+- Bowtie uses pre-built indexes to align the primers against the genome. To reduce runtime, you can generate these indexes yourself and place them in the indexes folder. Alternatively genomes and indexes for bowtie are offered for download [Illumina](http://support.illumina.com/sequencing/sequencing_software/igenome.ilmn). Indexes can be generated using bowtie-build:
+- Indexes should match in name with the given genome. If an index is not found, the pipeline will build the index using bowtie-build.
 
 ```bash
+# How to build an index using bowtie-build:
 bowtie-build foreign_species/sequence.fasta indexes/sequence
 ```
 
@@ -80,7 +90,7 @@ bowtie-build foreign_species/sequence.fasta indexes/sequence
 3. Generate a temporary set by replacing one or more primers from the current set by random replacement
 4. Calculate loss for temporary set
 5. Accept or reject temporary set based on a simulated annealing algorithm
-6. Repeat 3-5 until convergence
+6. Repeat 3-5 until the break off criteria is matched
 
 ```rust
 if L(temporary_set) <= L(current_set) {
@@ -94,6 +104,20 @@ else {
 
 ## 4. Report
 
-- Display the results in a html document (webbrowser) and .bed file (IGV)
+- Display the results in a single html document (webbrowser) and export them in a .bed file (to be used with IGV) and a csv file
+
+### BED File
+
+- List of primers with their positions in the genome
+
+### CSV
+
+- List of amplicons with their respective forward and reverse primers in 5'->3' direction
+
+### HTML  
+
 - Detailed view with sequences
 - Simplified view with only an overview plot of the results
+- Plot of loss of SADDLE function over time
+- Overview of amplicons and the number of generated/discarded primers per amplicon in a table
+- The html file is generated using angularjs, angular material, d3js, and gulp
