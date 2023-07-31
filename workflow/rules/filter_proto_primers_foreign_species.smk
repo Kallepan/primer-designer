@@ -1,4 +1,4 @@
-fasta_files = config["foreign_species_fastas"]
+fasta_files = [os.path.join(config["genomes_dir"], genome) for genome in config["foreign_species_fastas"]]
 fasta_names = [os.path.splitext(os.path.basename(f))[0] for f in fasta_files]
 rule all_foreign_species:
     input:

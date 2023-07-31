@@ -1,21 +1,23 @@
 ### input files ###
+# Adjust the following paths to point to the correct files/directories
 # regions: path to csv file containing regions to be amplified 
-regions: "/homes/kkandeepan/data/regions.csv" 
-# target_genome: path to fasta file containing target genome
-target_genome: "myc_tuberculosis_h37Rv"
+regions: ".sample/regions.csv"
 # genomes_dir: path to directory containing all fasta files (target and foreign species)
-genomes_dir: "/homes/kkandeepan/data/genomes"
+genomes_dir: ".sample/data"
 # index_dir: path to directory containing indexes of foreign species genomes
-index_dir: "/homes/kkandeepan/data/indexes" 
+index_dir: ".sample/indexes"
 # results_dir: path to directory where *final* results will be stored
-results_dir: "/homes/kkandeepan/data/results" 
+results_dir: ".sample/results"
+# target_genome: name of target species genome fasta file
+target_genome: "myc_tuberculosis_h37Rv.fasta"
 # file containing list of foreign species genomes to be used during filtering
-foreign_species_fastas: 
-  - "/homes/kkandeepan/data/foreign_species/GRCh38.fasta" 
+foreign_species_fastas:
+  - "staph_aureus_nctc8325.fasta"
 
+### Configurations ###
 primer_gen_config:
-  min_amplicon_size: 200
-  max_amplicon_size: 300
+  min_amplicon_size: 200 # min size of amplicon
+  max_amplicon_size: 300 # max size of amplicon
   min_overlap: 0.2 # 20% overlap between amplicons from different pools
 
 metadata:

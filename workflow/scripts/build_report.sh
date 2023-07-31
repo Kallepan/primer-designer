@@ -1,11 +1,14 @@
 #!/bin/bash
-cd $5
 
 # copy files
-cp $1 src/assets/results.json
-cp $2 src/assets/loss.json
-cp $3 src/assets/regions.json
-cp $4 src/assets/amplicons.json
+cp $1 packages/visualizer/src/assets/results.json
+cp $2 packages/visualizer/src/assets/loss.json
+cp $3 packages/visualizer/src/assets/regions.json
+cp $4 packages/visualizer/src/assets/amplicons.json
+
+# move to visualizer path
+CURRENT_DIR=$(pwd)
+cd packages/visualizer
 
 # install dependencies
 echo "Installing dependencies"
@@ -24,7 +27,8 @@ sed -i 's/media="print"/type="text\/css"/g' single-dist/index.html
 echo "Done building visualizer"
 
 # copy to output
-mv single-dist/index.html $6
+cd $CURRENT_DIR
+mv packages/visualizer/single-dist/index.html $5
 
 # cleanup
 echo "Cleaning up"

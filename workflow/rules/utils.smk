@@ -40,7 +40,7 @@ rule export_regions:
     input: 
         db = "results/{species}.db",
         regions = config["regions"],
-        fasta = expand("{genomes_dir}/{target_genome}.fasta", genomes_dir = config["genomes_dir"], target_genome = config["target_genome"])
+        fasta = expand("{genomes_dir}/{target_genome}", genomes_dir = config["genomes_dir"], target_genome = config["target_genome"])
     output: expand("{results}/{{species}}.regions.json", results = config["results_dir"])
     log: "logs/primer_gen/{species}.regions.log"
     conda: "../envs/biopython.yaml"
@@ -76,7 +76,7 @@ rule export_primers_to_bed:
     """ Exports the primers to a bed file for easy inspection in genome browsers such as IGV """
     input: 
         primer_set = expand("{results}/{{species}}.primer_set.json", results=config["results_dir"]),
-        fasta = expand("{genomes_dir}/{target_genome}.fasta", genomes_dir = config["genomes_dir"], target_genome = config["target_genome"])
+        fasta = expand("{genomes_dir}/{target_genome}", genomes_dir = config["genomes_dir"], target_genome = config["target_genome"])
     output: expand("{results}/{{species}}.bed", results=config["results_dir"])
     log: "logs/{species}.bed.log"
     conda: "../envs/biopython.yaml"

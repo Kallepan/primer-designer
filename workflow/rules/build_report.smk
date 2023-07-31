@@ -7,8 +7,6 @@ rule build_report:
         amplicons = expand("{results}/{{species}}.amplicons.json", results = config["results_dir"])
     log: "logs/report/{species}.build_report.log"
     output: expand("{results}/{{species}}.summary.html", results = config["results_dir"])
-    params:
-        source_dir = "packages/visualizer/"
     shell:
         """
         bash workflow/scripts/build_report.sh \
@@ -16,7 +14,7 @@ rule build_report:
             {input.loss} \
             {input.regions} \
             {input.amplicons} \
-            {params.source_dir} \
             {output} \
             &> {log}
         """
+
