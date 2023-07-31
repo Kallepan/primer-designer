@@ -133,7 +133,6 @@ dmypy.json
 tmp/
 logs/
 results/
-data/
 
 # Ignore files used for testing
 helper_scripts/
