@@ -16,7 +16,7 @@ foreign_species_fastas:
 primer_gen_config:
   min_amplicon_size: 200
   max_amplicon_size: 300
-  min_overlap: 0.2 # 20% overlap between primers from different pools
+  min_overlap: 0.2 # 20% overlap between amplicons from different pools
 
 metadata:
   num_pools: 2 # Defines the number of pools.
@@ -42,4 +42,3 @@ saddle:
 
 plot:
   plotting_buffer: 300 # +/- buffer for plotting, has no effect on results
-  chromosome: "NC_000962.3" # name of the chromosome to be used in the .bed file

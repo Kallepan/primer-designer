@@ -1,3 +1,5 @@
+from Bio import SeqIO
+
 import argparse
 import logging
 import json
@@ -24,22 +26,27 @@ def __get_args() -> argparse.Namespace:
         help="Path to the input file",
     )
     parser.add_argument(
+        "--fasta",
+        type=str,
+        required=True,
+        help="Fasta file of the target genome",
+    )
+    parser.add_argument(
         "--output",
         type=str,
         required=True,
         help="Path to the output file",
     )
-    parser.add_argument(
-        "--chrom",
-        type=str,
-        required=True,
-        help="Name of the chromosome",
-    )
 
     return parser.parse_args()
 
 
-def __format_into_bed(args: argparse.Namespace, data: list[dict]) -> None:
+def __get_chromosome(fasta_file: str) -> str:
+    """Gets the chromosome name from the fasta file"""
+    for record in SeqIO.parse(fasta_file, "fasta"):
+        return record.id
+
+def __format_into_bed(args: argparse.Namespace, chromosome: str, data: list[dict]) -> None:
     """Formats the input dictionary into a bed file"""
     with open(args.output, "w") as f:
         f.write("chrom\tstart\tend\tname\tscore\tstrand\n")
@@ -67,14 +74,18 @@ def __format_into_bed(args: argparse.Namespace, data: list[dict]) -> None:
             start = forward_primer["position"]
             end = reverse_primer["position"] + reverse_primer["length"]
             with open(args.output, "a") as f:
-                f.write(f"{args.chrom}\t{start}\t{end}\t{name}\t0\t+\n")
+                f.write(f"{chromosome}\t{start}\t{end}\t{name}\t0\t+\n")
 
 
 def main():
     logging.info("Starting script")
     args = __get_args()
     data = __load_json(args.input)
-    __format_into_bed(args, data)
+    
+    # Get the chromosome name from the fasta file
+    chromosome = __get_chromosome(args.fasta)
+
+    __format_into_bed(args, chromosome, data)
 
     logging.info("Script finished")
     logging.info(

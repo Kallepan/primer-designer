@@ -71,20 +71,21 @@ rule format_primers_to_tsv:
         &> {log}"""
 
 
-chromosome = config["plot"]["chromosome"]
+
 rule export_primers_to_bed:
     """ Exports the primers to a bed file for easy inspection in genome browsers such as IGV """
-    input: expand("{results}/{{species}}.primer_set.json", results=config["results_dir"])
+    input: 
+        primer_set = expand("{results}/{{species}}.primer_set.json", results=config["results_dir"]),
+        fasta = expand("{genomes_dir}/{target_genome}.fasta", genomes_dir = config["genomes_dir"], target_genome = config["target_genome"])
     output: expand("{results}/{{species}}.bed", results=config["results_dir"])
     log: "logs/{species}.bed.log"
     conda: "../envs/biopython.yaml"
-    params: chromosome=chromosome
     shell:
         """
         python3 workflow/scripts/export_primers_to_bed.py \
-            --input {input} \
+            --input {input.primer_set} \
+            --fasta {input.fasta} \
             --output {output} \
-            --chrom {params.chromosome} \
         &> {log}"""
 
 
