@@ -8,7 +8,7 @@ rule build_saddle_binary:
 
 min_subsequence_size = config["saddle"]["min_subsequence_size"]
 max_subsequence_size = config["saddle"]["max_subsequence_size"]
-optimal_iterations = config["saddle"]["optimal_iterations"]
+max_iterations = config["saddle"]["max_iterations"]
 amplicons_weight = config["saddle"]["amplicons_weight"]
 primers_weight = config["saddle"]["primers_weight"]
 rule run_saddle:
@@ -21,7 +21,7 @@ rule run_saddle:
     params:
         min_subsequence_size = min_subsequence_size,
         max_subsequence_size = max_subsequence_size,
-        optimal_iterations = optimal_iterations,
+        max_iterations = max_iterations,
         amplicons_weight = amplicons_weight,
         primers_weight = primers_weight
     log: "logs/saddle/{species}.{pool}.log"
@@ -34,7 +34,7 @@ rule run_saddle:
             --output-file-loss {output.loss} \
             --min-subsequence-size {params.min_subsequence_size} \
             --max-subsequence-size {params.max_subsequence_size} \
-            --optimal-iterations {params.optimal_iterations} \
+            --max-iterations {params.max_iterations} \
             --amplicons-weight {params.amplicons_weight} \
             --primers-weight {params.primers_weight} \
             &> {log}

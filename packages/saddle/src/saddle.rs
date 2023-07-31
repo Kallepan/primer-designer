@@ -196,7 +196,7 @@ pub fn run(
     output_file_loss: &String,
     subsequence_min_size: usize,
     subsequence_max_size: usize,
-    optimal_iterations: usize,
+    max_iterations: usize,
     amplicons_weight: f64,
     primers_weight: f64,
 ) {
@@ -217,7 +217,7 @@ pub fn run(
 
     // Calculate Simulated Annealing Parameters
     let sa_temp_initial = (number_of_amplicons as f64) * amplicons_weight + (number_of_primers as f64) * primers_weight;
-    let numsteps = optimal_iterations;
+    let numsteps = max_iterations;
 
     log::info!("Initial Temperature: {}", sa_temp_initial);
     log::info!("Number of Steps: {}", numsteps);
@@ -238,7 +238,7 @@ pub fn run(
         loss,
     };
 
-    while iteration <= numsteps as usize {
+    while iteration <= numsteps {
         /*
         Generate a temp set and calculate the loss by recalculating the hash map. Store the old hash map in case the temp set is not accepted.
         If the temp set is accepted, store the temp set and continue.

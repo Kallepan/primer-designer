@@ -19,5 +19,5 @@ cargo build --release
     # Optional arguments, defaults are 4, 8 and 40_000 respectively
     --min-subsequence-size <min_subsequence_size> \ 
     --max-subsequence-size <max_subsequence_size> \
-    --optimal-iterations <optimal_iterations>
+    --max-iterations <max_iterations>
 ```
