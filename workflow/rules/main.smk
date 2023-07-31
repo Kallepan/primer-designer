@@ -1,4 +1,7 @@
-pools = config["metadata"]["pools"]
+# Global configuration
+pools = range(0, config["metadata"]["num_pools"])
+
+
 rule all:
     input:
         expand("{results}/dump/{{species}}.proto_primers.tsv", results=config["results_dir"]),

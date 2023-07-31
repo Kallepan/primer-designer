@@ -71,7 +71,7 @@ rule format_primers_to_tsv:
         &> {log}"""
 
 
-chromosome = config["metadata"]["chromosome"]
+chromosome = config["plot"]["chromosome"]
 rule export_primers_to_bed:
     """ Exports the primers to a bed file for easy inspection in genome browsers such as IGV """
     input: expand("{results}/{{species}}.primer_set.json", results=config["results_dir"])

@@ -133,10 +133,7 @@ dmypy.json
 tmp/
 logs/
 results/
-
-# Ignore csv and tsv files
-*.csv
-*.tsv
+data/
 
 # Ignore files used for testing
 helper_scripts/
