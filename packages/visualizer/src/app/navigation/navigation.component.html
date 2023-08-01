@@ -1,0 +1,11 @@
+<mat-toolbar class="header">
+    <button mat-button class="title">
+        <h1 routerLink="/">Visualizer</h1>
+    </button>
+    <div class="menu">
+        <button mat-raised-button color="accent" routerLink="/results/simple" matTooltip="Simple overview of generated Primers">Simplified Primer View</button>
+        <button mat-raised-button color="accent" routerLink="/results/detail" matTooltip="Detailed Overview. Loading large regions may take time">Detailed Primer View</button>
+        <button mat-raised-button color="accent" routerLink="/results/saddle" matTooltip="Plots the output of the loss function against the iterations">SADDLE Loss View</button>
+    </div>
+    <span class="spacer"></span>
+</mat-toolbar>

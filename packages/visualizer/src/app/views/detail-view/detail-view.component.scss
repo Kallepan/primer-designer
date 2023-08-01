@@ -1,0 +1,31 @@
+.meta-form {
+    display: grid;
+    grid-template-columns: 1fr;
+    margin: 1rem;
+}
+
+.data {
+    margin: 1rem;
+    .metadata {
+        margin: 0 auto 0 auto;
+        text-align: center;
+    }
+
+    .sequence {
+        .letter {
+            color: black;
+            transition: transform 1s ease-out;
+        }
+
+        .letter:hover,
+        .letter:focus {
+            transform: scale(1.5);
+            transition: transform 0.5s ease-in;
+        }
+    }
+}
+
+.large-sequence-container {
+    display: flex;
+    flex-direction: row;
+}

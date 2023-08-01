@@ -1,0 +1,19 @@
+name: rustenv
+channels:
+  - conda-forge
+dependencies:
+  - _libgcc_mutex=0.1=conda_forge
+  - _openmp_mutex=4.5=2_gnu
+  - binutils_impl_linux-64=2.40=hf600244_0
+  - gcc_impl_linux-64=13.1.0=hc4be1a9_0
+  - kernel-headers_linux-64=2.6.32=he073ed8_15
+  - ld_impl_linux-64=2.40=h41732ed_0
+  - libgcc-devel_linux-64=13.1.0=he3cc6c4_0
+  - libgcc-ng=13.1.0=he5830b7_0
+  - libgomp=13.1.0=he5830b7_0
+  - libsanitizer=13.1.0=hfd8a6a1_0
+  - libstdcxx-ng=13.1.0=hfd8a6a1_0
+  - libzlib=1.2.13=hd590300_5
+  - rust=1.70.0=h70c747d_0
+  - rust-std-x86_64-unknown-linux-gnu=1.70.0=hc1431ca_0
+  - sysroot_linux-64=2.12=he073ed8_15

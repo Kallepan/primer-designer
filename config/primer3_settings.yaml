@@ -1,0 +1,14 @@
+# Change these values carefully, as they will affect the quality of the primers
+PRIMER_TASK: pick_primer_list
+PRIMER_PICK_LEFT_PRIMER: 1
+PRIMER_PICK_INTERNAL_OLIGO: 0
+PRIMER_PICK_RIGHT_PRIMER: 1
+PRIMER_NUM_RETURN: 20
+PRIMER_MIN_SIZE: 18
+PRIMER_MAX_SIZE: 25
+PRIMER_OPT_TM: 60.0
+PRIMER_MIN_TM: 58.5
+PRIMER_MAX_TM: 61.5
+PRIMER_MIN_GC: 20.0
+PRIMER_MAX_GC: 80.0
+SEQUENCE_PRIMER_PAIR_OK_REGION_LIST: DUMMY # This is a dummy value, it will be replaced by the actual value in the script!

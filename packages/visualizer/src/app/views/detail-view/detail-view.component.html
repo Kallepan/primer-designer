@@ -1,0 +1,24 @@
+<div class="view-container">
+    <div class="meta-form">
+        <mat-form-field class="meta-form-item">
+            <mat-label>Select the region</mat-label>
+            <mat-select (selectionChange)="changeActiveRegion($event)">
+                <mat-option *ngFor="let region of validRegions" [value]="region">
+                    {{region}}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+    </div>
+    <div *ngIf="(activeRegionData$ | async) as activeRegion" class="data">
+        <div class="metadata">
+            From Base {{minSequencePos}} To Base {{maxSequencePos}}
+        </div>
+        <div class="sequence" *ngFor="let pool_id of presentPools">
+            <h2>Pool {{pool_id}}</h2>
+            <span class="letter" *ngFor="let letter of currentSequence; let i = index"
+                [matTooltip]="getTooltip(i, pool_id)" [ngStyle]="{'background-color': getColor(i, pool_id)}">
+                {{letter}}
+            </span>
+        </div>
+    </div>
+</div>

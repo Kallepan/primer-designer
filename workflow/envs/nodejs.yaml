@@ -1,0 +1,5 @@
+name: nodejs
+channels:
+  - conda-forge
+dependencies:
+  - nodejs==18.15.0

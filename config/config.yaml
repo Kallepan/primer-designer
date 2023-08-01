@@ -1,0 +1,46 @@
+### input files ###
+# Adjust the following paths to point to the correct files/directories
+# regions: path to csv file containing regions to be amplified 
+regions: ".sample/regions.csv"
+# genomes_dir: path to directory containing all fasta files (target and foreign species)
+genomes_dir: ".sample/data"
+# index_dir: path to directory containing indexes of foreign species genomes
+index_dir: ".sample/indexes"
+# results_dir: path to directory where *final* results will be stored
+results_dir: ".sample/results"
+# target_genome: name of target species genome fasta file
+target_genome: "myc_tuberculosis_h37Rv.fasta"
+# list of foreign species genome fasta files
+foreign_species_fastas:
+  - "staph_aureus_nctc8325.fasta"
+
+### Configurations ###
+primer_gen_config:
+  min_amplicon_size: 200 # min size of amplicon
+  max_amplicon_size: 300 # max size of amplicon
+  min_overlap: 0.2 # 20% overlap between amplicons from different pools
+
+metadata:
+  num_pools: 2 # Defines the number of pools.
+
+# The following settings filter out misaligned primers and amplicons
+filter_settings:
+  target_species:
+    max_mismatches: 3 # Number of mismatches allowed for alignments of the primer. Bowtie allows 0-3 mismatches
+    adjacency_limit: 200 # max distance between two primers to be considered adjacent
+    bases_to_ignore: 3 # bases from 3' end of primer where mismatches cause the alignment to be ignored
+    max_misalignments: -1 # max number of misalignments allowed for a primer
+  foreign_species:
+    max_mismatches: 3 # Number of mismatches allowed for alignments of the primer. Bowtie allows 0-3 mismatches
+    adjacency_limit: 200 # same as above
+    bases_to_ignore: 3 # bases from 3' end of primer where mismatches cause the alignment to be ignored
+
+saddle:
+  min_subsequence_size: 4 # min size of subsequence to be considered for badness
+  max_subsequence_size: 8 # max size of subsequence to be considered for badness
+  max_iterations: 35_000 # optimal number of iterations for simulated annealing
+  amplicons_weight: 5.0 # weight of amplicons during simulated annealing temperature calculation
+  primers_weight: 10.0 # weight of primers during simulated annealing temperature calculation
+
+plot:
+  plotting_buffer: 300 # +/- buffer for plotting, has no effect on results
