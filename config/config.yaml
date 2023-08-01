@@ -8,7 +8,7 @@ genomes_dir: ".sample/data"
 index_dir: ".sample/indexes"
 # results_dir: path to directory where *final* results will be stored
 results_dir: ".sample/results"
-# target_genome: name of target species genome fasta file
+# target_genome: name of targcet species genome fasta file
 target_genome: "myc_tuberculosis_h37Rv.fasta"
 # list of foreign species genome fasta files
 foreign_species_fastas:
