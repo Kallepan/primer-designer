@@ -11,7 +11,9 @@
 - The pipeline requires the conda package manager, and snakemake to be installed
 - Snakemake can be installed using conda. It will automatically install all other dependencies
 
-## 1. Proto-Primers Generation
+## Description of Pipeline
+
+### 1. Proto-Primers Generation
 
 - Generate all possible primers using Primer3
 - Allow the user to change primer3 config settings (tm, primer length, gc content)
@@ -23,13 +25,13 @@
 - Store output in json file
 - Generate as many proto-primers as possible
 
-### Formula for determining if amplicons can overlap
+#### Formula for determining if amplicons can overlap
 
 Formula for calculating whether the amplicons can overlap or not.
 If true then overlap is not possible:
 $$A_{max} \leq 2 * A_{min} * (1 -min\_overlap)$$
 
-### PrimerGen Algorithm
+#### PrimerGen Algorithm
 
 - Generate seed sites with a certain distance between them
   - Distance between amplicon seed sites:
@@ -46,9 +48,9 @@ $$A_{max} \leq 2 * A_{min} * (1 -min\_overlap)$$
 - If no forward or no reverse primers are found in this buffer region, the amplicon is skipped and not included in the final output
 - Store the primers in the database with metadata extracted from the primer3 output
 
-## 2. Filter Proto-Primers
+### 2. Filter Proto-Primers
 
-### Filter against target organism
+#### Filter against target organism
 
 - Align primers against the target organism using bowtie and store the results in a table
 - Apply filters on the alignments:
@@ -58,7 +60,7 @@ $$A_{max} \leq 2 * A_{min} * (1 -min\_overlap)$$
   - The number of times the primer misaligns to the genome
 - Primers which do not meet filter criteria are marked as discarded in the database
 
-### Filter against other species
+#### Filter against other species
 
 - Align primers against the target organism using bowtie and store the results in a table.
 - Apply filters on the alignments:
@@ -75,12 +77,12 @@ $$A_{max} \leq 2 * A_{min} * (1 -min\_overlap)$$
 bowtie-build foreign_species/sequence.fasta indexes/sequence
 ```
 
-## 3. SADDLE
+### 3. SADDLE
 
 - Run the SADDLE algorithm on the filtered primers.
 - SADDLE is a simulated annealing algorithm that optimizes primer sets for a given set of parameters.
 
-### SADDLE Algorithm
+#### SADDLE Algorithm
 
 1. Generate a Set
 2. Calculate loss for set (L = SUM(Badness(p1,p2))), where p1 and p2 are primers in the set
@@ -102,19 +104,19 @@ else {
 }
 ```
 
-## 4. Report
+### 4. Report
 
 - Display the results in a single html document (webbrowser) and export them in a .bed file (to be used with IGV) and a csv file
 
-### BED File
+#### BED File
 
 - List of primers with their positions in the genome
 
-### CSV
+#### CSV
 
 - List of amplicons with their respective forward and reverse primers in 5'->3' direction
 
-### HTML  
+#### HTML  
 
 - Detailed view with sequences
 - Simplified view with only an overview plot of the results

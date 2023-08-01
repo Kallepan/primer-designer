@@ -10,7 +10,7 @@ index_dir: ".sample/indexes"
 results_dir: ".sample/results"
 # target_genome: name of target species genome fasta file
 target_genome: "myc_tuberculosis_h37Rv.fasta"
-# file containing list of foreign species genomes to be used during filtering
+# list of foreign species genome fasta files
 foreign_species_fastas:
   - "staph_aureus_nctc8325.fasta"
 
