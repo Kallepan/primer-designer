@@ -67,6 +67,12 @@ class PrimerGenConfig:
             default=self.DEFAULT_MAX_AMPLICON_SIZE,
             help=f"The maximum allowed length of a generateed amplicon to be generated. Default is {self.DEFAULT_MAX_AMPLICON_SIZE}.",
         )
+        parser.add_argument(
+            "--pool_count",
+            type=int,
+            default=2,
+            help="The number of pools to generate. Default is 2.",
+        )
 
         return parser.parse_args()
 

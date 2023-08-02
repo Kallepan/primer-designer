@@ -11,8 +11,8 @@ from Bio.Seq import Seq
 
 import pandas as pd
 
+from collections import defaultdict
 from configs import PrimerGenConfig
-
 from handlers import DBHandler
 
 logging.basicConfig(level=logging.INFO)
@@ -310,7 +310,7 @@ async def main():
     # pool_offset is the number of nucleotides that are skipped between each pool
     pool_offset = int((1 - config.min_overlap) * config.min_amplicon_size)
     # amplicon_offset is the number of nucleotides that are skipped between each amplicon in a pool
-    amplicon_offset = int((1 - config.min_overlap * 2) * config.min_amplicon_size)
+    amplicon_offset = int((1 - config.min_overlap * config.pool_count) * config.min_amplicon_size)
     # amplicon_buffer is the number of nucleotides that are added to the amplicon size to allow for primer placement
     amplicon_buffer = int((config.max_amplicon_size - config.min_amplicon_size) / 2)
     # Primer ok regions are regions where the primer can be placed without exceeding the amplicon size
@@ -338,44 +338,31 @@ async def main():
                 f"Region {name} is out of bounds. Skipping region. Please check the region coordinates."
             )
             continue
+        
+        seeds = defaultdict(list[int])
+        coords = defaultdict(list[tuple[int, int]])
+        for pool in range(config.pool_count):
+            # Generate the seed coordinates for each pool
+            seeds[pool] = __generate_seed_coordinates(
+                start + pool * pool_offset, end, config.min_amplicon_size, amplicon_offset
+            )
 
-        # Generate the seed coordinates for each pool
-        pool_zero_seeds = __generate_seed_coordinates(
-            start, end, config.min_amplicon_size, amplicon_offset
-        )
-        pool_one_seeds = __generate_seed_coordinates(
-            start + pool_offset, end, config.min_amplicon_size, amplicon_offset
-        )
+            # Generate the start and end coordinates for each amplicon
+            coords[pool] = __generate_amplicon_coordinates(
+                seeds[pool], config.max_amplicon_size
+            )
 
-        # Generate the start and end coordinates for each amplicon
-        pool_zero_coords = __generate_amplicon_coordinates(
-            pool_zero_seeds, config.max_amplicon_size
-        )
-        pool_one_coords = __generate_amplicon_coordinates(
-            pool_one_seeds, config.max_amplicon_size
-        )
-
-        # Generate the primers for each amplicon
-        await __generate_primers(
-            name,
-            "0",
-            pool_zero_coords,
-            sequence_record.seq,
-            primer_ok_regions_list,
-            config,
-            list_of_primers,
-            failed_amplicons,
-        )
-        await __generate_primers(
-            name,
-            "1",
-            pool_one_coords,
-            sequence_record.seq,
-            primer_ok_regions_list,
-            config,
-            list_of_primers,
-            failed_amplicons,
-        )
+            # Generate the primers for each amplicon
+            await __generate_primers(
+                name,
+                str(pool),
+                coords[pool],
+                sequence_record.seq,
+                primer_ok_regions_list,
+                config,
+                list_of_primers,
+                failed_amplicons,
+            )
 
     # Insert the primers into the database
     df = pd.DataFrame(list_of_primers)
