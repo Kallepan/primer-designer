@@ -1,6 +1,5 @@
 """ This module contains the handlers for the workflow scripts. """
 import sqlite3
-import random
 
 from collections import defaultdict
 

@@ -46,7 +46,10 @@ def __get_chromosome(fasta_file: str) -> str:
     for record in SeqIO.parse(fasta_file, "fasta"):
         return record.id
 
-def __format_into_bed(args: argparse.Namespace, chromosome: str, data: list[dict]) -> None:
+
+def __format_into_bed(
+    args: argparse.Namespace, chromosome: str, data: list[dict]
+) -> None:
     """Formats the input dictionary into a bed file"""
     with open(args.output, "w") as f:
         f.write("chrom\tstart\tend\tname\tscore\tstrand\n")
@@ -81,7 +84,7 @@ def main():
     logging.info("Starting script")
     args = __get_args()
     data = __load_json(args.input)
-    
+
     # Get the chromosome name from the fasta file
     chromosome = __get_chromosome(args.fasta)
 
