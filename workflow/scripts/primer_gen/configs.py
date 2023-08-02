@@ -11,6 +11,7 @@ class PrimerGenConfig:
     DEFAULT_MIN_AMPLICON_SIZE = 200
     DEFAULT_MAX_AMPLICON_SIZE = 300
     DEFAULT_MIN_OVERLAP = 0.2
+    DEFAULT_POOL_COUNT = 2
 
     def __setup_args(self) -> argparse.ArgumentParser:
         parser = argparse.ArgumentParser(
@@ -70,8 +71,8 @@ class PrimerGenConfig:
         parser.add_argument(
             "--pool_count",
             type=int,
-            default=2,
-            help="The number of pools to generate. Default is 2.",
+            default=self.DEFAULT_POOL_COUNT,
+            help=f"The number of pools to generate. Default is {self.DEFAULT_POOL_COUNT}.",
         )
 
         return parser.parse_args()

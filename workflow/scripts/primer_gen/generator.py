@@ -1,4 +1,4 @@
-from configs import PrimerGenConfig
+from .configs import PrimerGenConfig
 from Bio.Seq import Seq
 
 import re

@@ -1,6 +1,7 @@
 min_overlap = config["primer_gen_config"]["min_overlap"]
 min_amplicon_size = config["primer_gen_config"]["min_amplicon_size"]
 max_amplicon_size = config["primer_gen_config"]["max_amplicon_size"]
+pool_count = config["metadata"]["pool_count"]
 rule generate_proto_primers:
     input:
         expand("{results}/{{species}}.regions.json", results = config["results_dir"]),
@@ -11,6 +12,7 @@ rule generate_proto_primers:
         min_overlap = min_overlap,
         min_amplicon_size = min_amplicon_size,
         max_amplicon_size = max_amplicon_size,
+        pool_count = pool_count,
         tmp_dir = "tmp"
     conda: "../envs/primers.yaml"
     # Defining the log file as output is stupid, because it will be removed upon an error
@@ -26,5 +28,6 @@ rule generate_proto_primers:
             --min_overlap {params.min_overlap} \
             --min_amplicon_size {params.min_amplicon_size} \
             --max_amplicon_size {params.max_amplicon_size} \
+            --pool_count {params.pool_count} \
             &> {log}
         """

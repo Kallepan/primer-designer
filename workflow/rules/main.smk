@@ -1,5 +1,5 @@
 # Global configuration
-pools = range(0, config["metadata"]["num_pools"])
+pools = range(0, config["metadata"]["pool_count"])
 
 
 rule all:

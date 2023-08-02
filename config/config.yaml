@@ -21,7 +21,7 @@ primer_gen_config:
   min_overlap: 0.2 # 20% overlap between amplicons from different pools
 
 metadata:
-  num_pools: 2 # Defines the number of pools.
+  pool_count: 2 # Defines the number of pools.
 
 # The following settings filter out misaligned primers and amplicons
 filter_settings:
