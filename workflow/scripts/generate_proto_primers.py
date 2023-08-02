@@ -175,6 +175,9 @@ async def main():
     amplicon_offset = int(
         (1 - config.min_overlap * config.pool_count) * config.min_amplicon_size
     )
+    # if pool_count is 1, set amplion_offset to 0
+    amplicon_offset = 0 if config.pool_count == 1 else amplicon_offset
+
     # amplicon_buffer is the number of nucleotides that are added to the amplicon size to allow for primer placement
     amplicon_buffer = int((config.max_amplicon_size - config.min_amplicon_size) / 2)
     # Primer ok regions are regions where the primer can be placed without exceeding the amplicon size
