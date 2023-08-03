@@ -4,7 +4,7 @@ rule create_db:
         regions_sql_file = "workflow/sql/regions.sql",
         proto_primers_sql_file = "workflow/sql/proto_primers.sql",
         alignments_sql_file = "workflow/sql/alignments.sql",
-    output: "results/{species}.db"
+    output: temp("results/{species}.db")
     log: "logs/{species}.db.log"
     conda: "../envs/biopython.yaml"
     shell:
@@ -21,7 +21,7 @@ rule export_amplicons:
     """ Exports information about each amplicon to a json file to be used for the report """
     input: 
         db = "results/{species}.db",
-        regions = expand("results/{{species}}.{pool}.evaluated_primers.json", pool=pools),
+        evaluated_primers = expand("results/{{species}}.{pool}.evaluated_primers.json", pool=pools),
     output:
         expand("{results}/{{species}}.amplicons.json", results = config["results_dir"])
     log: "logs/{species}.export_amplicons.log"
@@ -36,7 +36,7 @@ rule export_amplicons:
 
 plotting_buffer = config["plot"]["plotting_buffer"]
 rule export_regions:
-    """ Exports the regions to a json file to be used for the report """
+    """ Exports the regions to a json file to be used for the report and proto primer design """
     input: 
         db = "results/{species}.db",
         regions = config["regions"],

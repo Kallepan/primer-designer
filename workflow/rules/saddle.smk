@@ -48,7 +48,7 @@ rule merge_saddle_data_output:
     output: expand("{results}/{{species}}.primer_set.json", results=config["results_dir"])
     shell:
         """
-        python workflow/scripts/merge_saddle_output.py \
+        python workflow/scripts/merge_json_files.py \
             --output {output} \
             --input {input} \
             &> {log}
@@ -62,7 +62,7 @@ rule merge_saddle_loss_output:
     output: expand("{results}/{{species}}.loss_set.json", results=config["results_dir"])
     shell:
         """
-        python workflow/scripts/merge_saddle_output.py \
+        python workflow/scripts/merge_json_files.py \
             --output {output} \
             --input {input} \
             &> {log}

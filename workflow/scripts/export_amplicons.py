@@ -4,7 +4,6 @@ Extracts the discarded amplicons from the database and writes them to a json.
 import argparse
 import json
 import logging
-import sys
 
 import pandas as pd
 
@@ -160,8 +159,4 @@ def main():
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        logging.exception(e)
-        sys.exit(1)
+    main()

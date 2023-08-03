@@ -32,6 +32,6 @@ mv packages/visualizer/single-dist/index.html $5
 
 # cleanup
 echo "Cleaning up"
-
+cd packages/visualizer
 rm dist -rf
 rm single-dist -rf

@@ -18,6 +18,9 @@ export PATH
 dir="workflow/scripts/*.py"
 for i in $dir; do echo $i; black $i;done
 
+dir="workflow/scripts/primer_gen/*.py"
+for i in $dir; do echo $i; black $i;done
+
 echo "##########################################################################################"
 echo "execute snakemake linter to lint rules"
 echo "##########################################################################################"

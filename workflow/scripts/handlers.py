@@ -1,6 +1,5 @@
 """ This module contains the handlers for the workflow scripts. """
 import sqlite3
-import random
 
 from collections import defaultdict
 
@@ -18,6 +17,11 @@ class DBHandler:
         conn.execute("PRAGMA journal_mode=WAL")
         conn.execute("PRAGMA busy_timeout = 60000")
         self.conn = conn
+
+    def clear_db(self) -> None:
+        """Iterate over each table and delete all contents"""
+        for table in self.get_tables():
+            self.execute(f"DELETE FROM {table};")
 
     def get_tables(self) -> list[str]:
         """Returns a list of tables in the database"""
@@ -152,7 +156,7 @@ class Graph(object):
         """
         Calculate the approximate vertex cover of the graph and returns the vertices to be removed.
         """
-        edges = self.get_all_edges()
+        # Initialize all vertices as not visited
         visited = defaultdict(bool)
 
         # Consider all edges one by one

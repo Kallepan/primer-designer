@@ -5,7 +5,6 @@ This is useful for debugging and for exporting the database to a different forma
 import argparse
 import logging
 import pandas as pd
-import sys
 import os
 
 from handlers import DBHandler
@@ -47,8 +46,4 @@ def main():
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        logging.exception(e)
-        sys.exit(1)
+    main()

@@ -1,13 +1,14 @@
 import argparse
 import json
-import sys
 import logging
 
 logging.basicConfig(level=logging.INFO)
 
 
 def __get_parser() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Merge saddle output files")
+    parser = argparse.ArgumentParser(
+        description="Merges json files with object as root"
+    )
     parser.add_argument(
         "--input", type=str, help="Input files", nargs="+", required=True
     )
@@ -15,8 +16,8 @@ def __get_parser() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def __merge_saddle_output(input_files: list, output_file: str) -> None:
-    # Merge saddle output files
+def __merge_json_files(input_files: list, output_file: str) -> None:
+    # Merge json output files
     output = []
 
     # Load all input files
@@ -31,8 +32,10 @@ def __merge_saddle_output(input_files: list, output_file: str) -> None:
 
 def main():
     logging.info("Merging saddle output files")
+
     args = __get_parser()
-    __merge_saddle_output(args.input, args.output)
+    __merge_json_files(args.input, args.output)
+
     logging.info("Done")
 
 
