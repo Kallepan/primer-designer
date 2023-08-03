@@ -42,11 +42,11 @@ class PrimerGenConfig:
             help="Path to the primer3 config file.",
         )
         parser.add_argument(
-            "-t",
-            "--temp_dir",
-            required=True,
+            "-o",
+            "--output_dir",
             type=str,
-            help="Path to the temporary directory to be used when generating the amplicons.",
+            required=True,
+            help="Path to the directory to save the output files to.",
         )
 
         # Optional arguments
@@ -86,8 +86,9 @@ class PrimerGenConfig:
             raise Exception(
                 f"The primer3 config file {args.primer_3_settings_path} does not exist."
             )
-        if not os.path.exists(args.temp_dir):
-            os.mkdir(args.temp_dir)
+        # Create the output directory if it does not exist
+        if not os.path.exists(args.output_dir):
+            os.mkdir(args.output_dir)
 
         return vars(args)
 

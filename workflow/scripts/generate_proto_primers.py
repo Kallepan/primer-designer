@@ -1,9 +1,6 @@
 import sys
 import asyncio
 import logging
-import subprocess
-import re
-import os
 
 from Bio import SeqIO
 from Bio.SeqIO import SeqRecord
@@ -32,11 +29,6 @@ def __load_regions_from_db(db: DBHandler) -> pd.DataFrame:
         },
     )
     return df
-
-
-def __clear_db(db: DBHandler) -> None:
-    # clear the database proto_primers table
-    db.execute("DELETE FROM proto_primers;")
 
 
 def __extract_sequence_record_from_fasta(path: str) -> SeqRecord:
@@ -164,9 +156,6 @@ async def main():
 
     # Load the sequence
     sequence_record = __extract_sequence_record_from_fasta(config.fasta_path)
-
-    # Clear the database
-    __clear_db(db)
 
     # Setup parameters
     # pool_offset is the number of nucleotides that are skipped between each pool

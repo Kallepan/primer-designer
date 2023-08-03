@@ -130,7 +130,6 @@ dmypy.json
 
 # Ignore Snakemake files
 .snakemake/
-tmp/
 logs/
 results/
 
@@ -138,8 +137,9 @@ results/
 helper_scripts/
 debug.sh
 test.sh
+launch.sh
 
-# Ignore indexes
+# Ignore indexes, except for the .sample/index files
 *.ebwt
 *.ebwtl
 

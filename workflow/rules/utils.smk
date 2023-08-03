@@ -4,7 +4,7 @@ rule create_db:
         regions_sql_file = "workflow/sql/regions.sql",
         proto_primers_sql_file = "workflow/sql/proto_primers.sql",
         alignments_sql_file = "workflow/sql/alignments.sql",
-    output: "results/{species}.db"
+    output: temp("results/{species}.db")
     log: "logs/{species}.db.log"
     conda: "../envs/biopython.yaml"
     shell:

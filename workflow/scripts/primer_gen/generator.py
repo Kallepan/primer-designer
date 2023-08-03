@@ -27,7 +27,7 @@ class PrimerGenerator:
         self.pool_name = pool_name
         self.primer_ok_regions_list = primer_ok_regions_list
         self._primer3_settings = config.primer3_settings
-        self.temp_dir = config.temp_dir
+        self.output_dir = config.output_dir
 
     async def generate_primers(self) -> tuple[list | None, list | None]:
         """
@@ -54,7 +54,9 @@ class PrimerGenerator:
     def __write_temp_primer_gen_file(self) -> str:
         PRIMER3_OK_REGIONS_LIST = f"{self.primer_ok_regions_list[0]},{self.primer_ok_regions_list[1]},{self.primer_ok_regions_list[2]},{self.primer_ok_regions_list[3]}"
 
-        with open(os.path.join(self.temp_dir, self.amplicon_id), "w") as file:
+        file_path = os.path.join(self.output_dir, f"{self.amplicon_id}.tmp")
+
+        with open(file_path, "w") as file:
             file.write(
                 f"SEQUENCE_PRIMER_PAIR_OK_REGION_LIST={PRIMER3_OK_REGIONS_LIST}\n"
             )

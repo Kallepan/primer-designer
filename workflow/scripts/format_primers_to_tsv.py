@@ -44,8 +44,8 @@ def __format_to_tsv(input_file: str, output_file: str) -> None:
     logging.info("All sequences are outputted in 5' -> 3'")
     column_names = [
         "amplicon_name",
-        "forward_primer_sequence",
-        "reverse_primer_sequence",
+        "forward_primer_sequence (5' -> 3')",
+        "reverse_primer_sequence (5' -> 3')",
     ]
     data = []
     for primer_set in primers:
