@@ -7,7 +7,6 @@ See the sql files in the sql directory for more information.
 """
 import argparse
 import logging
-import sys
 
 from handlers import DBHandler
 
@@ -53,8 +52,4 @@ def main():
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        logging.exception(e)
-        sys.exit(1)
+    main()

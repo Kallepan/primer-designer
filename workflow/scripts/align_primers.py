@@ -1,6 +1,5 @@
 import argparse
 import subprocess
-import sys
 import logging
 
 DEFAULT_NUMBER_OF_MISMATCHES = 3
@@ -50,8 +49,4 @@ def main():
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        logging.exception(e, file=sys.stderr)
-        sys.exit(1)
+    main()

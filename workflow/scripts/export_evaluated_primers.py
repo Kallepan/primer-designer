@@ -5,7 +5,6 @@ import argparse
 import pandas as pd
 import logging
 import json
-import sys
 
 from handlers import DBHandler
 
@@ -133,8 +132,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        logging.exception(e)
-        sys.exit(1)
+    main()

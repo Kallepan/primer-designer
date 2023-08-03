@@ -1,6 +1,5 @@
 import logging
 import argparse
-import sys
 import pandas as pd
 
 from collections import defaultdict
@@ -255,8 +254,4 @@ def main():
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        logging.exception(e)
-        sys.exit(1)
+    main()

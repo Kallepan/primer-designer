@@ -1,4 +1,3 @@
-import sys
 import asyncio
 import logging
 
@@ -234,9 +233,5 @@ async def main():
 
 if __name__ == "__main__":
     # Run the main function using asyncio
-    try:
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(main())
-    except Exception as e:
-        logging.exception(e)
-        sys.exit(1)
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
