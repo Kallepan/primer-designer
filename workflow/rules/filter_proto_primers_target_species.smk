@@ -4,7 +4,7 @@ import os
 rule build_index:
     input: expand("{genomes_dir}/{{species}}.fasta", genomes_dir=config["genomes_dir"])
     output:
-        expand("{index}/{{species}}.{version}.ebwt", version=range(1, 5), index=config["index_dir"]),
+        expand("{index}/{{species}}.{version}.ebwt", version=range(1, 3), index=config["index_dir"]),
         expand("{index}/{{species}}.rev.{version}.ebwt", version=range(1, 3), index=config["index_dir"])
     params:
         outdir = lambda w, input: os.path.join(config["index_dir"], w.species)
@@ -12,7 +12,7 @@ rule build_index:
     conda: "../envs/bowtie.yaml"
     shell: 
         """
-        bowtie-build \
+        bowtie-build -r\
             {input} \
             {params.outdir} \
             &> {log}
@@ -38,7 +38,7 @@ rule format_pool_into_fasta:
 max_mismatches = config["filter_settings"]["target_species"]["max_mismatches"]
 rule align_primers_target_species:
     input:
-        expand("{index}/{{species}}.{version}.ebwt", version=range(1, 5), index=config["index_dir"]),
+        expand("{index}/{{species}}.{version}.ebwt", version=range(1, 3), index=config["index_dir"]),
         expand("{index}/{{species}}.rev.{version}.ebwt", version=range(1, 3), index=config["index_dir"]),
         primers_fasta = "results/{species}.{pool}.proto_primers.fasta",
         db = "results/{species}.db"

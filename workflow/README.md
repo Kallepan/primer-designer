@@ -6,7 +6,7 @@
 - Allow the user to change primer3 config settings (tm, primer length, gc content)
 - Simple wrapper written in python to call primer3
 - Generation:
-  - Two pools
+  - 1 to 2 pools
   - Define regions of interest which are divided into amplicons
   - Each amplicons is flanked by forward and reverse primers
 - Store output in json file

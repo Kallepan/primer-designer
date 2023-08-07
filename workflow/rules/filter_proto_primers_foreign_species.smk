@@ -10,7 +10,7 @@ max_mismatches = config["filter_settings"]["foreign_species"]["max_mismatches"]
 rule align_primers_foreign_species:
     input:
         # ancient is a helper function that ensures the index is not rebuilt if it already exists
-        ancient(expand("{index}/{{fasta}}.{version}.ebwt", version=range(1, 5), index=config["index_dir"])),
+        ancient(expand("{index}/{{fasta}}.{version}.ebwt", version=range(1, 3), index=config["index_dir"])),
         ancient(expand("{index}/{{fasta}}.rev.{version}.ebwt", version=range(1, 3), index=config["index_dir"])),
         primers_fasta="results/{species}.{pool}.proto_primers.fasta",
         db = "results/{species}.db"
