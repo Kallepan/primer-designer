@@ -1,4 +1,5 @@
 # Change these values carefully, as they will affect the quality of the primers
+# You can add more settings from the primer3 manual, these will be passed to the primer3_core program
 PRIMER_TASK: pick_primer_list
 PRIMER_PICK_LEFT_PRIMER: 1
 PRIMER_PICK_INTERNAL_OLIGO: 0
@@ -11,4 +12,8 @@ PRIMER_MIN_TM: 58.5
 PRIMER_MAX_TM: 61.5
 PRIMER_MIN_GC: 20.0
 PRIMER_MAX_GC: 80.0
+PRIMER_MAX_NS_ACCEPTED: 0
+PRIMER_SALT_MONOVALENT: 50.0
+PRIMER_SALT_DIVALENT: 1.5
+PRIMER_DNTP_CONC: 0.6
 SEQUENCE_PRIMER_PAIR_OK_REGION_LIST: DUMMY # This is a dummy value, it will be replaced by the actual value in the script!

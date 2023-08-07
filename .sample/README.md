@@ -4,7 +4,7 @@
 
 ## Install conda environment
 
-- Install conda environment from `environment.yml` file to install snakemake and other dependencies. This is necessary to ensure you have snakemake installed in the same environment as the pipeline. Snakemake will take care of installing all other dependencies in the environment locally. For more information on how to install conda, please refer to the [conda documentation](https://docs.conda.io/projects/conda/en/latest/user-guide/install/) or the [mamba documentation](https://mamba.readthedocs.io/en/latest/installation.html).
+- Install conda environment from `environment.yml` file to install snakemake and other dependencies. This is necessary to ensure you have snakemake installed in the same environment as the pipeline. Snakemake will take care of installing all other dependencies in the environment locally. For more information on how to install conda, please refer to the [conda documentation](https://docs.conda.io/projects/conda/en/latest/user-guide/install/) or the [mamba documentation](https://mamba.readthedocs.io/en/latest/installation.html). The pipeline has been tested on **mamba 1.4.1** and **conda 23.3.1**.
 
 ```bash
 # create the environment
