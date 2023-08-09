@@ -15,7 +15,8 @@ class DBHandler:
         # Connect to database and increase timeout
         conn = sqlite3.connect(path_to_db, timeout=60)
         conn.execute("PRAGMA journal_mode=WAL")
-        conn.execute("PRAGMA busy_timeout = 60000")
+        conn.execute("PRAGMA busy_timeout = 120000")
+        conn.execute("PRAGMA optimize")
         self.conn = conn
 
     def clear_db(self) -> None:
@@ -78,16 +79,7 @@ class DBHandler:
     def __del__(self) -> None:
         if self.conn is None:
             return
-
-        try:
-            with self.conn:
-                self.conn.execute("PRAGMA optimize")
-        except Exception as e:
-            # Ignore if the database is locked
-            if "database is locked" not in str(e):
-                raise e
-        finally:
-            self.conn.close()
+        self.conn.close()
 
 
 class Graph(object):
