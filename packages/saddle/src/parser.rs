@@ -30,6 +30,8 @@ pub struct Opts {
     #[clap(long)]
     pub max_iterations: Option<usize>,
     #[clap(long)]
+    pub num_primers_to_replace: Option<usize>,
+    #[clap(long)]
     pub amplicons_weight: Option<f64>,
     #[clap(long)]
     pub primers_weight: Option<f64>,

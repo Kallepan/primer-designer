@@ -39,6 +39,7 @@ saddle:
   min_subsequence_size: 4 # min size of subsequence to be considered for badness
   max_subsequence_size: 8 # max size of subsequence to be considered for badness
   max_iterations: 35_000 # optimal number of iterations for simulated annealing
+  num_primers_to_replace: 1 # number of primers pairs to replace during simulated annealing
   amplicons_weight: 5.0 # weight of amplicons during simulated annealing temperature calculation
   primers_weight: 10.0 # weight of primers during simulated annealing temperature calculation
 

@@ -72,7 +72,7 @@ fn calculate_loss(hash_map: &HashMap<String, f64>, amplicon_primer_pairs: &Vec<P
     loss
 }
 
-fn replace_primer_in_set(primer_pool: &Pool, primer_set: &mut Vec<PrimerPair>, hash_map: &mut HashMap<String, f64>, subsequence_min_size: usize, subsequence_max_size: usize) {
+fn replace_primer_in_set(primer_pool: &Pool, primer_set: &mut Vec<PrimerPair>, hash_map: &mut HashMap<String, f64>, subsequence_min_size: usize, subsequence_max_size: usize, num_primers_to_replace: usize) {
     /* 
     Replace one primer pair from the given set, by another pair from the list of proto-primers and update the hash map.
     */
@@ -94,25 +94,29 @@ fn replace_primer_in_set(primer_pool: &Pool, primer_set: &mut Vec<PrimerPair>, h
         }
     }
 
-    let random_primer_pair_index = random::<usize>() % primer_set.len();
-    let forward_primer = &primer_set[random_primer_pair_index].forward_primer;
-    let reverse_primer = &primer_set[random_primer_pair_index].reverse_primer;
-    let region_name = &primer_set[random_primer_pair_index].region_name;
-    let amplicon_name = &primer_set[random_primer_pair_index].amplicon_name;
-    remove_primer_from_hash_map(hash_map, &forward_primer.sequence, forward_primer.length, subsequence_min_size, subsequence_max_size);
-    remove_primer_from_hash_map(hash_map, &reverse_primer.sequence, reverse_primer.length, subsequence_min_size, subsequence_max_size);
 
-    // get random new primer from proto-primers
-    let potential_primers = primer_pool.regions.iter().find(|region| region.region_name == *region_name).unwrap().amplicons.iter().find(|amplicon| amplicon.amplicon_name == *amplicon_name).unwrap();
-    let random_int_forward = random::<usize>() % potential_primers.forward_primers.len();
-    let random_int_reverse = random::<usize>() % potential_primers.reverse_primers.len();
+    for _ in 0..num_primers_to_replace {
+        // remove random primer from set
+        let random_primer_pair_index = random::<usize>() % primer_set.len();
+        let forward_primer = &primer_set[random_primer_pair_index].forward_primer;
+        let reverse_primer = &primer_set[random_primer_pair_index].reverse_primer;
+        let region_name = &primer_set[random_primer_pair_index].region_name;
+        let amplicon_name = &primer_set[random_primer_pair_index].amplicon_name;
+        remove_primer_from_hash_map(hash_map, &forward_primer.sequence, forward_primer.length, subsequence_min_size, subsequence_max_size);
+        remove_primer_from_hash_map(hash_map, &reverse_primer.sequence, reverse_primer.length, subsequence_min_size, subsequence_max_size);
 
-    primer_set[random_primer_pair_index].forward_primer = potential_primers.forward_primers[random_int_forward].clone();
-    primer_set[random_primer_pair_index].reverse_primer = potential_primers.reverse_primers[random_int_reverse].clone();
+        // get random new primer from proto-primers
+        let potential_primers = primer_pool.regions.iter().find(|region| region.region_name == *region_name).unwrap().amplicons.iter().find(|amplicon| amplicon.amplicon_name == *amplicon_name).unwrap();
+        let random_int_forward = random::<usize>() % potential_primers.forward_primers.len();
+        let random_int_reverse = random::<usize>() % potential_primers.reverse_primers.len();
 
-    // Populate HashMap with new values
-    add_primer_to_hash_map(hash_map, &primer_set[random_primer_pair_index].forward_primer.sequence, primer_set[random_primer_pair_index].forward_primer.length, subsequence_min_size, subsequence_max_size);
-    add_primer_to_hash_map(hash_map, &primer_set[random_primer_pair_index].reverse_primer.sequence, primer_set[random_primer_pair_index].reverse_primer.length, subsequence_min_size, subsequence_max_size);
+        primer_set[random_primer_pair_index].forward_primer = potential_primers.forward_primers[random_int_forward].clone();
+        primer_set[random_primer_pair_index].reverse_primer = potential_primers.reverse_primers[random_int_reverse].clone();
+
+        // Populate HashMap with new values
+        add_primer_to_hash_map(hash_map, &primer_set[random_primer_pair_index].forward_primer.sequence, primer_set[random_primer_pair_index].forward_primer.length, subsequence_min_size, subsequence_max_size);
+        add_primer_to_hash_map(hash_map, &primer_set[random_primer_pair_index].reverse_primer.sequence, primer_set[random_primer_pair_index].reverse_primer.length, subsequence_min_size, subsequence_max_size);
+    }
 }
 
 fn pick_random_primer_set(pool: &Vec<Region>) -> Vec<PrimerPair> {
@@ -196,6 +200,7 @@ pub fn run(
     output_file_loss: &String,
     subsequence_min_size: usize,
     subsequence_max_size: usize,
+    num_primers_to_replace: usize,
     max_iterations: usize,
     amplicons_weight: f64,
     primers_weight: f64,
@@ -247,7 +252,7 @@ pub fn run(
         let mut temp_set = current_data_set.clone();
         let old_hash_map = hash_map.clone();
 
-        replace_primer_in_set(&pool, &mut temp_set.primer_pairs, &mut hash_map, subsequence_min_size, subsequence_max_size);
+        replace_primer_in_set(&pool, &mut temp_set.primer_pairs, &mut hash_map, subsequence_min_size, subsequence_max_size, num_primers_to_replace);
         temp_set.loss = calculate_loss(&hash_map, &temp_set.primer_pairs, subsequence_min_size, subsequence_max_size);
         
         // Simulated Annealing
