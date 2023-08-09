@@ -19,27 +19,26 @@ fn calculate_loss(hash_map: &HashMap<String, f64>, amplicon_primer_pairs: &Vec<P
     For every sequence in the hash table find the reverse complement in all primers with the distance to 3' End
     Calculate the loss for every subsequence SUM(1 / (distance_of_revcomp + 1)) * 2^length_of_subsequence * 2^num_gc_of_subsequence * Hashvalue
     */
-    fn calculate_distance(length: usize, subsequence_start_index: usize, subsequence_length: usize) -> f64 {
+    fn calculate_distance_score(length: usize, subsequence_start_index: usize, subsequence_length: usize) -> f64 {
         /*
         Calculates the distance to the 3' end of the primer.
         Depending on the distance, the result is weighted differently.
         */
-        let distance = (length - (subsequence_start_index + subsequence_length)) as f64;
+        let distance_from_3_prime = (length - (subsequence_start_index + subsequence_length)) as f64;
 
-        if distance as usize <= 1 {
-            return 1.5/(distance + 1.0);
-        } else if distance as usize <= 3 {
-            return 1.25/(distance + 1.0);
-        } else if distance as usize <= 6 {
-            return 1.0/(distance + 1.0);
+        // Take the reciprocal of the distance_from_3_prime and add 1 to avoid division by zero.
+        if distance_from_3_prime <= 1.0 {
+            return 2.0/(distance_from_3_prime + 1.0);
+        } else if distance_from_3_prime <= 3.0 {
+            return 1.5/(distance_from_3_prime + 1.0);
+        } else if distance_from_3_prime <= 6.0 {
+            return 1.2/(distance_from_3_prime + 1.0);
         }
         
-        // distance > 6
-        1.0 / distance
+        1.0/(distance_from_3_prime + 1.0)
     }
 
     let mut loss = 0.0;
-
     for primer_pair in amplicon_primer_pairs {
         let left_primer = &primer_pair.forward_primer.sequence;
         let right_primer = &primer_pair.reverse_primer.sequence;
@@ -52,7 +51,10 @@ fn calculate_loss(hash_map: &HashMap<String, f64>, amplicon_primer_pairs: &Vec<P
             };
             
             loss += hash_value *
-            calculate_distance(left_primer.len(), subsequence_info.start_index, subsequence_info.seq.len()) *
+            calculate_distance_score(
+                left_primer.len(), 
+                subsequence_info.start_index, 
+                subsequence_info.seq.len()) *
                 2.0_f64.powi(subsequence_info.seq.len() as i32) * 2.0_f64.powi(subsequence_info.seq.num_gc() as i32);
         }
 
@@ -64,7 +66,10 @@ fn calculate_loss(hash_map: &HashMap<String, f64>, amplicon_primer_pairs: &Vec<P
             };
             
             loss += hash_value *
-            calculate_distance(right_primer.len(), subsequence_info.start_index, subsequence_info.seq.len()) *
+            calculate_distance_score(
+                right_primer.len(),
+                subsequence_info.start_index, 
+                subsequence_info.seq.len()) *
                 2.0_f64.powi(subsequence_info.seq.len() as i32) * 2.0_f64.powi(subsequence_info.seq.num_gc() as i32);
        }
     }
