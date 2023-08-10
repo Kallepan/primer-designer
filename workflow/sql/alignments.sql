@@ -7,8 +7,6 @@ CREATE TABLE IF NOT EXISTS alignments (
     position INT NOT NULL,
     sequence TEXT NOT NULL,
     matches INT NOT NULL,
-    score REAL DEFAULT 0.0,
-    read_quality TEXT NOT NULL,
     mismatches_descriptor TEXT,
     species TEXT NOT NULL,
 

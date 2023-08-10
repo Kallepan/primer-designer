@@ -54,6 +54,10 @@ def __parse_alignment(args: argparse.Namespace) -> pd.DataFrame:
     alignment["aligned_to"] = alignment["aligned_to"].apply(decode_aligned_to)
     alignment["pool"] = args.pool
     alignment["species"] = args.species
+
+    # Drop read_quality
+    alignment.drop("read_quality", axis=1, inplace=True)
+    
     return alignment
 
 
