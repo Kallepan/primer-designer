@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS amplicons (
     region_name TEXT NOT NULL,
-    name TEXT NOT NULL,
-    start INTEGER NOT NULL,x
+    name TEXT PRIMARY KEY,
+    start INTEGER NOT NULL,
     end INTEGER NOT NULL,
     pool TEXT NOT NULL,
     failed BOOLEAN NOT NULL DEFAULT FALSE,
@@ -10,5 +10,6 @@ CREATE TABLE IF NOT EXISTS amplicons (
 );
 
 CREATE INDEX IF NOT EXISTS amplicons_region_name_idx ON amplicons(region_name);
-CREATE INDEX IF NOT EXISTS amplicons_amplicon_name_idx ON amplicons(amplicon_name);
-CREATE INDEX IF NOT EXISTS amplicons_amplicon_id_idx ON amplicons(amplicon_id);
+CREATE INDEX IF NOT EXISTS amplicons_name_idx ON amplicons(name);
+CREATE INDEX IF NOT EXISTS amplicons_pool_idx ON amplicons(pool);
+CREATE INDEX IF NOT EXISTS amplicons_failed_idx ON amplicons(failed);

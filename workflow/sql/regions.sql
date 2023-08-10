@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS regions (
-    name TEXT PRIMARY KEY NOT NULL,
+    name TEXT PRIMARY KEY,
     start INT NOT NULL,
     end INT NOT NULL,
     sequence TEXT NOT NULL
