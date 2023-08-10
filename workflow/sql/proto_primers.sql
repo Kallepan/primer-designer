@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS proto_primers (
     position INT NOT NULL,
 
     UNIQUE(pool, region_name, amplicon_name, strand, sequence),
-    FOREIGN KEY (region_name) REFERENCES regions (name)
+    FOREIGN KEY (region_name) REFERENCES regions (name),
+    FOREIGN KEY (amplicon_name) REFERENCES amplicons (name)
 );
 
 CREATE INDEX IF NOT EXISTS idx_proto_primers_pool_idx ON proto_primers (pool);
