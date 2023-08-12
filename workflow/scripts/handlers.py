@@ -23,6 +23,12 @@ class DBHandler:
         """Iterate over each table and delete all contents"""
         for table in self.get_tables():
             self.execute(f"DELETE FROM {table};")
+        
+        self.execute("VACUUM;")
+        self.execute("REINDEX;")
+        self.execute("ANALYZE;")
+        self.execute("PRAGMA optimize;")
+        
 
     def get_tables(self) -> list[str]:
         """Returns a list of tables in the database"""

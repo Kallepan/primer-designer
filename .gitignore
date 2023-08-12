@@ -150,3 +150,6 @@ launch.sh
 
 # vscode    
 .vscode/
+
+# sample dataset
+GRCh38.*

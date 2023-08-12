@@ -1,8 +1,15 @@
 import os
 
 
+def get_build_index_input(w):
+    # Check if the .fasta file is present, if not return .fna
+    if os.path.isfile(os.path.join(config["genomes_dir"], w.species + ".fasta")):
+        return os.path.join(config["genomes_dir"], w.species + ".fasta")
+    else:
+        return os.path.join(config["genomes_dir"], w.species + ".fna")
+
 rule build_index:
-    input: expand("{genomes_dir}/{{species}}.fasta", genomes_dir=config["genomes_dir"])
+    input: get_build_index_input
     output:
         expand("{index}/{{species}}.{version}.ebwt", version=range(1, 3), index=config["index_dir"]),
         expand("{index}/{{species}}.rev.{version}.ebwt", version=range(1, 3), index=config["index_dir"])
