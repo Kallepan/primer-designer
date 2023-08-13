@@ -251,11 +251,11 @@ async def main():
 
     # Insert the primers into the database
     df = pd.DataFrame(list_of_primers)
-    df.to_sql("proto_primers", db.conn, if_exists="append", index=False)
+    df.to_sql("proto_primers", db.conn, if_exists="append", index=False, chunksize=1000)
 
     # Insert the amplicons into the database
     df = pd.DataFrame(amplicons)
-    df.to_sql("amplicons", db.conn, if_exists="append", index=False)
+    df.to_sql("amplicons", db.conn, if_exists="append", index=False, chunksize=1000)
 
 
 if __name__ == "__main__":

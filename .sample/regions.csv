@@ -1,4 +1,9 @@
 name,start,end
+test_small,100,200
+test_large,40000,50000
+test_very_small,50,100
+test_duplicated_one,4246514,4327547
+test_duplicated_two,4246514,4327547
 embB,4246514,4249810
 gidB,4408202,4407528
 gyrA,7302,9818
