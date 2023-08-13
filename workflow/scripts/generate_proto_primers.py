@@ -113,7 +113,7 @@ async def __generate_primers(
                 f"No primers generated for region {region_name} amplicon {idx}. Skipping amplicon."
             )
             continue
-        
+
         # add the amplicon to the list
         amplicons.append(
             {
@@ -219,7 +219,6 @@ async def main():
                 f"Region {name} is too small. Skipping region. Please check the region coordinates."
             )
             continue
-        
 
         seeds = defaultdict(list[int])
         coords = defaultdict(list[tuple[int, int]])
