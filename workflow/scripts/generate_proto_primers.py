@@ -204,11 +204,22 @@ async def main():
         name = row["name"]
 
         # Check if the region is valid
+        if start < 0:
+            logging.warning(
+                f"Region {name} is out of bounds. Skipping region. Please check the region coordinates."
+            )
+            continue
         if end > len(sequence_record.seq):
             logging.warning(
                 f"Region {name} is out of bounds. Skipping region. Please check the region coordinates."
             )
             continue
+        if end - start < config.min_amplicon_size:
+            logging.warning(
+                f"Region {name} is too small. Skipping region. Please check the region coordinates."
+            )
+            continue
+        
 
         seeds = defaultdict(list[int])
         coords = defaultdict(list[tuple[int, int]])

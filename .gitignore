@@ -134,10 +134,12 @@ logs/
 results/
 
 # Ignore files used for testing
-helper_scripts/
 debug.sh
-test.sh
 launch.sh
+
+# Ignore files used for testing
+tests/
+test.sh
 
 # Ignore indexes, except for the .sample/index files
 *.ebwt
