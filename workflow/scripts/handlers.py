@@ -13,9 +13,9 @@ class DBHandler:
 
     def __init__(self, path_to_db: str) -> None:
         # Connect to database and increase timeout
-        conn = sqlite3.connect(path_to_db, timeout=60)
+        conn = sqlite3.connect(path_to_db, timeout=30*60) # 30 minutes
         conn.execute("PRAGMA journal_mode=WAL")
-        conn.execute("PRAGMA busy_timeout = 120000")
+        conn.execute("PRAGMA busy_timeout = 1800000") # 30 minutes
         conn.execute("PRAGMA optimize")
         self.conn = conn
 
