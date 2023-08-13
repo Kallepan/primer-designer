@@ -57,7 +57,7 @@ def __parse_alignment(args: argparse.Namespace) -> pd.DataFrame:
 
     # Drop read_quality
     alignment.drop("read_quality", axis=1, inplace=True)
-    
+
     return alignment
 
 
@@ -70,7 +70,10 @@ def main():
     alignment = __parse_alignment(args)
 
     # write output to csv and database
-    alignment.to_sql("alignments", db.conn, if_exists="append", index=False, chunksize=5000)
+    logging.info("Writing primer alignments to database")
+    alignment.to_sql(
+        "alignments", db.conn, if_exists="append", index=False, chunksize=5000
+    )
 
     alignment.to_csv(args.output, sep="\t", index=False)
 

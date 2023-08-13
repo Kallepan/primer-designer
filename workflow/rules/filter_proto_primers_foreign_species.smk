@@ -58,6 +58,7 @@ rule eval_align_primers_foreign_species:
     output: "results/filter/foreign/{species}.{fasta}.{pool}.alignment.eval.tsv"
     log: "logs/filter/foreign/{species}.{fasta}.{pool}.alignment.eval.log"
     conda: "../envs/base.yaml"
+    threads: workflow.cores * 0.5
     params:
         adjacency_limit = adjacency_limit,
         bases_to_ignore = bases_to_ignore
