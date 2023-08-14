@@ -1,5 +1,7 @@
 fasta_files = [os.path.join(config["genomes_dir"], genome) for genome in config["foreign_species_fastas"]]
 fasta_names = [os.path.splitext(os.path.basename(f))[0] for f in fasta_files]
+
+
 rule all_foreign_species:
     input:
         expand("results/filter/foreign/{{species}}.{fasta}.{pool}.alignment.eval.tsv", fasta=fasta_names, pool=pools)
@@ -10,8 +12,8 @@ max_mismatches = config["filter_settings"]["foreign_species"]["max_mismatches"]
 rule align_primers_foreign_species:
     input:
         # ancient is a helper function that ensures the index is not rebuilt if it already exists
-        ancient(expand("{index}/{{fasta}}.{version}.ebwt", version=range(1, 3), index=config["index_dir"])),
-        ancient(expand("{index}/{{fasta}}.rev.{version}.ebwt", version=range(1, 3), index=config["index_dir"])),
+        lambda w: ancient(expand("{index}/{{species}}.{version}.{ending}", version=range(1, 3), index=config["index_dir"], ending=get_indexes_input(w))),
+        lambda w: ancient(expand("{index}/{{species}}.rev.{version}.{ending}", version=range(1, 3), index=config["index_dir"], ending=get_indexes_input(w))),
         primers_fasta="results/{species}.{pool}.proto_primers.fasta",
         db = "results/{species}.db"
     output: "results/filter/foreign/{species}.{fasta}.{pool}.alignment.raw"

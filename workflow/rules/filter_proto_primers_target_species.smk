@@ -2,7 +2,7 @@ import os
 
 
 rule build_index:
-    input: get_build_index_input
+    input: expand("{genomes_dir}/{{species}}.fasta", genomes_dir=config["genomes_dir"])
     output:
         expand("{index}/{{species}}.{version}.ebwt", version=range(1, 3), index=config["index_dir"]),
         expand("{index}/{{species}}.rev.{version}.ebwt", version=range(1, 3), index=config["index_dir"])
@@ -39,8 +39,8 @@ rule format_pool_into_fasta:
 max_mismatches = config["filter_settings"]["target_species"]["max_mismatches"]
 rule align_primers_target_species:
     input:
-        expand("{index}/{{species}}.{version}.ebwt", version=range(1, 3), index=config["index_dir"]),
-        expand("{index}/{{species}}.rev.{version}.ebwt", version=range(1, 3), index=config["index_dir"]),
+        lambda w: ancient(expand("{index}/{{species}}.{version}.{ending}", version=range(1, 3), index=config["index_dir"], ending=get_indexes_input(w))),
+        lambda w: ancient(expand("{index}/{{species}}.rev.{version}.{ending}", version=range(1, 3), index=config["index_dir"], ending=get_indexes_input(w))),
         primers_fasta = "results/{species}.{pool}.proto_primers.fasta",
         db = "results/{species}.db"
     output: "results/filter/target/{species}.{pool}.alignment.raw"

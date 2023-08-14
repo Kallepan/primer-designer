@@ -27,7 +27,7 @@ mamba activate smk
 
 - Run the pipeline on a test dataset to check if everything is working as expected.
 - In the `.sample/data/` folder, there are two fasta files. `myc_tuberculosis_h37Rv.fasta` [(source)](https://www.ncbi.nlm.nih.gov/nuccore/NC_000962.3) is the target organism for which we will design primers. `staph_aureus_nctc8325.fasta` [(source)](https://www.ncbi.nlm.nih.gov/datasets/taxonomy/1280/) is the organism against which our primers will be screened/filtered. Fasta files of genomes can be downloaded from [NCBI](https://www.ncbi.nlm.nih.gov). Upon running to pipeline will automatically generate indexes for both fasta files.
-- Note: for small genomes, the building of indexes is fast. For larger genomes such as human, this can take a while. If you are working with a large genome, you can download the bowtie indexes from [here](http://support.illumina.com/sequencing/sequencing_software/igenome.ilmn) and place them in the `.sample/indexes/` folder. If you, place the indexes into the indexes folder, the beginning of the filename should match the beginning of the filename of the fasta/fna files:
+- Note: for small genomes, the building of indexes is fast. For larger genomes such as human, this can take a while. If you are working with a large genome, you can download the bowtie indexes from [here](http://support.illumina.com/sequencing/sequencing_software/igenome.ilmn) and place them in the `.sample/indexes/` folder. If you, place the indexes into the indexes folder, the beginning of the filename should match the beginning of the filename of the fasta files:
 
 ```bash
 # example
