@@ -173,4 +173,3 @@ dependencies:
   - yarl=1.9.2
   - yte=1.5.1
   - zipp=3.16.2
-prefix: /homes/kkandeepan/mambaforge/envs/smk
