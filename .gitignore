@@ -134,12 +134,8 @@ logs/
 results/
 
 # Ignore files used for testing
-debug.sh
-launch.sh
-
-# Ignore files used for testing
-tests/
-test.sh
+hack/
+test/
 
 # Ignore indexes, except for the .sample/index files
 *.ebwt
@@ -150,8 +146,5 @@ test.sh
 *.bz2
 *.zip
 
-# vscode    
+# vscode
 .vscode/
-
-# sample dataset
-GRCh38.*
