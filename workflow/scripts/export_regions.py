@@ -91,7 +91,7 @@ def __adjust_region_df_for_plotting(
 
     def __adjust_end(row: pd.Series, seqrecord: SeqIO.SeqRecord) -> int:
         """Adjust the end position of the region to be plotted"""
-        return min(row["end"] + args.plotting_buffer, len(seqrecord))
+        return min(row["end"] + args.plotting_buffer, len(seqrecord) - 1)
 
     def __extract_region_from_seqrecord(
         start: int, end: int, seqrecord: SeqIO.SeqRecord
@@ -117,12 +117,6 @@ def __adjust_region_df_for_plotting(
 
 
 def __to_db(regions: pd.DataFrame, db: DBHandler) -> None:
-    # check if regions table has entries
-    rows, _ = db.select("SELECT * FROM regions")
-    if len(rows) > 0:
-        logging.warning("Regions table already has entries, skipping")
-        return
-
     # Append to regions table
     regions.to_sql("regions", db.conn, if_exists="append", index=False)
 

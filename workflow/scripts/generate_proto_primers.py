@@ -166,9 +166,6 @@ async def main():
     db = DBHandler(config.db_path)
     regions = __load_regions_from_db(db)
 
-    # clear the database
-    db.clear_db()
-
     # Load the sequence
     sequence_record = __extract_sequence_record_from_fasta(config.fasta_path)
 
