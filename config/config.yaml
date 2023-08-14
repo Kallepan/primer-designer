@@ -13,7 +13,6 @@ target_genome: "myc_tuberculosis_h37Rv.fasta"
 # list of foreign species genome fasta files
 foreign_species_fastas:
   - "staph_aureus_nctc8325.fasta"
-  - "GRCh38.fna"
 
 ### Configurations ###
 primer_gen_config:
