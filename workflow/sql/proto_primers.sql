@@ -11,7 +11,6 @@ CREATE TABLE IF NOT EXISTS proto_primers (
     discarded BOOLEAN NOT NULL DEFAULT FALSE,
     position INT NOT NULL,
 
-    UNIQUE(pool, region_name, amplicon_name, strand, sequence),
     FOREIGN KEY (region_name) REFERENCES regions (name),
     FOREIGN KEY (amplicon_name) REFERENCES amplicons (name)
 );
@@ -22,5 +21,4 @@ CREATE INDEX IF NOT EXISTS idx_proto_primers_amplicon_name ON proto_primers (amp
 CREATE INDEX IF NOT EXISTS idx_proto_primers_region_name ON proto_primers (region_name);
 CREATE INDEX IF NOT EXISTS idx_proto_primers_strand ON proto_primers (strand);
 CREATE INDEX IF NOT EXISTS idx_proto_primers_position ON proto_primers (position);
-CREATE INDEX IF NOT EXISTS idx_proto_primers_sequence ON proto_primers (sequence);
 CREATE INDEX IF NOT EXISTS idx_proto_primers_multi_one ON proto_primers (pool, region_name, amplicon_name, strand);
