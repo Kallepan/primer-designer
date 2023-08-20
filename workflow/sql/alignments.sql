@@ -9,7 +9,10 @@ CREATE TABLE IF NOT EXISTS alignments (
     mismatches_descriptor TEXT,
     species TEXT NOT NULL,
 
-    FOREIGN KEY (primer_id) REFERENCES proto_primers (id)
+    FOREIGN KEY (primer_id) REFERENCES proto_primers (id),
+
+    -- check if aligned_to is '+' or '-'
+    CHECK (aligned_to IN ('+', '-'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_alignments_id_idx ON alignments(id);

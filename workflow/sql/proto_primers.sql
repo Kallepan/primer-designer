@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS proto_primers (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    pool INT NOT NULL,
+    pool TEXT NOT NULL,
     region_name TEXT NOT NULL,
     amplicon_name TEXT NOT NULL,
     strand TEXT NOT NULL,
@@ -12,7 +12,10 @@ CREATE TABLE IF NOT EXISTS proto_primers (
     position INT NOT NULL,
 
     FOREIGN KEY (region_name) REFERENCES regions (name),
-    FOREIGN KEY (amplicon_name) REFERENCES amplicons (name)
+    FOREIGN KEY (amplicon_name) REFERENCES amplicons (name),
+
+    -- check if strand is '+' or '-'
+    CHECK (strand IN ('+', '-'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_proto_primers_pool_idx ON proto_primers (pool);
