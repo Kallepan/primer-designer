@@ -111,8 +111,8 @@ def __extract_amplicons_from_filtering(df: pd.DataFrame) -> list[dict]:
     for (region_name, amplicon_name, pool), group in dfs:
         # group is a dataframe with all primers for an amplicon, region and pool
         # Split the dataframe into forward and reverse primers
-        forward_primers = group[group["strand"] == "forward"]
-        reverse_primers = group[group["strand"] == "reverse"]
+        forward_primers = group[group["strand"] == "+"]
+        reverse_primers = group[group["strand"] == "-"]
 
         # Create a dictionary for the amplicon
         amplicon = defaultdict(str)

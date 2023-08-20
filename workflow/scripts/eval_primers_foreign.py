@@ -82,9 +82,8 @@ def __get_alignments_from_species(
         LENGTH(proto_primers.sequence) AS primer_length
     FROM alignments
     LEFT JOIN proto_primers ON proto_primers.id = alignments.primer_id
-
     WHERE 
-        alignments.pool = ? AND 
+        proto_primers.pool = ? AND 
         alignments.species = ? AND 
         ((
         -- do not filter out alignments with mismatches_descriptor if the primer is too short or if mismatches_descriptor is NULL
@@ -124,8 +123,8 @@ def __calculate_adjacency_by_chromosome(
     alignment = alignment.sort_values("position")
 
     # Split alignments into forward and reverse alignments
-    alignments_forward = alignment[alignment["aligned_to"] == "forward"]
-    alignments_reverse = alignment[alignment["aligned_to"] == "reverse"]
+    alignments_forward = alignment[alignment["aligned_to"] == "+"]
+    alignments_reverse = alignment[alignment["aligned_to"] == "-"]
 
     # For each alignment, in the dataframes, find all alignments of the complementary strand that are within the adjacency limit
     for _, alignment in alignments_forward.iterrows():

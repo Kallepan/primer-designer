@@ -21,4 +21,3 @@ CREATE INDEX IF NOT EXISTS idx_proto_primers_amplicon_name ON proto_primers (amp
 CREATE INDEX IF NOT EXISTS idx_proto_primers_region_name ON proto_primers (region_name);
 CREATE INDEX IF NOT EXISTS idx_proto_primers_strand ON proto_primers (strand);
 CREATE INDEX IF NOT EXISTS idx_proto_primers_position ON proto_primers (position);
-CREATE INDEX IF NOT EXISTS idx_proto_primers_multi_one ON proto_primers (pool, region_name, amplicon_name, strand);

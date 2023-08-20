@@ -85,7 +85,7 @@ def __get_alignments(db: DBHandler, args: argparse.Namespace) -> pd.DataFrame:
     LEFT JOIN proto_primers ON proto_primers.id = alignments.primer_id
     WHERE 
         alignments.species = ? AND 
-        alignments.pool = ? AND 
+        proto_primers.pool = ? AND 
         proto_primers.discarded = 0 AND (
         --filter out all alignments that are correct
         alignments.matches <> 1 OR
@@ -135,8 +135,8 @@ def __calculate_adjacent_alignments(
         alignments = alignments.sort_values("position")
 
         # Split the alignments into forward and reverse alignments
-        alignments_forward = alignments[alignments["aligned_to"] == "forward"]
-        alignments_reverse = alignments[alignments["aligned_to"] == "reverse"]
+        alignments_forward = alignments[alignments["aligned_to"] == "+"]
+        alignments_reverse = alignments[alignments["aligned_to"] == "-"]
 
         # For each alignment, in teh dataframes, find all alignments of the complementary strand that are within the adjacency limit
         for _, alignment in alignments_forward.iterrows():

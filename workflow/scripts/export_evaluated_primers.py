@@ -102,8 +102,8 @@ def __write_json(db: str, output: str, pool: str) -> None:
             )
 
             # Extract forward and reverse primers
-            forward_primers = amplicon_df[amplicon_df["strand"] == "forward"]
-            reverse_primers = amplicon_df[amplicon_df["strand"] == "reverse"]
+            forward_primers = amplicon_df[amplicon_df["strand"] == "+"]
+            reverse_primers = amplicon_df[amplicon_df["strand"] == "-"]
 
             # Check if either forward or reverse primers are empty
             # If so, remove the amplicon
