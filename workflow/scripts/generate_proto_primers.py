@@ -72,7 +72,7 @@ async def __generate_primers(
     primer_ok_regions_list: list[int, int, int, int],
     config: PrimerGenConfig,
     list_of_primers: list[dict],
-    failed_amplicons: list[dict],
+    amplicons: list[dict],
 ) -> None:
     """Generate the primer pairs for a given list of amplicon coordinates."""
 
@@ -99,19 +99,32 @@ async def __generate_primers(
 
         # check if forward AND reverse primers were generated.
         if forward_primers is None or reverse_primers is None:
-            failed_amplicons.append(
+            amplicons.append(
                 {
                     "region_name": region_name,
-                    "amplicon_name": f"{region_name}-{idx}-{pool_name}",
+                    "name": f"{region_name}-{idx}-{pool_name}",
                     "pool": pool_name,
-                    "amplicon_start": adjusted_amplicon_start,
-                    "amplicon_end": adjusted_amplicon_end,
+                    "start": adjusted_amplicon_start,
+                    "end": adjusted_amplicon_end,
+                    "failed": True,
                 }
             )
             logging.warning(
                 f"No primers generated for region {region_name} amplicon {idx}. Skipping amplicon."
             )
             continue
+
+        # add the amplicon to the list
+        amplicons.append(
+            {
+                "region_name": region_name,
+                "name": f"{region_name}-{idx}-{pool_name}",
+                "pool": pool_name,
+                "start": adjusted_amplicon_start,
+                "end": adjusted_amplicon_end,
+                "failed": False,
+            }
+        )
 
         # add the primers to the list
         for primer in forward_primers:
@@ -120,7 +133,7 @@ async def __generate_primers(
                     "pool": pool_name,
                     "region_name": region_name,
                     "amplicon_name": f"{region_name}-{idx}-{pool_name}",
-                    "strand": "forward",
+                    "strand": "+",
                     "sequence": primer["sequence"],
                     "tm": primer["tm"],
                     "gc_percent": primer["gc_percent"],
@@ -135,7 +148,7 @@ async def __generate_primers(
                     "pool": pool_name,
                     "region_name": region_name,
                     "amplicon_name": f"{region_name}-{idx}-{pool_name}",
-                    "strand": "reverse",
+                    "strand": "-",
                     "sequence": primer["sequence"],
                     "tm": primer["tm"],
                     "gc_percent": primer["gc_percent"],
@@ -181,16 +194,26 @@ async def main():
 
     # Create the RegionIterator
     list_of_primers: list[dict] = []
-    failed_amplicons: list[dict] = []
+    amplicons: list[dict] = []
     async for _, row in RegionIterator(regions=regions):
         start = row["start"]
         end = row["end"]
         name = row["name"]
 
         # Check if the region is valid
+        if start < 0:
+            logging.warning(
+                f"Region {name} is out of bounds. Skipping region. Please check the region coordinates."
+            )
+            continue
         if end > len(sequence_record.seq):
             logging.warning(
                 f"Region {name} is out of bounds. Skipping region. Please check the region coordinates."
+            )
+            continue
+        if end - start < config.min_amplicon_size:
+            logging.warning(
+                f"Region {name} is too small. Skipping region. Please check the region coordinates."
             )
             continue
 
@@ -219,16 +242,16 @@ async def main():
                 primer_ok_regions_list,
                 config,
                 list_of_primers,
-                failed_amplicons,
+                amplicons,
             )
 
     # Insert the primers into the database
     df = pd.DataFrame(list_of_primers)
-    df.to_sql("proto_primers", db.conn, if_exists="append", index=False)
+    df.to_sql("proto_primers", db.conn, if_exists="append", index=False, chunksize=1000)
 
-    # Insert the failed amplicons into the database
-    df = pd.DataFrame(failed_amplicons)
-    df.to_sql("failed_amplicons", db.conn, if_exists="append", index=False)
+    # Insert the amplicons into the database
+    df = pd.DataFrame(amplicons)
+    df.to_sql("amplicons", db.conn, if_exists="append", index=False, chunksize=1000)
 
 
 if __name__ == "__main__":

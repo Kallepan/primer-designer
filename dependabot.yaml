@@ -8,4 +8,4 @@ updates:
     commit-message:
       prefix: "chore: "
     schedule:
-      interval: "weekly"
+      interval: "monthly"

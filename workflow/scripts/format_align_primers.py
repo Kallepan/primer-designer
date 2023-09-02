@@ -23,13 +23,6 @@ def __get_parser() -> argparse.Namespace:
 
 
 def __parse_alignment(args: argparse.Namespace) -> pd.DataFrame:
-    def decode_aligned_to(symbol: str) -> str:
-        if symbol == "+":
-            return "forward"
-        if symbol == "-":
-            return "reverse"
-        return "unknown"
-
     """Takes the tab seperated output from the alignment and parses it to a pandas dataframe"""
 
     alignment = pd.read_csv(
@@ -51,9 +44,11 @@ def __parse_alignment(args: argparse.Namespace) -> pd.DataFrame:
     alignment["matches"] = alignment["matches"].apply(lambda x: int(x) + 1)
 
     # Reformat aligned_to to forward/reverse
-    alignment["aligned_to"] = alignment["aligned_to"].apply(decode_aligned_to)
-    alignment["pool"] = args.pool
     alignment["species"] = args.species
+
+    # Drop read_quality
+    alignment.drop("read_quality", axis=1, inplace=True)
+
     return alignment
 
 
@@ -66,7 +61,10 @@ def main():
     alignment = __parse_alignment(args)
 
     # write output to csv and database
-    alignment.to_sql("alignments", db.conn, if_exists="append", index=False)
+    logging.info("Writing primer alignments to database")
+    alignment.to_sql(
+        "alignments", db.conn, if_exists="append", index=False, chunksize=5000
+    )
 
     alignment.to_csv(args.output, sep="\t", index=False)
 

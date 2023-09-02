@@ -13,15 +13,21 @@ class DBHandler:
 
     def __init__(self, path_to_db: str) -> None:
         # Connect to database and increase timeout
-        conn = sqlite3.connect(path_to_db, timeout=60)
+        conn = sqlite3.connect(path_to_db, timeout=30 * 60)  # 30 minutes
         conn.execute("PRAGMA journal_mode=WAL")
-        conn.execute("PRAGMA busy_timeout = 60000")
+        conn.execute("PRAGMA busy_timeout = 1800000")  # 30 minutes
+        conn.execute("PRAGMA optimize")
         self.conn = conn
 
     def clear_db(self) -> None:
         """Iterate over each table and delete all contents"""
         for table in self.get_tables():
             self.execute(f"DELETE FROM {table};")
+
+        self.execute("VACUUM;")
+        self.execute("REINDEX;")
+        self.execute("ANALYZE;")
+        self.execute("PRAGMA optimize;")
 
     def get_tables(self) -> list[str]:
         """Returns a list of tables in the database"""
@@ -78,16 +84,7 @@ class DBHandler:
     def __del__(self) -> None:
         if self.conn is None:
             return
-
-        try:
-            with self.conn:
-                self.conn.execute("PRAGMA optimize")
-        except Exception as e:
-            # Ignore if the database is locked
-            if "database is locked" not in str(e):
-                raise e
-        finally:
-            self.conn.close()
+        self.conn.close()
 
 
 class Graph(object):

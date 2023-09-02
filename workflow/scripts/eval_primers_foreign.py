@@ -4,6 +4,7 @@ import pandas as pd
 
 from collections import defaultdict
 from handlers import DBHandler, Graph
+from multiprocessing import Pool
 
 logging.basicConfig(level=logging.INFO)
 
@@ -81,9 +82,8 @@ def __get_alignments_from_species(
         LENGTH(proto_primers.sequence) AS primer_length
     FROM alignments
     LEFT JOIN proto_primers ON proto_primers.id = alignments.primer_id
-
     WHERE 
-        alignments.pool = ? AND 
+        proto_primers.pool = ? AND 
         alignments.species = ? AND 
         ((
         -- do not filter out alignments with mismatches_descriptor if the primer is too short or if mismatches_descriptor is NULL
@@ -110,6 +110,69 @@ def __get_alignments_from_species(
     return pd.DataFrame(alignments, columns=columns)
 
 
+# function called by multiprocessing to calculate the adjacency for a chromosome
+def __calculate_adjacency_by_chromosome(
+    alignment: pd.DataFrame, chromosome: str, adjacency_limit: int
+) -> dict[str, list]:
+    adjacent_primers_for_primer: dict[str, list] = defaultdict(list)
+    logging.info(
+        f"Processing chromosome {chromosome} with {alignment.shape[0]} alignments"
+    )
+
+    # Sort alignments by position position
+    alignment = alignment.sort_values("position")
+
+    # Split alignments into forward and reverse alignments
+    alignments_forward = alignment[alignment["aligned_to"] == "+"]
+    alignments_reverse = alignment[alignment["aligned_to"] == "-"]
+
+    # For each alignment, in the dataframes, find all alignments of the complementary strand that are within the adjacency limit
+    for _, alignment in alignments_forward.iterrows():
+        # Filter out complementary alignments that are not within the adjacency limit
+        adjacent_alignments = alignments_reverse[
+            (alignments_reverse["position"] >= alignment["position"])
+            & (
+                alignments_reverse["position"]
+                <= alignment["position"] + adjacency_limit
+            )
+        ]
+
+        # if adjacent_alignments is empty, we can continue
+        if adjacent_alignments.empty:
+            continue
+
+        # Extract the information we need from the adjacent_alignments
+        adjacent_alignments_info = adjacent_alignments.to_dict("records")
+
+        # Add the adjacent alignments to the dict
+        key = alignment["primer_id"]
+        adjacent_primers_for_primer[key].extend(adjacent_alignments_info)
+
+    # Repeat the same process for the reverse alignments
+    for _, alignment in alignments_reverse.iterrows():
+        # Filter out complementary alignments that are not within the adjacency limit
+        adjacent_alignments = alignments_forward[
+            (alignments_forward["position"] <= alignment["position"])
+            & (
+                alignments_forward["position"]
+                >= alignment["position"] - adjacency_limit
+            )
+        ]
+
+        # if adjacent_alignments is empty, we can continue
+        if adjacent_alignments.empty:
+            continue
+
+        # Extract the information we need from the adjacent_alignments
+        adjacent_alignments_info = adjacent_alignments.to_dict("records")
+
+        # Add the adjacent alignments to the dict
+        key = alignment["primer_id"]
+        adjacent_primers_for_primer[key].extend(adjacent_alignments_info)
+
+    return adjacent_primers_for_primer
+
+
 def __calculate_adjacent_alignments(
     alignments: pd.DataFrame, adjacency_limit: int
 ) -> dict[str, list]:
@@ -121,78 +184,35 @@ def __calculate_adjacent_alignments(
     # Split alignments into tables for each chromosome
     alignments_by_chromosome = alignments.groupby("chromosome")
 
-    adjacent_primers_for_primer: dict[str, list] = defaultdict(list)
-    for chromosome, alignments in alignments_by_chromosome:
-        logging.info(
-            f"Processing chromosome {chromosome} with {alignments.shape[0]} alignments"
+    with Pool() as p:
+        results = p.starmap(
+            __calculate_adjacency_by_chromosome,
+            [
+                (alignment, chromosome, adjacency_limit)
+                for chromosome, alignment in alignments_by_chromosome
+            ],
         )
 
-        # Sort alignments by position position
-        alignments = alignments.sort_values("position")
-
-        # Split alignments into forward and reverse alignments
-        alignments_forward = alignments[alignments["aligned_to"] == "forward"]
-        alignments_reverse = alignments[alignments["aligned_to"] == "reverse"]
-
-        # For each alignment, in the dataframes, find all alignments of the complementary strand that are within the adjacency limit
-        for _, alignment in alignments_forward.iterrows():
-            # Filter out complementary alignments that are not within the adjacency limit
-            adjacent_alignments = alignments_reverse[
-                (alignments_reverse["position"] >= alignment["position"])
-                & (
-                    alignments_reverse["position"]
-                    <= alignment["position"] + adjacency_limit
-                )
-            ]
-
-            # if adjacent_alignments is empty, we can continue
-            if adjacent_alignments.empty:
-                continue
-
-            # Extract the information we need from the adjacent_alignments
-            adjacent_alignments_info = adjacent_alignments.to_dict("records")
-
-            # Add the adjacent alignments to the dict
-            key = int(alignment["primer_id"])
-            adjacent_primers_for_primer[key].extend(adjacent_alignments_info)
-
-        # Repeat the same process for the reverse alignments
-        for _, alignment in alignments_reverse.iterrows():
-            # Filter out complementary alignments that are not within the adjacency limit
-            adjacent_alignments = alignments_forward[
-                (
-                    alignments_forward["position"]
-                    >= alignment["position"] - adjacency_limit
-                )
-                & (alignments_forward["position"] <= alignment["position"])
-            ]
-
-            # if adjacent_alignments is empty, we can continue
-            if adjacent_alignments.shape[0] == 0:
-                continue
-
-            # Extract the information we need from the adjacent_alignments
-            adjacent_alignments_info = adjacent_alignments.to_dict("records")
-
-            # Add the adjacent alignments to the dict
-            key = int(alignment["primer_id"])
-            adjacent_primers_for_primer[key].extend(adjacent_alignments_info)
+    # Merge the results from each chromosome
+    adjacent_primers_for_primer: dict[str, list] = defaultdict(list)
+    for result in results:
+        for primer_id, adjacent_primers_infos in result.items():
+            adjacent_primers_for_primer[primer_id].extend(adjacent_primers_infos)
 
     return adjacent_primers_for_primer
 
 
 def __select_primers_to_discard(
-    adjacent_primers_for_primer: dict[int, list[int]]
-) -> set[int]:
+    adjacent_primers_for_primer: dict[str, list[str]]
+) -> set[str]:
     """Determines which primers to mark as dicarded in the databases based on their adjacency"""
 
     # Transform adjacent_primers_for_primer into a list of tuples
     # Each tuple contains the primer_id and the list of adjacent primers
     connections = []
     for primer_id, adjacent_primers_infos in adjacent_primers_for_primer.items():
-        primer_id = int(primer_id)
         for adjacent_primer_info in adjacent_primers_infos:
-            adjacent_primer_id = int(adjacent_primer_info["primer_id"])
+            adjacent_primer_id = adjacent_primer_info["primer_id"]
             connections.append((primer_id, adjacent_primer_id))
 
     # Filter out duplicates
@@ -207,7 +227,7 @@ def __select_primers_to_discard(
     return set(primer_ids_to_discard)
 
 
-def __mark_primers_as_discarded(db: DBHandler, primer_ids_to_discard: set[int]) -> None:
+def __mark_primers_as_discarded(db: DBHandler, primer_ids_to_discard: set[str]) -> None:
     """Marks the primers as discarded in the database"""
 
     # Create the query
