@@ -136,6 +136,11 @@ results/
 # Ignore files used for testing
 hack/
 test/
+=======
+helper_scripts/
+debug.sh
+test.sh
+launch.sh+
 
 # Ignore indexes, except for the .sample/index files
 *.ebwt
