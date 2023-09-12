@@ -5,7 +5,6 @@ min_version("6.3.0")
 configfile: "config/config.yaml"
 
 include: "rules/main.smk"
-include: "rules/common.smk"
 include: "rules/generate_proto_primers.smk"
 include: "rules/filter_proto_primers_target_species.smk"
 include: "rules/filter_proto_primers_foreign_species.smk"

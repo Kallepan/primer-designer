@@ -145,6 +145,8 @@ launch.sh+
 # Ignore indexes, except for the .sample/index files
 *.ebwt
 *.ebwtl
+*.bt2
+*.bt2l
 
 # Ignore compressed files
 *.gz

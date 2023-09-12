@@ -56,12 +56,12 @@ $$A_{max} \leq 2 * A_{min} * (1 -min\_overlap)$$
   - The number of adjacent alignments of primers on the complementary strand
   - The number of times the primer misaligns to the genome
 - All alignments are checked for adjacent alignments. The relationship of alignment with each other is stored in a graph. Using the minimal vertex cover problem, nodes/primers are selected which cover all edges/alignments. The selected primers are marked as discarded in the database.
-- Bowtie uses pre-built indexes to align the primers against the genome. To reduce runtime, you can generate these indexes yourself and place them in the indexes folder. Alternatively genomes and indexes for bowtie are offered for download [Illumina](http://support.illumina.com/sequencing/sequencing_software/igenome.ilmn). Indexes can be generated using bowtie-build:
-- Indexes should match in name with the given genome. If an index is not found, the pipeline will build the index using bowtie-build.
+- Bowtie uses pre-built indexes to align the primers against the genome. To reduce runtime, you can generate these indexes yourself and place them in the indexes folder. Alternatively genomes and indexes for bowtie are offered for download [Illumina](http://support.illumina.com/sequencing/sequencing_software/igenome.ilmn). Indexes can be generated using bowtie2-build:
+- Indexes should match in name with the given genome. If an index is not found, the pipeline will build the index using bowtie2-build.
 
 ```bash
-# How to build an index using bowtie-build:
-bowtie-build foreign_species/sequence.fasta indexes/sequence
+# How to build an index using bowtie2-build:
+bowtie2-build foreign_species/sequence.fasta indexes/sequence
 ```
 
 ## 3. SADDLE

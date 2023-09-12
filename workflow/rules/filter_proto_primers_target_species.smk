@@ -4,15 +4,15 @@ import os
 rule build_index:
     input: expand("{genomes_dir}/{{species}}.fasta", genomes_dir=config["genomes_dir"])
     output:
-        expand("{index}/{{species}}.{version}.ebwt", version=range(1, 3), index=config["index_dir"]),
-        expand("{index}/{{species}}.rev.{version}.ebwt", version=range(1, 3), index=config["index_dir"])
+        expand("{index}/{{species}}.{version}.bt2", version=range(1, 3), index=config["index_dir"]),
+        expand("{index}/{{species}}.rev.{version}.bt2", version=range(1, 3), index=config["index_dir"])
     params:
         outdir = lambda w, input: os.path.join(config["index_dir"], w.species)
     log: "logs/indexes/{species}.index.log"
     conda: "../envs/bowtie.yaml"
     shell: 
         """
-        bowtie-build -r\
+        bowtie2-build -r\
             {input} \
             {params.outdir} \
             &> {log}
@@ -39,8 +39,8 @@ rule format_pool_into_fasta:
 max_mismatches = config["filter_settings"]["target_species"]["max_mismatches"]
 rule align_primers_target_species:
     input:
-        lambda w: ancient(expand("{index}/{{species}}.{version}.{ending}", version=range(1, 3), index=config["index_dir"], ending=get_indexes_input(w))),
-        lambda w: ancient(expand("{index}/{{species}}.rev.{version}.{ending}", version=range(1, 3), index=config["index_dir"], ending=get_indexes_input(w))),
+        ancient(expand("{index}/{{species}}.{version}.bt2", version=range(1, 3), index=config["index_dir"])),
+        ancient(expand("{index}/{{species}}.rev.{version}.bt2", version=range(1, 3), index=config["index_dir"])),
         primers_fasta = "results/{species}.{pool}.proto_primers.fasta",
         db = "results/{species}.db"
     output: "results/filter/target/{species}.{pool}.alignment.raw"

@@ -32,10 +32,10 @@ mamba activate smk
 ```bash
 # example
 data/GRCh38.fasta
-indexes/GRCh38.1.ebwt
-indexes/GRCh38.2.ebwt
-indexes/GRCh38.rev.1.ebwt
-indexes/GRCh38.rev.2.ebwt
+indexes/GRCh38.1.bt2
+indexes/GRCh38.2.bt2
+indexes/GRCh38.rev.1.bt2
+indexes/GRCh38.rev.2.bt2
 ```
 
 The pipeline will automatically detect the indexes and use them instead of building them from scratch.

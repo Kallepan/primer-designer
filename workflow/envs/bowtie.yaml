@@ -4,5 +4,6 @@ channels:
   - bioconda
 dependencies:
   - bowtie==1.3.1
+  - bowtie2==2.5.1
   - tbb==2021.9.0
   - libxml2==2.10.4
