@@ -31,6 +31,10 @@ export class StatisticsComponent implements OnInit, AfterViewInit {
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
 
+  totalDiscardedAmplicons: number = 0;
+  totalPassedAmplicons: number = 0;
+  totalAmplicons: number = this._resultsService.getAmplicons().length;
+
   // Get the amplicon data from the results service
   private _ampliconData = this._resultsService.getAmplicons().map(amplicon => {
     const formattedAmplicon: FormattedAmplicon = {
@@ -43,6 +47,12 @@ export class StatisticsComponent implements OnInit, AfterViewInit {
       reversePrimers: `${amplicon.n_reverse || "NA"}`,
       discardedReversePrimers: `${amplicon.n_discarded_reverse || "-"}`,
     };
+
+    if (amplicon.discarded) {
+      this.totalDiscardedAmplicons++;
+    } else {
+      this.totalPassedAmplicons++;
+    }
 
     return formattedAmplicon;
   });

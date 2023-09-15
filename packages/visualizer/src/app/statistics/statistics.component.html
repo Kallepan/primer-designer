@@ -1,5 +1,10 @@
 <h3>Overview of amplicons</h3>
-<mat-hint></mat-hint>
+<small>
+    Total number of amplicons: {{totalAmplicons}} <br>
+    Absent amplicons: {{totalDiscardedAmplicons}} <br>
+    Present amplicons: {{totalPassedAmplicons}} <br>
+</small>
+
 <mat-form-field class="wide-form-field">
     <mat-label>Filter</mat-label>
     <input matInput (keyup)="applyFilter($event)" placeholder="some value" #input>
