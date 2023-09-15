@@ -9,8 +9,10 @@
 ### Config files
 
 - Please use the config.yaml file and primer3_settings.yaml to adjust the settings of the pipeline
-- For a detailed overview of how to run the pipeline please refer to: [.sample/README.md](.sample/README.md)
+- For a detailed overview of how to run the pipeline please refer to [this file](.sample/README.md)
 
 ### Software
 
-- [.sample/environment.yaml](.sample/environment.yaml) contains a list of all required software to run the pipeline. This pipeline uses the mamba environment manager to install all required software. If run using snakemake, the --use-conda flag will automatically install all required software using the environment.yaml file.
+- [This file](.sample/environment.yaml) contains a list of all required software to run the pipeline. This pipeline uses the mamba environment manager to install all required software. If run using snakemake, the --use-conda flag will automatically install all required software using the environment.yaml file.
+
+- [This file](workflow/README.md) provides a detailed overview of the steps employed in the pipeline and how each of its modules/steps work. It is very detailed.
