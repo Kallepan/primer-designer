@@ -69,7 +69,7 @@ async def __generate_primers(
     pool_name: str,
     amplicon_coords: list[tuple[int, int]],
     sequence: Seq,
-    primer_ok_regions_list: list[int, int, int, int],
+    buffer_size: int,
     config: PrimerGenConfig,
     list_of_primers: list[dict],
     amplicons: list[dict],
@@ -90,7 +90,7 @@ async def __generate_primers(
             amplicon_index=idx,
             amplicon_sequence=amplicon_sequence,
             pool_name=pool_name,
-            primer_ok_regions_list=primer_ok_regions_list,
+            buffer_size=buffer_size,
             config=config,
         )
 
@@ -181,16 +181,9 @@ async def main():
 
     # amplicon_buffer is the number of nucleotides that are added to the amplicon size to allow for primer placement
     amplicon_buffer = int((config.max_amplicon_size - config.min_amplicon_size) / 2)
-    # Primer ok regions are regions where the primer can be placed without exceeding the amplicon size
-    # forward primers are placed in the range from 0 to amplicon_buffer
-    # reverse primers are placed in the ragen from max_amplicon_size - amplicon_buffer to max_amplicon_size
-
-    primer_ok_regions_list = [
-        0,
-        amplicon_buffer,
-        config.max_amplicon_size - amplicon_buffer,
-        amplicon_buffer,
-    ]
+    buffer_size = amplicon_buffer
+    # forward primers are placed in the range from 0 to amplicon_buffer within the virtual amplicon
+    # reverse primers are placed in the ragen from max_amplicon_size - amplicon_buffer to max_amplicon_size within the virtual amplicon
 
     # Create the RegionIterator
     list_of_primers: list[dict] = []
@@ -239,7 +232,7 @@ async def main():
                 str(pool),
                 coords[pool],
                 sequence_record.seq,
-                primer_ok_regions_list,
+                buffer_size,
                 config,
                 list_of_primers,
                 amplicons,

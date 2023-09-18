@@ -19,15 +19,18 @@ class PrimerGenerator:
         amplicon_index: int,
         amplicon_sequence: Seq,
         pool_name: str,
-        primer_ok_regions_list: tuple[int, int, int, int],
+        buffer_size: int,
         config: PrimerGenConfig,
     ):
         self.amplicon_sequence = amplicon_sequence
         self.amplicon_id = f"{region_name}-{amplicon_index}"
         self.pool_name = pool_name
-        self.primer_ok_regions_list = primer_ok_regions_list
+        self.buffer_size = buffer_size
         self._primer3_settings = config.primer3_settings
         self.output_dir = config.output_dir
+
+        self.primer_ok_regions_list = None
+        self.__set_primer_ok_region_list()
 
     async def generate_primers(self) -> tuple[list | None, list | None]:
         """
@@ -50,6 +53,15 @@ class PrimerGenerator:
             raise Exception(f"Primer3 failed with error: {stderr}")
 
         return self.__parse_output_from_primer3(stdout)
+
+    def __set_primer_ok_region_list(self) -> None:
+        """ Set the primer ok region list for the amplicon """
+        self.primer_ok_regions_list = [
+            0,
+            self.buffer_size,
+            len(self.amplicon_sequence) - self.buffer_size,
+            self.buffer_size,
+        ]
 
     def __write_temp_primer_gen_file(self) -> str:
         PRIMER3_OK_REGIONS_LIST = f"{self.primer_ok_regions_list[0]},{self.primer_ok_regions_list[1]},{self.primer_ok_regions_list[2]},{self.primer_ok_regions_list[3]}"
