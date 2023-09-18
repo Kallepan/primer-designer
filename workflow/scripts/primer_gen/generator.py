@@ -28,6 +28,8 @@ class PrimerGenerator:
         self.buffer_size = buffer_size
         self._primer3_settings = config.primer3_settings
         self.output_dir = config.output_dir
+        self.min_amplicon_size = config.min_amplicon_size
+        self.max_amplicon_size = config.max_amplicon_size
 
         self.primer_ok_regions_list = None
         self.__set_primer_ok_region_list()
@@ -71,6 +73,9 @@ class PrimerGenerator:
         with open(file_path, "w") as file:
             file.write(
                 f"SEQUENCE_PRIMER_PAIR_OK_REGION_LIST={PRIMER3_OK_REGIONS_LIST}\n"
+            )
+            file.write(
+                f"PRIMER_PRODUCT_SIZE_RANGE={self.min_amplicon_size}-{self.max_amplicon_size}\n"
             )
             file.write(f"SEQUENCE_ID={self.amplicon_id}\n")
             file.write(f"SEQUENCE_TEMPLATE={str(self.amplicon_sequence)}\n")
